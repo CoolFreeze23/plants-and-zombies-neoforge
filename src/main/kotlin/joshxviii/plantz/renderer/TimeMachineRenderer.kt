@@ -1,7 +1,6 @@
 package joshxviii.plantz.renderer
 
 import com.mojang.blaze3d.vertex.PoseStack
-import com.mojang.math.Axis
 import joshxviii.plantz.block.TimeMachineBlock
 import joshxviii.plantz.block.TimeMachineState
 import joshxviii.plantz.block.entity.TimeMachineBlockEntity
@@ -11,7 +10,6 @@ import joshxviii.plantz.compat.client.state.BlockEntityRenderState
 import joshxviii.plantz.compat.client.renderer.ModelFeatureRenderer
 import joshxviii.plantz.compat.client.CameraRenderState
 import net.minecraft.core.Direction
-import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import kotlin.math.pow
 

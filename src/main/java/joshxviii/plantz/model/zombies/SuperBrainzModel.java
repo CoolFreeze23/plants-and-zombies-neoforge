@@ -1,6 +1,5 @@
 package joshxviii.plantz.model.zombies;
 
-import joshxviii.plantz.ai.ZombieState;
 import joshxviii.plantz.animation.zombies.SuperBrainzAnimation;
 import joshxviii.plantz.renderer.entity.zombie.PazZombieRenderState;
 import joshxviii.plantz.renderer.entity.zombie.SuperBrainzRenderState;

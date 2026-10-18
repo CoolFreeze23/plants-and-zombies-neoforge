@@ -2,7 +2,6 @@ package joshxviii.plantz.mixin.client;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.mojang.blaze3d.vertex.PoseStack;
-import joshxviii.plantz.PazEffects;
 import joshxviii.plantz.renderer.DuckyTubeRenderLayer;
 import joshxviii.plantz.renderer.DyeVatRenderLayer;
 import joshxviii.plantz.renderer.SpecialEffectsLayer;
@@ -30,9 +29,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static joshxviii.plantz.PazModels.*;
 
 /**
- * Port: upstream targeted vanilla 26.1 LivingEntityRenderer. On 1.21.1 the mod's own living renderers run on the
- * compat 26.1-style renderer (joshxviii.plantz.compat.client.renderer.LivingEntityRenderer), so this targets that class;
- * vanilla 1.21.1 renderers (players, vanilla mobs) get the tint from LivingEntityRendererVanillaMixin.
+ * Port: targets the compat 26.1-style LivingEntityRenderer the mod's renderers run on; 1.21.1's own living renderer
+ * (players, vanilla mobs) gets the same from LivingEntityRendererVanillaMixin.
  */
 @Mixin(LivingEntityRenderer.class)
 public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extends LivingEntityRenderState, M extends EntityModel<? super S>> implements RenderLayerParent<S, M> {

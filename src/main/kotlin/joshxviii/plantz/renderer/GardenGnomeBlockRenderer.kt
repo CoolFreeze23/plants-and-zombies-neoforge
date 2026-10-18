@@ -14,7 +14,6 @@ import joshxviii.plantz.compat.client.state.BlockEntityRenderState
 import joshxviii.plantz.compat.client.renderer.ModelFeatureRenderer
 import joshxviii.plantz.compat.client.CameraRenderState
 import net.minecraft.client.renderer.texture.OverlayTexture
-import net.minecraft.core.Direction
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.phys.Vec3
 

@@ -18,6 +18,7 @@ import joshxviii.plantz.renderer.entity.plant.PlantRenderer
 import joshxviii.plantz.renderer.entity.plant.WallNutRenderer
 import joshxviii.plantz.renderer.entity.zombie.*
 import joshxviii.plantz.compat.client.RenderStateDataKey
+import joshxviii.plantz.compat.client.model.CompatModelLayers
 import net.minecraft.client.model.geom.ModelLayerLocation
 import net.minecraft.client.model.geom.ModelLayers
 import net.minecraft.client.model.geom.builders.LayerDefinition
@@ -76,6 +77,8 @@ object PazModels {
 
     fun registerLayers(event: EntityRenderersEvent.RegisterLayerDefinitions) {
         event.registerLayerDefinition(EMPTY_LAYER) { LayerDefinition.create(MeshDefinition(), 0, 0) }
+        // 26.1 vanilla layers missing on 1.21.1 (baby zombie mesh, zombie armor sets)
+        CompatModelLayers.registerLayers(event)
 
         // REGISTER MODELS
         event.registerLayerDefinition(PeaShooterModel.LAYER_LOCATION) { PeaShooterModel.createBodyLayer() }
