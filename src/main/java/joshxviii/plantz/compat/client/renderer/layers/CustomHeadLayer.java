@@ -1,5 +1,6 @@
 package joshxviii.plantz.compat.client.renderer.layers;
 
+import joshxviii.plantz.compat.client.BucketHelmet;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import joshxviii.plantz.compat.client.model.EntityModel;
@@ -60,8 +61,10 @@ public class CustomHeadLayer<S extends LivingEntityRenderState, M extends Entity
             }
         } else {
             translateToHead(poseStack, this.transforms);
-            Minecraft.getInstance().getEntityRenderDispatcher().getItemInHandRenderer()
-                .renderItem(entity, headItem, ItemDisplayContext.HEAD, false, poseStack, submitNodeCollector.bufferSource(), lightCoords);
+            if (!BucketHelmet.render(headItem, poseStack, submitNodeCollector.bufferSource(), lightCoords)) {
+                Minecraft.getInstance().getEntityRenderDispatcher().getItemInHandRenderer()
+                    .renderItem(entity, headItem, ItemDisplayContext.HEAD, false, poseStack, submitNodeCollector.bufferSource(), lightCoords);
+            }
         }
         poseStack.popPose();
     }

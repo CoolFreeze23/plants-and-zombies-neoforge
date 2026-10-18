@@ -10,6 +10,7 @@
     "BossHealthOverlayAccessor",
     "BossHealthOverlayMixin",
     "CopperShelfRendererMixin",
+    "CustomHeadLayerMixin",
     "EditBoxMixin",
     "GameRendererAccessor",
     "GuiMixin",

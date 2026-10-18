@@ -73,6 +73,9 @@ Optional, detected automatically:
   unchanged. 26.1's `on_shelf` display context is `plantz:on_shelf` (NeoForge requires a namespaced name), falling
   back to `fixed`; 1.21.1 only has shelves through Copper Age Backport.
 
+The worn bucket uses the mod's own `plantz:item/bucket_head` model in the head layers instead of overriding the
+vanilla bucket model like upstream, so resource packs that retexture the bucket (e.g. Alittle Axolotl) no longer hide it.
+
 Upstream quirk kept: the raid's "vanish" wither sound is played with `playLocalSound` on the server level, which plays
 nothing (in 26.1 too).
 

@@ -1,6 +1,7 @@
 package joshxviii.plantz
 
 import joshxviii.plantz.block.entity.*
+import joshxviii.plantz.compat.client.BucketHelmet
 import joshxviii.plantz.model.BalloonModel
 import joshxviii.plantz.model.FlagBlockModel
 import joshxviii.plantz.model.GnomeArmorModel
@@ -71,7 +72,10 @@ object PazModels {
     )
 
     // 26.1 registered the plant_icon item model type here (ItemModels.ID_MAPPER); see PlantIconItemModel
-    fun registerAdditionalModels(event: ModelEvent.RegisterAdditional) = PlantIconItemModel.registerAdditionalModels(event)
+    fun registerAdditionalModels(event: ModelEvent.RegisterAdditional) {
+        PlantIconItemModel.registerAdditionalModels(event)
+        BucketHelmet.registerModel(event)
+    }
 
     fun modifyBakingResult(event: ModelEvent.ModifyBakingResult) = PlantIconItemModel.modifyBakingResult(event)
 
