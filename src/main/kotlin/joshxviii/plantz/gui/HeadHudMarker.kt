@@ -1,23 +1,20 @@
 package joshxviii.plantz.gui
 
-import com.mojang.blaze3d.platform.Lighting
-import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.math.Axis
+import joshxviii.plantz.PazRenderPipelines
 import joshxviii.plantz.gui.ZombieHudMarkers.ICON_SIZE
 import joshxviii.plantz.compat.client.model.HumanoidModel
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphics
-import net.minecraft.client.renderer.RenderType
 import net.minecraft.client.renderer.texture.OverlayTexture
 import net.minecraft.resources.ResourceLocation
 import joshxviii.plantz.compat.LightCoordsUtil
 import net.minecraft.world.entity.monster.Zombie
 import net.minecraft.world.item.ItemStack
-import org.joml.Vector3f
 
 /**
- * 26.1 queued this as a GuiElementRenderState for the HEAD_MARKER_BAKE pipeline (cutout, no cull, no cardinal
- * lighting, emissive); 1.21.1 draws it right away with entityCutoutNoCull, full bright and lit from the front and back.
+ * 26.1 queued this as a GuiElementRenderState for the HEAD_MARKER_BAKE / HEAD_MARKER_OUTLINE pipelines; 1.21.1 draws
+ * it right away with the equivalent render types.
  */
 class HeadHudMarker(
     val zombie: Zombie,
@@ -42,18 +39,12 @@ class HeadHudMarker(
         if (outlinePad>0f) pose.scale(outlinePad, outlinePad, outlinePad)
         model.head.setPos(0f, 0f, 0f)
 
+        val renderType = if (outlinePad > 0f) PazRenderPipelines.HEAD_MARKER_OUTLINE.apply(texture) else PazRenderPipelines.HEAD_MARKER_BAKE.apply(texture)
         graphics.flush()
-        RenderSystem.setShaderLights(LIGHT_FRONT, LIGHT_BACK)
-        model.head.render(pose, graphics.bufferSource().getBuffer(RenderType.entityCutoutNoCull(texture)), LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY)
+        model.head.render(pose, graphics.bufferSource().getBuffer(renderType), LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY)
         graphics.flush()
-        Lighting.setupFor3DItems()
         // (26.1 also resolved the worn head item here but never drew it; worn items are not rendered)
 
         pose.popPose()
-    }
-
-    companion object {
-        private val LIGHT_FRONT = Vector3f(0f, 0f, 1f)
-        private val LIGHT_BACK = Vector3f(0f, 0f, -1f)
     }
 }
