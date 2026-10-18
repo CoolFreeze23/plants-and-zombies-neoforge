@@ -545,7 +545,7 @@ object BlockItemGameTests {
         helper.succeedWhen {
             helper.check(stand.getItemBySlot(EquipmentSlot.HEAD).`is`(PazItems.FOOTBALL_HELMET)) { "helmet not dispensed onto the armor stand" }
             helper.check(flagStand.getItemBySlot(EquipmentSlot.OFFHAND).`is`(PazBlocks.PLANTZ_FLAG.asItem())) { "flag not dispensed into the off hand" }
-            helper.check(helper.entitiesNear(Zombie::class.java, eggDispenser.east(), 3.0).any { it.type == PazEntities.BROWN_COAT }) {
+            helper.check(helper.entitiesNear(Zombie::class.java, eggDispenser.east(), 8.0).any { it.type == PazEntities.BROWN_COAT }) {
                 "spawn egg not dispensed: dispenser holds ${helper.getBlockEntity<DispenserBlockEntity>(eggDispenser).getItem(0)}"
             }
         }

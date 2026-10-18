@@ -521,12 +521,13 @@ object ZombieGameTests {
 
         val wavesSeen = mutableSetOf<Int>()
         var fireworkSeen = false
-        fun raiders() = level.getEntities(EntityTypeTest.forClass(Zombie::class.java)) { (it as ZombieRaider).`plantz$getIsFromRaid`() }
+        // only this raid's zombies: raid zombies left over from other batches can still be in the level
+        fun raiders() = level.getEntitiesOfClass(Zombie::class.java, AABB(flagPos).inflate(ZombieRaid.SPAWN_DISTANCE * 2.0)) { (it as ZombieRaider).`plantz$getIsFromRaid`() }
 
         helper.succeedWhen {
             if (raid.status != ZombieRaid.ZombieRaidStatus.VICTORY && raid.status != ZombieRaid.ZombieRaidStatus.STOPPED) {
                 val raiders = raiders()
-                if (raiders.isNotEmpty()) wavesSeen += raid.wavesSpawned
+                if (raiders.isNotEmpty() && raid.wavesSpawned > 0) wavesSeen += raid.wavesSpawned
                 raiders.forEach { it.discard() }
             }
             if (raid.status == ZombieRaid.ZombieRaidStatus.VICTORY) {
