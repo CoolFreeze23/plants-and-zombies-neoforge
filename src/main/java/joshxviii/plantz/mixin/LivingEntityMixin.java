@@ -56,6 +56,9 @@ abstract public class LivingEntityMixin implements PlantHeadAttachment, GardenHe
     private static final EntityDataAccessor<Boolean> DATA_FROZEN_ID = SynchedEntityData.defineId(LivingEntity.class, EntityDataSerializers.BOOLEAN);
     @Unique
     private static final EntityDataAccessor<Boolean> DATA_BUTTER_ID = SynchedEntityData.defineId(LivingEntity.class, EntityDataSerializers.BOOLEAN);
+    /** NBT compound keys must be strings, so the colour keys are stored as decimal strings. */
+    @Unique
+    private static final Codec<Map<Integer, Integer>> PAINTED_COLORS_CODEC = Codec.unboundedMap(Codec.STRING.xmap(Integer::parseInt, String::valueOf), Codec.INT);
     @Unique
     private static final EntityDataAccessor<Map<Integer, Integer>> DATA_PAINTED_COLORS = SynchedEntityData.defineId(LivingEntity.class, DATA_PAINT_COLORS);
 
@@ -198,7 +201,7 @@ abstract public class LivingEntityMixin implements PlantHeadAttachment, GardenHe
         output.putBoolean("plantz:IsChilled", self.getEntityData().get(DATA_CHILL_ID));
         output.putBoolean("plantz:IsFrozen", self.getEntityData().get(DATA_FROZEN_ID));
         output.putBoolean("plantz:IsButtered", self.getEntityData().get(DATA_BUTTER_ID));
-        output.store("plantz:PaintedColor", Codec.unboundedMap(Codec.INT, Codec.INT), self.getEntityData().get(DATA_PAINTED_COLORS));
+        output.store("plantz:PaintedColor", PAINTED_COLORS_CODEC, self.getEntityData().get(DATA_PAINTED_COLORS));
         if (!this.plantz$getPlantData().isEmpty()) {
             output.store("plantz:AttachedPlant", CompoundTag.CODEC, this.plantz$getPlantData());
         }
@@ -213,9 +216,12 @@ abstract public class LivingEntityMixin implements PlantHeadAttachment, GardenHe
         self.getEntityData().set(DATA_CHILL_ID, input.getBooleanOr("plantz:IsChilled", false));
         self.getEntityData().set(DATA_FROZEN_ID, input.getBooleanOr("plantz:IsFrozen", false));
         self.getEntityData().set(DATA_BUTTER_ID, input.getBooleanOr("plantz:IsButtered", false));
-        self.getEntityData().set(DATA_PAINTED_COLORS, input.read("plantz:PaintedColor", Codec.unboundedMap(Codec.INT, Codec.INT)).orElseGet(HashMap::new));
+        self.getEntityData().set(DATA_PAINTED_COLORS, input.read("plantz:PaintedColor", PAINTED_COLORS_CODEC).orElseGet(HashMap::new));
         plantz$setPlantData(input.read("plantz:AttachedPlant", CompoundTag.CODEC).orElseGet(CompoundTag::new));
         if (self instanceof ServerPlayer) plantz$setWaveList(input.read("plantz:CompletedWaveList", Codec.list(WaveType.Companion.getCODEC())).orElseGet(List::of));
+        // Fix (upstream too): the flags above mirror active effects, which LivingEntity has just loaded, so derive them
+        // from the effects. The old int-keyed map codec could never be written to NBT, so paint was lost on reload.
+        if (!self.level().isClientSide()) updateEffects();
 
         if (self instanceof PathfinderMob mob) {
             prevFloatTag = mob.getNavigation().canFloat();

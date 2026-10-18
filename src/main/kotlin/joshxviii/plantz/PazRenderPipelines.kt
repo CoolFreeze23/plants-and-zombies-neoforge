@@ -3,6 +3,7 @@ package joshxviii.plantz
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
 import com.mojang.blaze3d.vertex.VertexFormat
+import joshxviii.plantz.integration.PazIrisCompat
 import net.minecraft.Util
 import net.minecraft.client.renderer.RenderStateShard
 import net.minecraft.client.renderer.RenderType
@@ -14,7 +15,9 @@ import java.util.function.Function
 /**
  * 26.1 `RenderPipeline`s ported to 1.21.1 [RenderType]s. Custom pipelines use core shaders under
  * `assets/plantz/shaders/core`, registered from [registerShaders] (`RegisterShadersEvent`).
- * Iris pipeline assignment (26.1 `IrisApi.assignPipeline`) is dropped: Iris on NeoForge 1.21.1 has no equivalent API.
+ * Iris: 26.1 assigned `PAINT_OVERLAY` to Iris' entity program. On 1.21.1, [paintOverlay] switches to the vanilla
+ * translucent-entity shader while a shader pack is active, which Iris replaces with that same entity program.
+ * The other world render types already use vanilla shader states.
  */
 object PazRenderPipelines {
 
@@ -70,7 +73,28 @@ object PazRenderPipelines {
      */
     @JvmStatic
     fun paintOverlay(entityTexture: ResourceLocation, noiseTexture: ResourceLocation): RenderType =
-        PAINT_OVERLAY_TYPES.apply(entityTexture to noiseTexture)
+        if (PazIrisCompat.isShaderPackInUse()) PAINT_OVERLAY_IRIS_TYPES.apply(entityTexture)
+        else PAINT_OVERLAY_TYPES.apply(entityTexture to noiseTexture)
+
+    /**
+     * Shader-pack variant of the paint overlay: same states, but the vanilla translucent-entity shader, so Iris draws it
+     * with its entity program. Like 26.1 under Iris, that program samples only the entity texture (tinted by the paint
+     * colour) and not the noise.
+     */
+    private val PAINT_OVERLAY_IRIS_TYPES: Function<ResourceLocation, RenderType> = Util.memoize { texture: ResourceLocation ->
+        RenderType.create(
+            "plantz_paint_overlay_iris", DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 1536, true, true,
+            RenderType.CompositeState.builder()
+                .setShaderState(RenderStateShard.RENDERTYPE_ENTITY_TRANSLUCENT_SHADER)
+                .setTextureState(RenderStateShard.TextureStateShard(texture, false, false))
+                .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
+                .setCullState(RenderStateShard.NO_CULL)
+                .setLightmapState(RenderStateShard.LIGHTMAP)
+                .setOverlayState(RenderStateShard.OVERLAY)
+                .setLayeringState(RenderStateShard.VIEW_OFFSET_Z_LAYERING)
+                .createCompositeState(true)
+        )
+    }
 
     private val PAINT_OVERLAY_TYPES: Function<Pair<ResourceLocation, ResourceLocation>, RenderType> = Util.memoize { (texture, noise) ->
         RenderType.create(

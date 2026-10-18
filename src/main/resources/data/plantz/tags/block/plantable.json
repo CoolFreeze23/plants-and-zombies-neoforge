@@ -14,14 +14,10 @@
     "minecraft:moss_carpet",
     "#minecraft:dirt",
     {
-      "id": "#minecraft:grass_blocks",
+      "id": "minecraft:pale_moss_block",
       "required": false
     },
     "#minecraft:nylium",
-    {
-      "id": "#minecraft:moss_blocks",
-      "required": false
-    },
     "#plantz:gives_plant_pot_protection",
     "#plantz:farmable"
   ]

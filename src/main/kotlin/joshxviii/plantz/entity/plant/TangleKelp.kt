@@ -1,5 +1,6 @@
 package joshxviii.plantz.entity.plant
 
+import joshxviii.plantz.integration.PazVanillaBackportCompat
 import joshxviii.plantz.*
 import joshxviii.plantz.ai.goal.MeleeAttackActionGoal
 import net.minecraft.core.BlockPos
@@ -158,7 +159,8 @@ class TangleKelp(type: EntityType<out Plant>, level: Level) : Plant(type, level)
         override fun doAction() : Boolean {
             val success = super.doAction()
             if (success) {
-                tangleKelp.playSound(SoundEvents.HANGING_ROOTS_BREAK, 1f, 1f)// 26.1 CREAKING_ACTIVATE does not exist in 1.21.1
+                // 26.1 CREAKING_ACTIVATE; Vanilla Backport provides it on 1.21.1, otherwise hanging roots
+                tangleKelp.playSound(PazVanillaBackportCompat.sound("entity.creaking.activate", SoundEvents.HANGING_ROOTS_BREAK), 1f, 1f)
                 tangleKelp.tangleTime = TANGLE_TIME + tangleKelp.random.nextInt(-10,20)
                 tangleKelp.target?.addEffect(MobEffectInstance(PazEffects.TANGLED, 80, 0), tangleKelp)
             }

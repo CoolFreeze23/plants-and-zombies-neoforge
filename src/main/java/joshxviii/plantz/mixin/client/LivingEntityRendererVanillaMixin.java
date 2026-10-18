@@ -3,21 +3,38 @@ package joshxviii.plantz.mixin.client;
 import com.llamalad7.mixinextras.sugar.Local;
 import joshxviii.plantz.compat.ARGB;
 import joshxviii.plantz.mixin.LivingEntityAccessor;
+import joshxviii.plantz.renderer.VanillaPaintLayer;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
+import net.minecraft.client.renderer.entity.RenderLayerParent;
+import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 /**
  * Port addition: upstream's LivingEntityRendererMixin tinted every living entity (26.1 has one renderer pipeline).
  * On 1.21.1, vanilla renderers (players, vanilla mobs) still use 1.21.1's LivingEntityRenderer, so this applies the
- * same hypno / chill / frozen / butter tint to the model color there. (The extra render layers and the frozen-pose
- * freeze from LivingEntityRendererMixin only apply to the mod's compat renderers.)
+ * same hypno / chill / frozen / butter tint to the model color there, and adds the paint overlay layer. (The other
+ * extra render layers and the frozen-pose freeze from LivingEntityRendererMixin only apply to the mod's compat renderers.)
  */
 @Mixin(LivingEntityRenderer.class)
-public abstract class LivingEntityRendererVanillaMixin {
+public abstract class LivingEntityRendererVanillaMixin<T extends LivingEntity, M extends EntityModel<T>> implements RenderLayerParent<T, M> {
+
+    @Shadow
+    protected abstract boolean addLayer(RenderLayer<T, M> layer);
+
+    /** Upstream's paint overlay on vanilla renderers too (players, vanilla mobs). */
+    @Inject(method = "<init>", at = @At("TAIL"))
+    private void plantz$addPaintLayer(EntityRendererProvider.Context context, M model, float shadowRadius, CallbackInfo ci) {
+        this.addLayer(new VanillaPaintLayer<>(this));
+    }
 
     @Unique
     private static final int PLANTZ_HYPNO_TINT = ARGB.opaque(0xD036FF);

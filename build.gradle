@@ -22,6 +22,10 @@ repositories {
         url = 'https://thedarkcolour.github.io/KotlinForForge/'
         content { includeGroup 'thedarkcolour' }
     }
+    exclusiveContent {
+        forRepository { maven { name = 'Modrinth'; url = 'https://api.modrinth.com/maven' } }
+        filter { includeGroup 'maven.modrinth' }
+    }
     maven {
         name = 'Glitchfiend'
         url = 'https://maven.minecraftforge.net/'
@@ -72,6 +76,19 @@ neoForge {
 dependencies {
     implementation "thedarkcolour:kotlinforforge-neoforge:${kff_version}"
     implementation "com.github.glitchfiend:TerraBlender-neoforge:${terrablender_version}"
+
+    // Iris: only its API is used (shader-pack checks), and only when the mod is present at runtime
+    compileOnly "maven.modrinth:iris:${iris_version}"
+
+    // Optional mods for dev runs: ./gradlew runClient -PwithIris  /  -PwithVanillaBackport
+    if (project.hasProperty('withIris')) {
+        runtimeOnly "maven.modrinth:sodium:${sodium_version}"
+        runtimeOnly "maven.modrinth:iris:${iris_version}"
+    }
+    if (project.hasProperty('withVanillaBackport')) {
+        runtimeOnly "maven.modrinth:vanillabackport:${vanillabackport_version}"
+        runtimeOnly "maven.modrinth:platform:${platform_version}"
+    }
 }
 
 tasks.withType(ProcessResources).configureEach {
@@ -83,6 +100,8 @@ tasks.withType(ProcessResources).configureEach {
             loader_version_range     : loader_version_range,
             kff_version_range        : kff_version_range,
             terrablender_version_range: terrablender_version_range,
+            iris_version_range       : iris_version_range,
+            vanillabackport_version_range: vanillabackport_version_range,
             mod_id                   : mod_id,
             mod_name                 : mod_name,
             mod_license              : mod_license,
