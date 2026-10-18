@@ -43,6 +43,11 @@ neoForge {
             client()
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
+        // opens run/saves/smoke straight away (world prepared on the dev server for render smoke tests)
+        clientSmoke {
+            client()
+            programArguments.addAll('--quickPlaySingleplayer', 'smoke', '--username', 'Dev', '--width', '1280', '--height', '720')
+        }
         server {
             server()
             programArgument '--nogui'
