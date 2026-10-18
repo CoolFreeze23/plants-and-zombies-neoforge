@@ -8,9 +8,7 @@ import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.util.Mth;
 import org.joml.Vector3f;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,18 +42,21 @@ public class KeyframeAnimation {
         return new KeyframeAnimation(definition, List.copyOf(entries));
     }
 
+    /** Same lookup as 26.1 ModelPart.createPartLookup: "root" is the baked part, then names in its traversal order. */
     private static Map<String, ModelPart> createPartLookup(ModelPart root) {
         Map<String, ModelPart> lookup = new HashMap<>();
-        Deque<ModelPart> queue = new ArrayDeque<>();
-        queue.add(root);
-        while (!queue.isEmpty()) {
-            ModelPart part = queue.poll();
-            for (Map.Entry<String, ModelPart> child : part.children.entrySet()) {
-                lookup.putIfAbsent(child.getKey(), child.getValue());
-                queue.add(child.getValue());
-            }
-        }
+        lookup.put("root", root);
+        addAllChildren(root, lookup);
         return lookup;
+    }
+
+    private static void addAllChildren(ModelPart part, Map<String, ModelPart> lookup) {
+        for (Map.Entry<String, ModelPart> child : part.children.entrySet()) {
+            lookup.putIfAbsent(child.getKey(), child.getValue());
+        }
+        for (ModelPart child : part.children.values()) {
+            addAllChildren(child, lookup);
+        }
     }
 
     public void applyStatic() {

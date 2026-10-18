@@ -39,6 +39,8 @@ object PazClient {
 		modBus.addListener { event: RegisterMenuScreensEvent -> PazScreens.registerScreens(event) }
 		modBus.addListener { event: RegisterGuiLayersEvent -> PazScreens.registerGuiLayers(event) }
 		modBus.addListener { event: RegisterShadersEvent -> PazRenderPipelines.registerShaders(event) }
+		modBus.addListener { event: ModelEvent.RegisterAdditional -> PazModels.registerAdditionalModels(event) }
+		modBus.addListener { event: ModelEvent.ModifyBakingResult -> PazModels.modifyBakingResult(event) }
 		modBus.addListener { event: RegisterItemDecorationsEvent -> registerSeedPacketCooldownOverlay(event) }
 		modBus.addListener { event: FMLClientSetupEvent -> event.enqueueWork { PazClientHooks.clientSetup() } }
 		PazClientHooks.registerModBus(modBus)
