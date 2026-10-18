@@ -4,7 +4,6 @@ import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import joshxviii.plantz.PazRegistries
 import joshxviii.plantz.pazResource
-import net.fabricmc.fabric.api.event.registry.DynamicRegistries
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Holder
 import net.minecraft.core.HolderSet
@@ -28,8 +27,8 @@ object SeedMutationManager {
     fun get(level: ServerLevel, type: EntityType<*>): SeedMutationData? {
         val entityId = BuiltInRegistries.ENTITY_TYPE.getKey(type)
         val key = ResourceKey.create(PazRegistries.SEED_MUTATION, entityId)
-        val t = level.registryAccess().lookupOrThrow(PazRegistries.SEED_MUTATION)
-        val p = t.getValue(key)
+        val t = level.registryAccess().registryOrThrow(PazRegistries.SEED_MUTATION)
+        val p = t.get(key)
 
         return p
     }
@@ -121,12 +120,12 @@ sealed interface TimePredicate {
     fun matches(level: Level): Boolean
 
     data class Named(val day: Boolean) : TimePredicate {
-        override fun matches(level: Level) = if (day) level.isBrightOutside else level.isDarkOutside
+        override fun matches(level: Level) = if (day) level.isDay else level.isNight
     }
 
     data class Range(val min: Int, val max: Int) : TimePredicate {
         override fun matches(level: Level): Boolean {
-            val t = (level.overworldClockTime % 24000L).toInt()
+            val t = (level.dayTime % 24000L).toInt()// 26.1 overworldClockTime; 1.21.1 dimensions share the overworld day time
             return if (min <= max) t in min..max else t !in (max + 1)..<min
         }
     }

@@ -73,14 +73,14 @@ class TangleKelp(type: EntityType<out Plant>, level: Level) : Plant(type, level)
         val level = level() as? ServerLevel?: return
         if (tickCount % 20 != 0) return
         val damage = getAttribute(Attributes.ATTACK_DAMAGE)?.value?.toFloat() ?: 1f
-        entity.hurtServer(level, damageSources().source(PazDamageTypes.PLANT, this), damage)
+        entity.hurt(damageSources().source(PazDamageTypes.PLANT, this), damage)
     }
 
     override fun registerGoals() {
         super.registerGoals()
         this.goalSelector.addGoal(1, TangleKelpAttackGoal(this))
 
-        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target, level ->
+        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target ->
             target !is Plant
                     && (target is Zombie
                     || (target is Enemy && isTame)
@@ -93,7 +93,7 @@ class TangleKelp(type: EntityType<out Plant>, level: Level) : Plant(type, level)
         entityData.define(TANGLE_TIME_ID, 0)
     }
 
-    override fun canBreatheUnderwater(): Boolean = true
+    override fun plantCanBreatheUnderwater(): Boolean = true
 
     private fun canTargetBePulled(target: LivingEntity): Boolean {
         if (this.hurtTime > 0) return false
@@ -101,7 +101,7 @@ class TangleKelp(type: EntityType<out Plant>, level: Level) : Plant(type, level)
         if (target is Player && isTame) return false
         if (hasSameRootOwner(target)) return false
         val targetAttacker: LivingEntity? = target.lastHurtByMob
-        if (targetAttacker?.`is`(PazEntities.TANGLE_KELP) == true && targetAttacker != this) {
+        if (targetAttacker?.type == PazEntities.TANGLE_KELP && targetAttacker != this) {
             this.target = null
             return false
         }
@@ -124,8 +124,8 @@ class TangleKelp(type: EntityType<out Plant>, level: Level) : Plant(type, level)
 
         if (target is ServerPlayer) target.connection.send(ClientboundSetEntityMotionPacket(target))
         target.addDeltaMovement(direction)
-        target.needsSync = true
-        target.checkFallDistanceAccumulation()
+        target.hasImpulse = true
+        target.checkSlowFallDistance()// 26.1 checkFallDistanceAccumulation()
 
         if (tickCount % 4 == 0) {
             (level() as? ServerLevel)?.sendParticles(
@@ -158,7 +158,7 @@ class TangleKelp(type: EntityType<out Plant>, level: Level) : Plant(type, level)
         override fun doAction() : Boolean {
             val success = super.doAction()
             if (success) {
-                tangleKelp.playSound(SoundEvents.CREAKING_ACTIVATE, 1f, 1f)
+                tangleKelp.playSound(SoundEvents.HANGING_ROOTS_BREAK, 1f, 1f)// 26.1 CREAKING_ACTIVATE does not exist in 1.21.1
                 tangleKelp.tangleTime = TANGLE_TIME + tangleKelp.random.nextInt(-10,20)
                 tangleKelp.target?.addEffect(MobEffectInstance(PazEffects.TANGLED, 80, 0), tangleKelp)
             }

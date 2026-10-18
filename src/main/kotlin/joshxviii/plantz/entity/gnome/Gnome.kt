@@ -38,6 +38,7 @@ import net.minecraft.world.level.block.state.BlockState
 import joshxviii.plantz.compat.ValueInput
 import joshxviii.plantz.compat.ValueOutput
 import net.minecraft.world.phys.Vec3
+import net.minecraft.nbt.CompoundTag
 import kotlin.jvm.optionals.getOrDefault
 
 class Gnome(type: EntityType<out Gnome>, level: Level) :Monster(type, level) {
@@ -95,14 +96,14 @@ class Gnome(type: EntityType<out Gnome>, level: Level) :Monster(type, level) {
     }
 
     override fun registerGoals() {
-        this.goalSelector.addGoal(1, SpearUseGoal(this, 1.0, 1.0, 10.0f, 2.0f))
+        // 26.1 SpearUseGoal(this, 1.0, 1.0, 10.0f, 2.0f): spears do not exist in 1.21.1
         this.goalSelector.addGoal(2, RandomLookAroundGoal(this))
         this.goalSelector.addGoal(2, LookAtPlayerGoal(this, Player::class.java, 8.0f))
         this.goalSelector.addGoal(3, WaterAvoidingRandomStrollGoal(this, 0.6))
         this.goalSelector.addGoal(4, FindAndRideAnimalGoal(this))
         //this.goalSelector.addGoal(7, FollowMobGoal(this, 1.0, 3.0f, 7.0f))
         this.targetSelector.addGoal(1, HurtByTargetGoal(this, Gnome::class.java).setAlertOthers())
-        this.targetSelector.addGoal(2, NearestAttackableTargetGoal(this, LivingEntity::class.java, true) { target, level ->
+        this.targetSelector.addGoal(2, NearestAttackableTargetGoal(this, LivingEntity::class.java, true) { target ->
             target !is Gnome
                     && target is Plant
                     || target is Zombie
@@ -133,13 +134,15 @@ class Gnome(type: EntityType<out Gnome>, level: Level) :Monster(type, level) {
         entityData.define(DATA_SOUND_VARIANT_ID, GnomeSoundVariant.VOICE_1)
     }
 
-    override fun addAdditionalSaveData(output: ValueOutput) {
-        super.addAdditionalSaveData(output)
+    override fun addAdditionalSaveData(tag: CompoundTag) {
+        super.addAdditionalSaveData(tag)
+        val output = ValueOutput.of(tag, registryAccess())
         output.store("color_variant", GnomeVariant.CODEC, variant)
         output.store("sound_variant", GnomeSoundVariant.CODEC, soundVariant)
     }
-    override fun readAdditionalSaveData(input: ValueInput) {
-        super.readAdditionalSaveData(input)
+    override fun readAdditionalSaveData(tag: CompoundTag) {
+        super.readAdditionalSaveData(tag)
+        val input = ValueInput.of(tag, registryAccess())
         variant = input.read<GnomeVariant>("color_variant", GnomeVariant.CODEC).getOrDefault(entityData.get(DATA_VARIANT_ID))
         soundVariant = input.read<GnomeSoundVariant>("sound_variant", GnomeSoundVariant.CODEC).getOrDefault(entityData.get(DATA_SOUND_VARIANT_ID))
         this.reassessWeaponGoal()
@@ -174,7 +177,17 @@ class Gnome(type: EntityType<out Gnome>, level: Level) :Monster(type, level) {
     }
 
 
-    override fun getPreferredWeaponType(): TagKey<Item> = PazTags.ItemTags.GNOME_PREFERRED_WEAPONS
+    fun getPreferredWeaponType(): TagKey<Item> = PazTags.ItemTags.GNOME_PREFERRED_WEAPONS
+
+    // 26.1 Mob.compareWeapons(): items in getPreferredWeaponType() win over other main hand items
+    override fun canReplaceCurrentItem(candidate: ItemStack, existing: ItemStack): Boolean {
+        if (!existing.isEmpty && getEquipmentSlotForItem(candidate) == EquipmentSlot.MAINHAND) {
+            val preferredWeaponType = getPreferredWeaponType()
+            if (existing.`is`(preferredWeaponType) && !candidate.`is`(preferredWeaponType)) return false
+            if (!existing.`is`(preferredWeaponType) && candidate.`is`(preferredWeaponType)) return true
+        }
+        return super.canReplaceCurrentItem(candidate, existing)
+    }
 
     override fun populateDefaultEquipmentSlots(random: RandomSource, difficulty: DifficultyInstance) {
         var armorType = random.nextInt(2)
@@ -191,10 +204,11 @@ class Gnome(type: EntityType<out Gnome>, level: Level) :Monster(type, level) {
         if (random.nextFloat() < (if (this.level().difficulty == Difficulty.HARD) 0.5f else 0.33f)) {
             val rand = random.nextInt(5)
             when (rand) {
-                0 -> this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack(Items.COPPER_AXE))
-                1 -> this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack(Items.COPPER_SPEAR))
+                // 26.1 copper axe / copper spear / copper pickaxe do not exist in 1.21.1: stone tools instead
+                0 -> this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack(Items.STONE_AXE))
+                1 -> this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack(Items.STONE_SWORD))
                 2 -> this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack(Items.BOW))
-                else -> this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack(Items.COPPER_PICKAXE))
+                else -> this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack(Items.STONE_PICKAXE))
             }
         }
     }
@@ -203,7 +217,7 @@ class Gnome(type: EntityType<out Gnome>, level: Level) :Monster(type, level) {
         if (random.nextFloat() < 0.25f) this.setItemSlot(slot, itemStack)
     }
 
-    public override fun customServerAiStep(level: ServerLevel) {
+    public override fun customServerAiStep() {
         if (jumpDelayTicks > 0) jumpDelayTicks--
 
         if (onGround()) {
@@ -301,7 +315,7 @@ class Gnome(type: EntityType<out Gnome>, level: Level) :Monster(type, level) {
     }
 
     fun startJumping() {
-        isJumping = true
+        setJumping(true)
         jumpDuration = 15
         jumpTicks = 0
     }
@@ -343,14 +357,18 @@ class Gnome(type: EntityType<out Gnome>, level: Level) :Monster(type, level) {
         var pathTick: Int = 0
         val targeting: TargetingConditions = TargetingConditions.forCombat()
             .range(searchDistance.toDouble())
-            .selector { entity, _ ->  entity.passengers.isEmpty() && !(entity is AgeableMob && entity.age<0) }
+            .selector { entity -> entity.passengers.isEmpty() && !(entity is AgeableMob && entity.age<0) }
 
         override fun canUse(): Boolean {
-            nearestRideable = getServerLevel(gnome)
+            val level = gnome.level() as? ServerLevel ?: return false
+            // 26.1 ServerLevel.getNearestEntity(TagKey, ...)
+            nearestRideable = level
                 .getNearestEntity(
-                    PazTags.EntityTypes.GNOME_RIDEABLE, targeting,
-                    gnome, gnome.x, gnome.y, gnome.z,
-                    gnome.boundingBox.inflate(searchDistance.toDouble(), 3.5, searchDistance.toDouble())
+                    level.getEntitiesOfClass(LivingEntity::class.java,
+                        gnome.boundingBox.inflate(searchDistance.toDouble(), 3.5, searchDistance.toDouble())
+                    ) { it.type.`is`(PazTags.EntityTypes.GNOME_RIDEABLE) },
+                    targeting,
+                    gnome, gnome.x, gnome.y, gnome.z
                 )?: return false
             return !gnome.isPassenger && !gnome.isDeadOrDying
         }

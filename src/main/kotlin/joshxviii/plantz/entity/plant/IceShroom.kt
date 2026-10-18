@@ -35,7 +35,7 @@ class IceShroom(type: EntityType<out ExplosivePlant>, level: Level) : ExplosiveP
             actionEndEffect = { cooldown = 480 },
             actionPredicate = { cooldown <= 0 }
         ))
-        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target, level ->
+        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target ->
             target !is Plant
                     && (target is Zombie
                     || (target is Enemy && isTame)
@@ -74,7 +74,7 @@ class IceShroom(type: EntityType<out ExplosivePlant>, level: Level) : ExplosiveP
         for (entity in candidates) {
             val level = level() as? ServerLevel?: return
             val damage : Float = this.attributes.getValue(Attributes.ATTACK_DAMAGE).toFloat()
-            val success = entity.hurtServer(level, damageSources().source(PazDamageTypes.PLANT_FREEZE), damage)
+            val success = entity.hurt(damageSources().source(PazDamageTypes.PLANT_FREEZE), damage)
             if (success) {
                 entity as LivingEntity
                 entity.addEffect(MobEffectInstance(PazEffects.FROZEN, 260, 0))

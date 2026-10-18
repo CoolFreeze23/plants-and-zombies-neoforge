@@ -27,7 +27,7 @@ import net.minecraft.world.phys.Vec3
 
 class PlantPotMinecart(type: EntityType<out AbstractMinecart>, level: Level) : AbstractMinecart(type, level) {
 
-    override fun interact(player: Player, hand: InteractionHand, location: Vec3): InteractionResult {
+    override fun interact(player: Player, hand: InteractionHand): InteractionResult {
         val itemStack = player.getItemInHand(hand)
         val serverLevel = this.level()
 
@@ -40,8 +40,8 @@ class PlantPotMinecart(type: EntityType<out AbstractMinecart>, level: Level) : A
 
             // snap rotation
             if (entity is Plant) {
-                entity.startRiding(this, true, true)
-                entity.snapTo(this.position())
+                entity.startRiding(this, true)
+                entity.moveTo(this.position())
                 val yaw = this.yRot
                 entity.yHeadRot = yaw
                 entity.yBodyRot = yaw
@@ -59,10 +59,12 @@ class PlantPotMinecart(type: EntityType<out AbstractMinecart>, level: Level) : A
             serverLevel.gameEvent(player, GameEvent.ENTITY_PLACE, this.position())
             if (player is ServerPlayer) PazCriteria.PLANT_POT_MINECRAFT.trigger(player, entity !=null && hasPassenger(entity))
         }
-        return InteractionResult.SUCCESS_SERVER
+        return InteractionResult.sidedSuccess(serverLevel.isClientSide)
     }
 
-    override fun isRideable(): Boolean = false
+    // 26.1 isRideable() = false: never picks up nearby mobs (NeoForge canBeRidden())
+    override fun canBeRidden(): Boolean = false
+    override fun getMinecartType(): Type = Type.RIDEABLE
     override fun getPickResult(): ItemStack = ItemStack(PazItems.PLANT_POT_MINECART)
     override fun getDropItem(): Item = PazItems.PLANT_POT_MINECART
 

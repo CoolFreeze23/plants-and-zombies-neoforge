@@ -56,7 +56,7 @@ class MineBlocksToTargetGoal(
         if (breakTime > 0) return true
         if (--breakCooldownTime > 0) return false
         if (miner.isDeadOrDying || !miner.isAggressive) return false
-        if (!level.gameRules.get(GameRules.MOB_GRIEFING)) return false
+        if (!level.gameRules.getBoolean(GameRules.RULE_MOBGRIEFING)) return false
         if (!miner.mainHandItem.`is`(ItemTags.PICKAXES)) return false
         val targetPos = miner.target?.blockPosition()?: miner.navigation.path.getEndPos() ?:  return false
 
@@ -160,7 +160,7 @@ class MineBlocksToTargetGoal(
 
     private fun BlockPos?.equalPos(pos: BlockPos?): Boolean {
         if (this == null || pos == null) return false
-        return this.toMutable() == pos.toMutable()
+        return this.mutable() == pos.mutable()
     }
 
     private fun getBlockBreakTime(pos: BlockPos?): Int {

@@ -26,8 +26,8 @@ class HypnoShroom(type: EntityType<out Plant>, level: Level) : Plant(type, level
         hurtOnCollide(entity)
     }
 
-    override fun actuallyHurt(level: ServerLevel, source: DamageSource, damage: Float) {
-        super.actuallyHurt(level, source, damage)
+    override fun actuallyHurt(source: DamageSource, damage: Float) {
+        super.actuallyHurt(source, damage)
         if (isAsleep) return
         val attacker = source.entity
         if (attacker is LivingEntity && !attacker.isInvulnerable) {
@@ -40,7 +40,7 @@ class HypnoShroom(type: EntityType<out Plant>, level: Level) : Plant(type, level
             )
             attacker.addEffect(MobEffectInstance(PazEffects.HYPNOTIZE, 800, 0))
             val owner = owner
-            if (owner is ServerPlayer) PazCriteria.DISCO_HYPNO.trigger(owner, attacker.`is`(PazEntities.DISCO_ZOMBIE))
+            if (owner is ServerPlayer) PazCriteria.DISCO_HYPNO.trigger(owner, attacker.type == PazEntities.DISCO_ZOMBIE)
             playSound(PazSounds.HYPNOTIZED)
         }
     }
@@ -56,8 +56,8 @@ class HypnoShroom(type: EntityType<out Plant>, level: Level) : Plant(type, level
         cloud.radiusOnUse = -0.5f
         cloud.waitTime = 10
         cloud.duration = 300
-        cloud.setPotionDurationScale(0.25f)
-        cloud.setCustomParticle(PazServerParticles.HYPNO_SPORE)
+        // 26.1 setPotionDurationScale(0.25f): 1.21.1 clouds always apply 1/4 of the effect duration
+        cloud.setParticle(PazServerParticles.HYPNO_SPORE)
         cloud.radiusPerTick = -cloud.radius / cloud.duration.toFloat()
         cloud.addEffect(MobEffectInstance(PazEffects.HYPNOTIZE, 1000, 0))
         level().addFreshEntity(cloud)

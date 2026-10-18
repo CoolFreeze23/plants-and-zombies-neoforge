@@ -37,7 +37,7 @@ class CoffeeBean(type: EntityType<out Plant>, level: Level) : Plant(type, level)
             actionSuccessEffect = {
                 addParticlesAroundSelf(
                     level(),
-                    DustParticleOptions(8606770, 1f),
+                    DustParticleOptions(net.minecraft.world.phys.Vec3.fromRGB24(8606770).toVector3f(), 1f),
                     amount = 12..14,
                     horizontalSpreadScale = 0.1,
                     verticalSpreadScale = 0.3,

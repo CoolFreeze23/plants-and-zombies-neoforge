@@ -74,7 +74,7 @@ class DoomShroom(type: EntityType<out ExplosivePlant>, level: Level) : Explosive
 //                )
             }
         ))
-        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target, level ->
+        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target ->
             target !is Plant
                     && (target is Zombie
                     || (target is Enemy && isTame)

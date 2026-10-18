@@ -58,7 +58,7 @@ public class ProjectileMixin {
                     float breakChance = component.getBreakChance();
                     if (entity.level() instanceof ServerLevel && entity.getRandom().nextFloat() < breakChance) {
                         item.shrink(1);
-                        projectile.playSound(SoundEvents.ITEM_BREAK.value());
+                        projectile.playSound(SoundEvents.ITEM_BREAK);
                     }
                     else {
                         SoundEvent hitSound;

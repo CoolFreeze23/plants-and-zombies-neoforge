@@ -24,7 +24,7 @@ class CabbagePult(type: EntityType<out Plant>, level: Level) : Plant(type, level
             velocity = 0.85,
             cooldownTime = 30,
             actionDelay = 9))
-        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, false, false) { target, level ->
+        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, false, false) { target ->
             target !is Plant
                     && target !is Creeper
                     && (target is Zombie

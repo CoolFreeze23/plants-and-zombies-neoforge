@@ -23,7 +23,7 @@ class ElectrifyMobEffect(
     category: MobEffectCategory,
     color: Int,
     particleOptions: ParticleOptions
-) : MobEffect(category, color, particleOptions) {
+) : MobEffect(category, color, particleOptions), PazMobEffectHooks {
     companion object {
         const val ZAP_INTERVAL: Int = 12
         const val ZAP_RANGE: Double = 3.0
@@ -31,16 +31,17 @@ class ElectrifyMobEffect(
     }
 
     // chain lightening effect to nearby mobs
-    override fun onMobHurt(level: ServerLevel, mob: LivingEntity, amplifier: Int, source: DamageSource, damage: Float) {
-        super.onMobHurt(level, mob, amplifier, source, damage)
+    override fun onMobHurt(mob: LivingEntity, amplifier: Int, source: DamageSource, damage: Float) {
+        super.onMobHurt(mob, amplifier, source, damage)
+        val level = mob.level() as? ServerLevel ?: return
         if (!source.`is`(PazTags.DamageTypes.IS_ELECTRIC)) return
         // targeting conditions for nearby candidates to zap
         val rootCauseEntity = source.entity
-        val targetConditions = TargetingConditions.forNonCombat().ignoreLineOfSight().ignoreInvisibilityTesting().selector { entity, level ->
-            val isRootSource = rootCauseEntity?.let { entity.hasSameRootOwner(it) || it.`is`(entity) } ?: false
+        val targetConditions = TargetingConditions.forNonCombat().ignoreLineOfSight().ignoreInvisibilityTesting().selector { entity ->
+            val isRootSource = rootCauseEntity?.let { entity.hasSameRootOwner(it) || it == entity } ?: false
             val onSameTeam = (entity is Enemy && mob is Enemy) || (entity !is Enemy && mob !is Enemy)
             val canHurt = (rootCauseEntity as? LivingEntity)?.canAttack(entity) ?: true
-            !entity.`is`(mob) && !entity.hurtMarked && !isRootSource && canHurt && onSameTeam
+            entity != mob && !entity.hurtMarked && !isRootSource && canHurt && onSameTeam
         }
         val nearbyTargets = level.getNearbyEntities(LivingEntity::class.java, targetConditions, mob, mob.boundingBox.inflate(ZAP_RANGE))
         nearbyTargets.randomOrNull()?.let {
@@ -64,14 +65,15 @@ class ElectrifyMobEffect(
         }
     }
 
-    override fun applyEffectTick(level: ServerLevel, mob: LivingEntity, amplification: Int): Boolean {
+    override fun applyEffectTick(mob: LivingEntity, amplification: Int): Boolean {
+        val level = mob.level() as? ServerLevel ?: return true
         if (mob.isInWater) zap(level, mob, 1.25f)
         return true
     }
 
     private fun zap(level: ServerLevel, target: LivingEntity, damage: Float = ZAP_DAMAGE, causeEntity: Entity? = null) {
         val source = target.damageSources().source(PazDamageTypes.ZAP,causeEntity,null)
-        target.hurtServer(level, source, damage)
+        target.hurt(source, damage)
         level.sendParticles(
             PazServerParticles.ELECTRIFIED,
             target.x, target.y + target.boundingBox.ysize*0.5, target.z, 10,
@@ -88,14 +90,14 @@ class ElectrifyMobEffect(
     }
 
     override fun onEffectAdded(effectInstance: MobEffectInstance, entity: LivingEntity) {
-        super.onEffectAdded(effectInstance, entity)
+        super<PazMobEffectHooks>.onEffectAdded(effectInstance, entity)
     }
 
     override fun onEffectStarted(effectInstance: MobEffectInstance, entity: LivingEntity) {
-        super.onEffectStarted(effectInstance, entity)
+        super<PazMobEffectHooks>.onEffectStarted(effectInstance, entity)
     }
 
     override fun onEffectRemoved(effectInstance: MobEffectInstance, entity: LivingEntity) {
-        super.onEffectRemoved(effectInstance, entity)
+        super<PazMobEffectHooks>.onEffectRemoved(effectInstance, entity)
     }
 }

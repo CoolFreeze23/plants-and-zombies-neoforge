@@ -18,7 +18,7 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.util.Mth
-import net.minecraft.util.random.WeightedList
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.damagesource.DamageType
@@ -91,12 +91,12 @@ abstract class ExplosivePlant(type: EntityType<out ExplosivePlant>, level: Level
             if (itemStack.`is`(Items.FLINT_AND_STEEL)) {
                 if (cooldown<0) {
                     if (isAsleep) {
-                        player.sendOverlayMessage(Component.translatable("message.plantz.sleeping", name.copy().withStyle(ChatFormatting.RED)).withStyle(ChatFormatting.DARK_RED))
+                        player.displayClientMessage(Component.translatable("message.plantz.sleeping", name.copy().withStyle(ChatFormatting.RED)).withStyle(ChatFormatting.DARK_RED), true)
                         return InteractionResult.FAIL
                     }
                     swellDir=2
                     playSound(SoundEvents.FLINTANDSTEEL_USE)
-                    return InteractionResult.SUCCESS_SERVER
+                    return InteractionResult.sidedSuccess(level.isClientSide)
                 }
             }
         }
@@ -134,7 +134,6 @@ abstract class ExplosivePlant(type: EntityType<out ExplosivePlant>, level: Level
             Level.ExplosionInteraction.MOB,
             ParticleTypes.SMOKE,
             ParticleTypes.EXPLOSION,
-            WeightedList.of(),
             sound
         )
         if (destroyBlocks) level.explode(
@@ -147,8 +146,7 @@ abstract class ExplosivePlant(type: EntityType<out ExplosivePlant>, level: Level
             Level.ExplosionInteraction.MOB,
             ParticleTypes.SMOKE,
             ParticleTypes.EXPLOSION,
-            WeightedList.of(),
-            SoundEvents.ITEM_BREAK
+            BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.ITEM_BREAK)
         )
         if (discardOnExplode()) discard()
     }

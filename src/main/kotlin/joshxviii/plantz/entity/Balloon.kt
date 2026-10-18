@@ -9,7 +9,7 @@ import joshxviii.plantz.entity.zombie.BrownCoatVariant
 import joshxviii.plantz.entity.zombie.ImpVariant
 import joshxviii.plantz.entity.zombie.PazZombie
 import joshxviii.plantz.item.BalloonItem
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup.level
+import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.SynchedEntityData
 import net.minecraft.server.level.ServerLevel
@@ -66,7 +66,13 @@ class Balloon(
 
     var clientTiltZ: Float = 0f
     var clientTiltX: Float = 0f
-    private val interpolation = InterpolationHandler(this)
+    // 26.1 InterpolationHandler -> 1.21.1 lerpTo/lerpSteps (like vanilla boats)
+    private var lerpSteps = 0
+    private var lerpX = 0.0
+    private var lerpY = 0.0
+    private var lerpZ = 0.0
+    private var lerpYRot = 0.0
+    private var lerpXRot = 0.0
 
     private var balloonLeashData: LeashData? = null
     var dyeColor: DyeColor
@@ -87,15 +93,27 @@ class Balloon(
 
     private fun checkPoppingHeight() {
         if (tickCount > 200) {
-            val floorHeight = y - level().getHeight(Heightmap.Types.WORLD_SURFACE, blockPosition()).toDouble()
+            val floorHeight = y - level().getHeight(Heightmap.Types.WORLD_SURFACE, blockPosition().x, blockPosition().z).toDouble()
             if (floorHeight > POPPING_HEIGHT) pop()
         }
     }
 
-    override fun getInterpolation(): InterpolationHandler = interpolation
+    override fun lerpTo(x: Double, y: Double, z: Double, yRot: Float, xRot: Float, steps: Int) {
+        lerpX = x
+        lerpY = y
+        lerpZ = z
+        lerpYRot = yRot.toDouble()
+        lerpXRot = xRot.toDouble()
+        lerpSteps = 3// 26.1 InterpolationHandler default
+    }
+    override fun lerpTargetX(): Double = if (lerpSteps > 0) lerpX else x
+    override fun lerpTargetY(): Double = if (lerpSteps > 0) lerpY else y
+    override fun lerpTargetZ(): Double = if (lerpSteps > 0) lerpZ else z
+    override fun lerpTargetXRot(): Float = if (lerpSteps > 0) lerpXRot.toFloat() else xRot
+    override fun lerpTargetYRot(): Float = if (lerpSteps > 0) lerpYRot.toFloat() else yRot
 
-    override fun load(input: ValueInput) {
-        super.load(input)
+    override fun load(tag: CompoundTag) {
+        super.load(tag)
         val holder = leashHolder
         if (holder is PazZombie && !holder.balloons.contains(this)) {
             holder.balloons.add(this)
@@ -141,9 +159,10 @@ class Balloon(
         }
 
         if (isRemoved) return
-        if (isInterpolating) {
-            getInterpolation().interpolate()
-        } else if (canSimulateMovement()) {
+        if (lerpSteps > 0) {
+            lerpPositionAndRotationStep(lerpSteps, lerpX, lerpY, lerpZ, lerpYRot, lerpXRot)
+            lerpSteps--
+        } else if (isControlledByLocalInstance) {
             move(MoverType.SELF, deltaMovement)
             applyGravity()
             deltaMovement = deltaMovement.scale(0.98)
@@ -157,7 +176,7 @@ class Balloon(
         val verticalStretch = y - holder.y - 2.0
         if (verticalStretch <= 0.0) return
 
-        val holderFloorHeight = (holder.y - level().getHeight(Heightmap.Types.WORLD_SURFACE, holder.blockPosition()).toDouble()).coerceAtLeast(0.0)
+        val holderFloorHeight = (holder.y - level().getHeight(Heightmap.Types.WORLD_SURFACE, holder.blockPosition().x, holder.blockPosition().z).toDouble()).coerceAtLeast(0.0)
         val maxLiftHeight = if (holder is PazZombie) 2.5 else 5.0
         val heightLimitForce = (holderFloorHeight / maxLiftHeight).coerceIn(0.0, 1.0)
 
@@ -173,12 +192,12 @@ class Balloon(
 
         if (appliedLift > 0.0) {
             holder.addDeltaMovement(Vec3(0.0, appliedLift, 0.0))
-            holder.needsSync = true
-            holder.checkFallDistanceAccumulation()
-            holder.checkFallDistanceAccumulation()
+            holder.hasImpulse = true
+            holder.checkSlowFallDistance()
+            holder.checkSlowFallDistance()
         } else if (holderFloorHeight >= maxLiftHeight && holder.deltaMovement.y > 0.02) {
             holder.deltaMovement = Vec3(holder.deltaMovement.x, holder.deltaMovement.y * 0.75, holder.deltaMovement.z)
-            holder.needsSync = true
+            holder.hasImpulse = true
         }
     }
 
@@ -187,7 +206,7 @@ class Balloon(
     }
 
     private fun pushCollidingEntities() {
-        val entities = level().getPushableEntities(this, boundingBox.inflate(0.25))
+        val entities = level().getEntities(this, boundingBox.inflate(0.25), EntitySelector.pushableBy(this))
         for (entity in entities) {
             push(entity)
         }
@@ -246,12 +265,12 @@ class Balloon(
         super.onLeashRemoved()
     }
 
-    override fun hurtServer(
-        level: ServerLevel,
+    override fun hurt(
         source: DamageSource,
         damage: Float
     ): Boolean {
-        return isRemoved || if (this.isInvulnerableToBase(source)) false
+        if (level().isClientSide) return false// 26.1 hurtServer only
+        return isRemoved || if (this.isInvulnerableTo(source)) false
         else {
             pop()
             true
@@ -263,14 +282,16 @@ class Balloon(
         super.lerpPositionAndRotationStep(stepsToTarget, targetX, targetY, targetZ, wrappedTargetYRot.toDouble(), targetXRot)
     }
 
-    override fun addAdditionalSaveData(output: ValueOutput) {
-        this.writeLeashData(output, balloonLeashData)
+    override fun addAdditionalSaveData(tag: CompoundTag) {
+        val output = ValueOutput.of(tag, registryAccess())
+        this.writeLeashData(tag, balloonLeashData)
         this.entityData.set(DYE_COLOR, dyeColor)
         output.store("plantz:Color", DyeColor.CODEC, dyeColor)
     }
 
-    override fun readAdditionalSaveData(input: ValueInput) {
-        this.readLeashData(input)
+    override fun readAdditionalSaveData(tag: CompoundTag) {
+        val input = ValueInput.of(tag, registryAccess())
+        balloonLeashData = this.readLeashData(tag)
         this.dyeColor = this.entityData.get(DYE_COLOR)
         input.read("plantz:Color", DyeColor.CODEC).ifPresent { dyeColor -> this.dyeColor = dyeColor }
     }

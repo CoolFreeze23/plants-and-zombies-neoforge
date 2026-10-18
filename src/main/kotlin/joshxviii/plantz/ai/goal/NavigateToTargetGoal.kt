@@ -64,7 +64,7 @@ class NavigateToTargetGoal(
             }
             return false
         }
-        if (!mob.isWithinHome(target.blockPosition())) return false
+        if (!mob.isWithinRestriction(target.blockPosition())) return false
         return when (target) {
             is Player -> !target.isSpectator && !target.isCreative
             else -> true

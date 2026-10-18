@@ -23,7 +23,7 @@ class PeaShooter(type: EntityType<out Plant>, level: Level) : Plant(type, level)
             projectileFactory = { Pea(level(), this)},
             cooldownTime = 19,
             actionDelay = 3))
-        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target, level ->
+        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target ->
             target !is Plant
                     && target !is Creeper
                     && (target is Zombie
@@ -31,8 +31,8 @@ class PeaShooter(type: EntityType<out Plant>, level: Level) : Plant(type, level)
         })
     }
 
-    override fun actuallyHurt(level: ServerLevel, source: DamageSource, damage: Float) {
-        super.actuallyHurt(level, source, damage)
+    override fun actuallyHurt(source: DamageSource, damage: Float) {
+        super.actuallyHurt(source, damage)
         if (source.`is`(DamageTypes.LIGHTNING_BOLT)) {
             convertToPlantType(PazEntities.ELECTRIC_PEA_SHOOTER)
         }

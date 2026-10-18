@@ -14,7 +14,6 @@ import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.resources.ResourceKey
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.sounds.SoundEvent
-import net.minecraft.util.random.WeightedList
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.damagesource.DamageType
 import net.minecraft.world.entity.Entity
@@ -34,7 +33,7 @@ class ExplodeONut(type: EntityType<out Plant>, level: Level) : WallNut(type, lev
         if (isRolling && entity !is Plant) explode()
     }
 
-    override fun causeFallDamage(fallDistance: Double, damageModifier: Float, damageSource: DamageSource): Boolean {
+    override fun causeFallDamage(fallDistance: Float, damageModifier: Float, damageSource: DamageSource): Boolean {
         val result = super.causeFallDamage(fallDistance, damageModifier, damageSource)
         if (isRolling && fallDistance > 12.0) explode()
         return result
@@ -58,7 +57,6 @@ class ExplodeONut(type: EntityType<out Plant>, level: Level) : WallNut(type, lev
             Level.ExplosionInteraction.MOB,
             ParticleTypes.SMOKE,
             ParticleTypes.EXPLOSION,
-            WeightedList.of(),
             sound
         )
 

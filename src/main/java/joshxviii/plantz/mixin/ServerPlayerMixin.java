@@ -2,66 +2,39 @@ package joshxviii.plantz.mixin;
 
 import joshxviii.plantz.PlantHeadAttachment;
 import joshxviii.plantz.entity.plant.Plant;
-import net.minecraft.core.UUIDUtil;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.MobSpawnType;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.block.Portal;
-import net.minecraft.world.level.portal.TeleportTransition;
-import joshxviii.plantz.compat.ValueInput;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.portal.DimensionTransition;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import java.util.Optional;
-import java.util.UUID;
 
 /**
  * @author Josh
+ * <p>
+ * Port note: the 26.1 {@code loadAndSpawnParentVehicle} hook (respawning the attached plant when the player joins)
+ * moved to {@link PlayerListMixin} (1.21.1 loads vehicles in {@code PlayerList.placeNewPlayer}).
+ * 26.1 {@code ServerPlayer.teleport(TeleportTransition)} is 1.21.1 {@code ServerPlayer.changeDimension(DimensionTransition)},
+ * which also handles same-dimension teleports.
  */
 @Mixin(ServerPlayer.class)
 public abstract class ServerPlayerMixin {
 
-    @Shadow
-    public abstract ServerLevel level();
-
-    @Inject(method = "loadAndSpawnParentVehicle", at = @At(value = "HEAD"))
-    public void respawnAttachedPlant(ValueInput playerInput, CallbackInfo ci) {
-        if ( !((PlantHeadAttachment) this).plantz$getPlantData().isEmpty() ) {
-            Optional<ValueInput> rootTag = playerInput.child("plantz:AttachedPlant");
-            if (rootTag.isPresent()) {
-                ServerLevel serverLevel = this.level();
-                Entity entity = EntityType.loadEntityRecursive(
-                        rootTag.get(), serverLevel, MobSpawnType.LOAD, e -> !serverLevel.addWithUUID(e) ? null : e
-                );
-                if (entity instanceof Plant plantAttachment) {
-                    plantAttachment.attachToEntity((ServerPlayer) (Object) this);
-                }
-            }
-        }
-    }
-
     //TODO probably should move to a EntityMixin instead
-    @Inject(method = "teleport(Lnet/minecraft/world/level/portal/TeleportTransition;)Lnet/minecraft/server/level/ServerPlayer;", at = @At(value = "RETURN"))
-    public void teleportAttachedPlant(TeleportTransition transition, CallbackInfoReturnable<ServerPlayer> cir) {
-        ServerPlayer targetPlayer = cir.getReturnValue() != null ? cir.getReturnValue() : (ServerPlayer) (Object) this;
+    @Inject(method = "changeDimension(Lnet/minecraft/world/level/portal/DimensionTransition;)Lnet/minecraft/world/entity/Entity;", at = @At(value = "RETURN"))
+    public void teleportAttachedPlant(DimensionTransition transition, CallbackInfoReturnable<Entity> cir) {
+        ServerPlayer targetPlayer = cir.getReturnValue() instanceof ServerPlayer returned ? returned : (ServerPlayer) (Object) this;
         if ( ((PlantHeadAttachment) this).plantz$getPlant() instanceof Plant plantAttachment ) {
                 plantAttachment.detachFromEntity();
-                plantAttachment.teleport(
-                    new TeleportTransition(
+                plantAttachment.changeDimension(
+                    new DimensionTransition(
                             transition.newLevel(),
-                            transition.position(),
-                            transition.deltaMovement(),
+                            transition.pos(),
+                            transition.speed(),
                             transition.yRot(),
                             transition.xRot(),
-                            TeleportTransition.DO_NOTHING.then( entity -> {
+                            DimensionTransition.DO_NOTHING.then( entity -> {
                                 if (entity instanceof Plant plantEntity) {
                                     plantEntity.setYRot(plantAttachment.yRotO);
                                     plantEntity.setXRot(plantAttachment.xRotO);

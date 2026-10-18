@@ -44,7 +44,7 @@ class SeaShroom(type: EntityType<out Plant>, level: Level) : Plant(type, level) 
             usingEntity = this,
             projectileFactory = { WaterSpore(level(), this) },
             cooldownTime = 20))
-        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target, level ->
+        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target ->
             target !is Plant
                     && target !is Creeper
                     && (target is Zombie
@@ -52,7 +52,7 @@ class SeaShroom(type: EntityType<out Plant>, level: Level) : Plant(type, level) 
         })
     }
 
-    override fun canBreatheUnderwater(): Boolean = true
+    override fun plantCanBreatheUnderwater(): Boolean = true
 
     override fun canSurviveOn(block: BlockState): Boolean {
         return block.`is`(PazTags.BlockTags.FARMABLE) || level().getBlockState(blockPosition()).fluidState.`is`(FluidTags.WATER)
