@@ -3,17 +3,18 @@ package joshxviii.plantz.particles
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.particle.Particle
 import net.minecraft.client.particle.ParticleProvider
-import net.minecraft.client.particle.SingleQuadParticle
+import net.minecraft.client.particle.ParticleRenderType
+import net.minecraft.client.particle.TextureSheetParticle
 import net.minecraft.client.particle.SpriteSet
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
 import net.minecraft.core.particles.SimpleParticleType
 import net.minecraft.util.Mth
-import net.minecraft.util.RandomSource
 import kotlin.math.max
 
 class PeaParticle private constructor(
     level: ClientLevel, x: Double, y: Double, z: Double, xa: Double, ya: Double, za: Double, sprite: TextureAtlasSprite
-) : SingleQuadParticle(level, x, y, z, 0.0, 0.0, 0.0, sprite) {
+) : TextureSheetParticle(level, x, y, z, 0.0, 0.0, 0.0) {
+    init { setSprite(sprite) }
     init {
         friction = 0.7f
         gravity = 0.5f
@@ -39,7 +40,7 @@ class PeaParticle private constructor(
         return quadSize * Mth.clamp((age + a) / lifetime * 32.0f, 0.0f, 1.0f)
     }
 
-    public override fun getLayer(): Layer = Layer.OPAQUE
+    override fun getRenderType(): ParticleRenderType = ParticleRenderType.PARTICLE_SHEET_OPAQUE
 
     class Provider(private val sprite: SpriteSet) : ParticleProvider<SimpleParticleType> {
         override fun createParticle(
@@ -50,10 +51,9 @@ class PeaParticle private constructor(
             z: Double,
             xAux: Double,
             yAux: Double,
-            zAux: Double,
-            random: RandomSource
+            zAux: Double
         ): Particle {
-            return PeaParticle(level, x, y, z, xAux, yAux, zAux, sprite.get(random))
+            return PeaParticle(level, x, y, z, xAux, yAux, zAux, sprite.get(level.random))
         }
     }
 }

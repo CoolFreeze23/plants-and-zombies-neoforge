@@ -18,10 +18,8 @@ import net.minecraft.client.Minecraft
 import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance
 import net.minecraft.client.resources.sounds.SoundInstance
 import net.minecraft.client.resources.sounds.SoundInstance.Attenuation
-import net.minecraft.client.sounds.MusicManager
-import net.minecraft.client.sounds.SoundEngine
-import net.minecraft.client.sounds.WeighedSoundEvents
 import net.minecraft.core.Holder
+import net.minecraft.network.chat.Component
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundSource
 import net.minecraft.util.RandomSource
@@ -71,12 +69,13 @@ object RaidMusicManager {
 
         // start silent music track for music toast
         minecraft.musicManager.stopPlaying()
-        minecraft.musicManager.setMinutesBetweenSongs(MusicManager.MusicFrequency.DEFAULT)
+        // (26.1 also reset MusicManager.setMinutesBetweenSongs here; 1.21.1 has no music frequency option)
         //minecraft.soundManager.reload()
 
         // transition between song layers
         if (shouldUpdateMusic()) {
             targetMusicLayer = getMusicFromRaidContext(event)
+            showNowPlaying()
             val slowFadeIn = activeLayers.values.count { it.volume >= 0.0f } <= 1
             val fadeInDuration = if (slowFadeIn) FADE_IN_TIME.coerceAtLeast(1) else TRANSITION_TIME.coerceAtLeast(1)
             val fadeInStep = 1f / fadeInDuration
@@ -95,15 +94,13 @@ object RaidMusicManager {
         // to avoid resetting the music, only start if there are no active layers already
         if (activeLayers.isNotEmpty()) return
         stop()
+        // 26.1 showed the NowPlayingToast when a layer STARTED; 1.21.1 shows the action-bar "Now playing" (see showNowPlaying)
+        nowPlayingPending = minecraft.options.getSoundSourceVolume(SoundSource.MUSIC) > 0f
         RaidMusicLayer.entries.forEach {
             val layer = RaidMusicSoundInstance(it.music.value())
             layer.volume = 0.0f
             activeLayers[it] = layer
-            when (minecraft.soundManager.play(layer)) {
-                SoundEngine.PlayResult.STARTED -> minecraft.toastManager.showNowPlayingToast()
-                SoundEngine.PlayResult.STARTED_SILENTLY -> {}
-                SoundEngine.PlayResult.NOT_STARTED -> {}
-            }
+            minecraft.soundManager.play(layer)
         }
     }
 
@@ -111,9 +108,24 @@ object RaidMusicManager {
         activeLayers.forEach { (_, layer) ->
             layer.stopLayer()
         }
-        minecraft.toastManager.hideNowPlayingToast()
+        nowPlayingPending = false
+        shownSongName = null
         activeLayers.clear()
         targetMusicLayer = null
+    }
+
+    private var nowPlayingPending = false
+    private var shownSongName: String? = null
+
+    /** 1.21.1 stand-in for 26.1 NowPlayingToast + NowPlayingToastMixin (which named the current raid layer). */
+    private fun showNowPlaying() {
+        val layer = targetMusicLayer ?: return
+        val name = Component.translatable("music.plantz.raid." + layer.musicName)
+        if (nowPlayingPending || (shownSongName != null && shownSongName != name.string)) {
+            minecraft.gui.setNowPlaying(name)
+            shownSongName = name.string
+            nowPlayingPending = false
+        }
     }
 
     fun isPlaying(): Boolean = targetMusicLayer != null
@@ -171,6 +183,9 @@ class RaidMusicSoundInstance(
     }
 
     fun stopLayer() = this.stop()
+
+    // 26.1 lets MUSIC sounds start at volume 0; 1.21.1 skips silent sounds unless they opt in
+    override fun canStartSilent(): Boolean = true
 
     override fun tick() {}
 }

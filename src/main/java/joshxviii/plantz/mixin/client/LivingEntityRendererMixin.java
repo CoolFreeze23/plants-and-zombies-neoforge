@@ -29,20 +29,25 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static joshxviii.plantz.PazModels.*;
 
+/**
+ * Port: upstream targeted vanilla 26.1 LivingEntityRenderer. On 1.21.1 the mod's own living renderers run on the
+ * compat 26.1-style renderer (joshxviii.plantz.compat.client.renderer.LivingEntityRenderer), so this targets that class;
+ * vanilla 1.21.1 renderers (players, vanilla mobs) get the tint from LivingEntityRendererVanillaMixin.
+ */
 @Mixin(LivingEntityRenderer.class)
 public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extends LivingEntityRenderState, M extends EntityModel<? super S>> implements RenderLayerParent<S, M> {
 
     @Shadow
     protected abstract boolean addLayer(RenderLayer<S, M> layer);
 
-    @Inject(method = "<init>", at = @At("TAIL"))
+    @Inject(method = "<init>(Lnet/minecraft/client/renderer/entity/EntityRendererProvider$Context;Ljoshxviii/plantz/compat/client/model/EntityModel;F)V", at = @At("TAIL"))
     private void plantz$addDuckyTubeLayer(EntityRendererProvider.Context context, M model, float shadow, CallbackInfo ci) {
         this.addLayer(new DuckyTubeRenderLayer<>(this));
         this.addLayer(new DyeVatRenderLayer<>(this));
         this.addLayer(new SpecialEffectsLayer<>(this));
     }
 
-    @Inject(method = "extractRenderState*", at = @At("TAIL"))
+    @Inject(method = "extractRenderState(Lnet/minecraft/world/entity/LivingEntity;Ljoshxviii/plantz/compat/client/state/LivingEntityRenderState;F)V", at = @At("TAIL"))
     private void checkForHypnoEffect(T entity, S state, float partialTicks, CallbackInfo ci) {
         boolean hasHypno = ((LivingEntityAccessor) entity).plantz$getHypnoId();
         state.setData(HAS_HYPNO_KEY, hasHypno);
@@ -89,8 +94,8 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extend
     private static final int PLANTZ_BUTTER_TINT = ARGB.opaque(0xdbdc8c);
 
     @ModifyExpressionValue(
-        method = "submit*",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/util/ARGB;multiply(II)I")
+        method = "submit(Ljoshxviii/plantz/compat/client/state/LivingEntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Ljoshxviii/plantz/compat/client/renderer/SubmitNodeCollector;Ljoshxviii/plantz/compat/client/CameraRenderState;)V",
+        at = @At(value = "INVOKE", target = "Ljoshxviii/plantz/compat/ARGB;multiply(II)I")
     )
     private int plantz$applyHypnoTint(int tintedColor, S state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
         AtomicInteger finalColor = new AtomicInteger(tintedColor);

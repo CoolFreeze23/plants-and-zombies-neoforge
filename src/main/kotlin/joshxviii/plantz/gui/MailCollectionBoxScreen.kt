@@ -1,30 +1,33 @@
 package joshxviii.plantz.gui
 
-import com.mojang.blaze3d.platform.cursor.CursorTypes
 import joshxviii.plantz.inventory.MailCollectionBoxMenu
 import joshxviii.plantz.networking.UpdateCollectionBoxPayload
 import joshxviii.plantz.pazResource
-import joshxviii.plantz.renderer.outlineText
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.ChatFormatting
-import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.components.Button
 import net.minecraft.client.gui.components.EditBox
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.client.input.KeyEvent
-import net.minecraft.client.input.MouseButtonEvent
-import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
 import joshxviii.plantz.compat.ARGB
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.player.Inventory
+import net.neoforged.neoforge.network.PacketDistributor
+import org.lwjgl.glfw.GLFW
 
 class MailCollectionBoxScreen(
     val menu: MailCollectionBoxMenu,
     val inventory: Inventory,
     title: Component,
-) : AbstractContainerScreen<MailCollectionBoxMenu>(menu, inventory, title, 176, 180) {
+) : AbstractContainerScreen<MailCollectionBoxMenu>(menu, inventory, title) {
+    init {
+        imageWidth = 176
+        imageHeight = 180
+        inventoryLabelY = imageHeight - 94
+    }
+
     private lateinit var addressSearch: EditBox
     private val miniButtons = mutableListOf<MiniAddressButton>()
     private var scrollOffs = 0f
@@ -53,7 +56,6 @@ class MailCollectionBoxScreen(
         txt.setTextColor(-1)
         txt.setTextColorUneditable(-1)
         txt.setTextShadow(false)
-        txt.setInvertHighlightedTextColor(false)
         txt.setBordered(false)
         txt.setMaxLength(40)
         txt.setResponder(this::onSearchUpdated)
@@ -105,25 +107,24 @@ class MailCollectionBoxScreen(
         }
     }
 
-    override fun extractRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, a: Float) {
-        super.extractRenderState(graphics, mouseX, mouseY, a)
+    override fun render(graphics: GuiGraphics, mouseX: Int, mouseY: Int, a: Float) {
+        super.render(graphics, mouseX, mouseY, a)
+        renderTooltip(graphics, mouseX, mouseY)
         val xo = leftPos
         val yo = topPos
     }
 
-    override fun extractBackground(graphics: GuiGraphicsExtractor, xm: Int, ym: Int, a: Float) {
+    override fun renderBg(graphics: GuiGraphics, a: Float, xm: Int, ym: Int) {
         val xo = leftPos
         val yo = topPos
-        graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND, xo, yo, 0f, 0f, imageWidth, imageHeight, 256, 256, -1)
+        graphics.pazBlit(BACKGROUND, xo, yo, 0f, 0f, imageWidth, imageHeight, 256, 256, -1)
 
         val sy = (52.0f * scrollOffs).toInt()
         val sprite = if (isScrollBarActive()) SCROLLER else SCROLLER_DISABLED
         val scrollerX = xo+152
         val scrollerY = yo+17 + sy
-        graphics.blit(RenderPipelines.GUI_TEXTURED, sprite, scrollerX, scrollerY, 0f, 0f, 12, 15, 12, 15)
-        if (xm >= scrollerX && xm < scrollerX + 12 && ym >= scrollerY && ym < scrollerY + 15) {
-            graphics.requestCursor(if (scrolling) CursorTypes.RESIZE_NS else CursorTypes.POINTING_HAND)
-        }
+        graphics.pazBlit(sprite, scrollerX, scrollerY, 0f, 0f, 12, 15, 12, 15)
+        // 26.1 requestCursor (pointer/resize cursor over the scroller) has no 1.21.1 equivalent
 
         menu.availableMailboxes.find { it.blockPos == menu.selectedMailboxPos }?.let { mailbox ->
             val color = ARGB.addRgb(mailbox.color, 0x333333)
@@ -131,14 +132,14 @@ class MailCollectionBoxScreen(
             val posText = mailbox.blockPos.let { Component.translatable("container.plantz.mailbox_coords", it.x, it.y, it.z) }.withColor(darker)
             val text = Component.translatable("chat.square_brackets", posText).withColor(darker)
             val line = font.split(text, 101).firstOrNull()
-            graphics.blit(RenderPipelines.GUI_TEXTURED, MAILBOX_SELECTED, xo+24, yo+70, 0f, 0f, 101, 14, 101, 14, color)
-            if (line!=null) graphics.text(font, line, xo+75 - font.width(line)/2, yo+73, -1, false)
+            graphics.pazBlit(MAILBOX_SELECTED, xo+24, yo+70, 0f, 0f, 101, 14, 101, 14, color)
+            if (line!=null) graphics.drawString(font, line, xo+75 - font.width(line)/2, yo+73, -1, false)
         }
 
         if (miniButtons.isEmpty() && menu.selectedMailboxPos == null) {
             val text = Component.translatable("container.plantz.no_address").withColor(0x777777)
             val line = font.split(text, 101).firstOrNull()
-            if (line!=null) graphics.text(font, line, xo+75 - font.width(line)/2, yo+73, -1, false)
+            if (line!=null) graphics.drawString(font, line, xo+75 - font.width(line)/2, yo+73, -1, false)
         }
     }
 
@@ -146,27 +147,27 @@ class MailCollectionBoxScreen(
         super.containerTick()
     }
 
-    override fun mouseClicked(event: MouseButtonEvent, doubleClick: Boolean): Boolean {
+    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
         val xo = leftPos + 152
         val yo = topPos + 18
-        if (event.x() >= xo && event.x() < xo + 12 && event.y() >= yo && event.y() < yo + 64) scrolling = true
-        return super.mouseClicked(event, doubleClick)
+        if (mouseX >= xo && mouseX < xo + 12 && mouseY >= yo && mouseY < yo + 64) scrolling = true
+        return super.mouseClicked(mouseX, mouseY, button)
     }
 
-    override fun mouseDragged(event: MouseButtonEvent, dx: Double, dy: Double): Boolean {
+    override fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, dx: Double, dy: Double): Boolean {
         if (scrolling && isScrollBarActive()) {
             val yscr = topPos + 19
             val yscr2 = yscr + 64
-            scrollOffs = (event.y().toFloat() - yscr - 7.5f) / (yscr2 - yscr - 15.0f)
+            scrollOffs = (mouseY.toFloat() - yscr - 7.5f) / (yscr2 - yscr - 15.0f)
             scrollOffs = Mth.clamp(scrollOffs, 0.0f, 1.0f)
             startIndex = (scrollOffs * getOffscreenRows() + 0.5).toInt()
             return true
-        } else return super.mouseDragged(event, dx, dy)
+        } else return super.mouseDragged(mouseX, mouseY, button, dx, dy)
     }
 
-    override fun mouseReleased(event: MouseButtonEvent): Boolean {
+    override fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
         scrolling = false
-        return super.mouseReleased(event)
+        return super.mouseReleased(mouseX, mouseY, button)
     }
     
     override fun mouseScrolled(x: Double, y: Double, scrollX: Double, scrollY: Double): Boolean {
@@ -191,7 +192,7 @@ class MailCollectionBoxScreen(
 
     fun onSelectedMailbox() {
         addressSearch.value = ""
-        ClientPlayNetworking.send(UpdateCollectionBoxPayload(menu.data.blockPos, menu.selectedMailboxPos))
+        PacketDistributor.sendToServer(UpdateCollectionBoxPayload(menu.data.blockPos, menu.selectedMailboxPos))
         scrollToIndex()
     }
 
@@ -208,16 +209,16 @@ class MailCollectionBoxScreen(
         scrollOffs = if (offscreen > 0) startIndex.toFloat() / offscreen else 0f
     }
 
-    override fun keyPressed(event: KeyEvent): Boolean {
-        if (event.isEscape) {
-            this.minecraft.player!!.closeContainer()
+    override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            Minecraft.getInstance().player!!.closeContainer()
             return true
-        } else return if (!addressSearch.keyPressed(event) && !addressSearch.canConsumeInput()) super.keyPressed(event) else true
+        } else return if (!addressSearch.keyPressed(keyCode, scanCode, modifiers) && !addressSearch.canConsumeInput()) super.keyPressed(keyCode, scanCode, modifiers) else true
     }
 
-    override fun resize(width: Int, height: Int) {
+    override fun resize(minecraft: Minecraft, width: Int, height: Int) {
         val oldEditAddress: String = addressSearch.value
-        this.init(width, height)
+        this.init(minecraft, width, height)
         addressSearch.setValue(oldEditAddress)
     }
 

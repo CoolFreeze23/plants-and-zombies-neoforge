@@ -4,12 +4,12 @@ import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.particle.ExplodeParticle
 import net.minecraft.client.particle.Particle
 import net.minecraft.client.particle.ParticleProvider
+import net.minecraft.client.particle.ParticleRenderType
 import net.minecraft.client.particle.SpriteSet
-import net.minecraft.client.renderer.state.level.QuadParticleRenderState
+import com.mojang.blaze3d.vertex.VertexConsumer
 import net.minecraft.core.particles.SimpleParticleType
 import joshxviii.plantz.compat.ARGB
 import net.minecraft.util.Mth
-import net.minecraft.util.RandomSource
 import org.joml.Quaternionf
 import kotlin.math.pow
 
@@ -50,21 +50,19 @@ class ConfettiParticle(
 
     fun setSpriteFromCycle() {
         val progress = age.toDouble() / lifetime.toDouble()
-        val cycle = Mth.cos(frequency * progress * Mth.TWO_PI + phaseOffset) * lifetime*.5 + lifetime*.5
+        val cycle = Mth.cos((frequency * progress * Mth.TWO_PI + phaseOffset).toFloat()) * lifetime*.5 + lifetime*.5
         val frame = Mth.floor(cycle).coerceIn(0, lifetime-1)
         setSprite(sprites.get(frame, lifetime))
     }
 
-    override fun getLayer(): Layer {
-        return Layer.TRANSLUCENT
-    }
+    override fun getRenderType(): ParticleRenderType = ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT
 
     override fun getQuadSize(a: Float): Float {
         return 0.15f
     }
 
-    override fun extractRotatedQuad(particleTypeRenderState: QuadParticleRenderState, rotation: Quaternionf, x: Float, y: Float, z: Float, partialTickTime: Float) {
-        super.extractRotatedQuad(particleTypeRenderState, rotation, x, y+.05f, z, partialTickTime)
+    override fun renderRotatedQuad(buffer: VertexConsumer, rotation: Quaternionf, x: Float, y: Float, z: Float, partialTickTime: Float) {
+        super.renderRotatedQuad(buffer, rotation, x, y+.05f, z, partialTickTime)
     }
 
     class Provider(private val sprites: SpriteSet) : ParticleProvider<SimpleParticleType> {
@@ -76,8 +74,7 @@ class ConfettiParticle(
             z: Double,
             xAux: Double,
             yAux: Double,
-            zAux: Double,
-            random: RandomSource
+            zAux: Double
         ): Particle {
             val color = ARGB.vector3fFromRGB24(getColor())
             val particle = ConfettiParticle(level, x, y, z, xAux, yAux, zAux, sprites)

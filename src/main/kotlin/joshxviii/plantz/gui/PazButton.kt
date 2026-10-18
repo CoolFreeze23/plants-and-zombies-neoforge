@@ -1,10 +1,8 @@
 package joshxviii.plantz.gui
 
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.components.Button
-import net.minecraft.client.input.MouseButtonEvent
-import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
 
@@ -23,8 +21,8 @@ open class PazButton(
     val color: Int = -1
 ) : Button(buttonX, buttonY, buttonWidth, buttonHeight, text, clickAction, DEFAULT_NARRATION) {
 
-    override fun extractContents(
-        graphics: GuiGraphicsExtractor,
+    override fun renderWidget(
+        graphics: GuiGraphics,
         mx: Int,
         my: Int,
         a: Float
@@ -32,22 +30,21 @@ open class PazButton(
         val pressed = isPressed()
         val font = Minecraft.getInstance().font
 
-        graphics.blit(
-            RenderPipelines.GUI_TEXTURED,
+        graphics.pazBlit(
             if (pressed) disabledTexture else if (isButtonHovered(mx, my)) hoverTexture else texture,
             buttonX, buttonY, 0.0f, 0.0f, buttonWidth, buttonHeight, buttonWidth, buttonHeight, color
         )
 
         val line = font.split(text, buttonWidth-8).firstOrNull()
-        if (line!=null) graphics.text(font, line, buttonX + if(pressed) 3 else 2, buttonY+3, -1, false)
+        if (line!=null) graphics.drawString(font, line, buttonX + if(pressed) 3 else 2, buttonY+3, -1, false)
     }
 
     fun isPressed(): Boolean {
         return !enabledRequirement.invoke(this)
     }
 
-    override fun mouseClicked(event: MouseButtonEvent, doubleClick: Boolean): Boolean {
-        if (clickRequirement.invoke(this)) super.mouseClicked(event, doubleClick)
+    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        if (clickRequirement.invoke(this)) super.mouseClicked(mouseX, mouseY, button)
         return false
     }
 

@@ -3,16 +3,17 @@ package joshxviii.plantz.particles
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.particle.Particle
 import net.minecraft.client.particle.ParticleProvider
+import net.minecraft.client.particle.ParticleRenderType
 import net.minecraft.client.particle.RisingParticle
 import net.minecraft.client.particle.SpriteSet
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
 import net.minecraft.core.particles.SimpleParticleType
-import net.minecraft.util.RandomSource
 import kotlin.math.pow
 
 class SleepParticle private constructor(
     level: ClientLevel, x: Double, y: Double, z: Double, xd: Double, yd: Double, zd: Double, sprite: TextureAtlasSprite
-) : RisingParticle(level, x, y, z, xd, yd, zd, sprite) {
+) : RisingParticle(level, x, y, z, xd, yd, zd) {
+    init { setSprite(sprite) }
 
     init {
         lifetime = 32
@@ -29,9 +30,7 @@ class SleepParticle private constructor(
         }
     }
 
-    public override fun getLayer(): Layer {
-        return Layer.OPAQUE
-    }
+    override fun getRenderType(): ParticleRenderType = ParticleRenderType.PARTICLE_SHEET_OPAQUE
 
     override fun move(xa: Double, ya: Double, za: Double) {
         this.boundingBox = this.boundingBox.move(xa, ya, za)
@@ -56,10 +55,9 @@ class SleepParticle private constructor(
             z: Double,
             xAux: Double,
             yAux: Double,
-            zAux: Double,
-            random: RandomSource
+            zAux: Double
         ): Particle {
-            return SleepParticle(level, x, y, z, xAux, yAux, zAux, sprites.get(random))
+            return SleepParticle(level, x, y, z, xAux, yAux, zAux, sprites.get(level.random))
         }
     }
 }

@@ -3,10 +3,10 @@ package joshxviii.plantz.particles
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.particle.Particle
 import net.minecraft.client.particle.ParticleProvider
-import net.minecraft.client.particle.SingleQuadParticle
+import net.minecraft.client.particle.ParticleRenderType
+import net.minecraft.client.particle.TextureSheetParticle
 import net.minecraft.client.particle.SpriteSet
 import net.minecraft.core.particles.SimpleParticleType
-import net.minecraft.util.RandomSource
 import kotlin.math.pow
 
 class FumeBubbleParticle private constructor(
@@ -18,7 +18,8 @@ class FumeBubbleParticle private constructor(
     ya: Double,
     za: Double,
     private val sprites: SpriteSet
-) : SingleQuadParticle(level, x, y, z, sprites.first()) {
+) : TextureSheetParticle(level, x, y, z) {
+    init { setSprite(sprites.first()) }
     init {
         lifetime = 8
         gravity = 0.008f
@@ -41,9 +42,7 @@ class FumeBubbleParticle private constructor(
         }
     }
 
-    public override fun getLayer(): Layer {
-        return Layer.OPAQUE
-    }
+    override fun getRenderType(): ParticleRenderType = ParticleRenderType.PARTICLE_SHEET_OPAQUE
 
     private fun updateEasedSprite() {
         if (removed) return
@@ -64,8 +63,7 @@ class FumeBubbleParticle private constructor(
             z: Double,
             xAux: Double,
             yAux: Double,
-            zAux: Double,
-            random: RandomSource
+            zAux: Double
         ): Particle {
             return FumeBubbleParticle(level, x, y, z, xAux, yAux, zAux, sprites)
         }

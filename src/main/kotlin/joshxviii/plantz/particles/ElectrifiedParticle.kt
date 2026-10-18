@@ -4,13 +4,13 @@ import net.minecraft.client.Camera
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.particle.Particle
 import net.minecraft.client.particle.ParticleProvider
-import net.minecraft.client.particle.SingleQuadParticle
+import net.minecraft.client.particle.ParticleRenderType
+import net.minecraft.client.particle.TextureSheetParticle
 import net.minecraft.client.particle.SpriteSet
-import net.minecraft.client.renderer.state.level.QuadParticleRenderState
+import com.mojang.blaze3d.vertex.VertexConsumer
 import net.minecraft.core.particles.SimpleParticleType
 import joshxviii.plantz.compat.LightCoordsUtil
 import net.minecraft.util.Mth
-import net.minecraft.util.RandomSource
 import org.joml.Quaternionf
 
 
@@ -20,7 +20,8 @@ class ElectrifiedParticle private constructor(
     y: Double,
     z: Double,
     private val sprites: SpriteSet
-) : SingleQuadParticle(world, x, y, z, sprites.first()) {
+) : TextureSheetParticle(world, x, y, z) {
+    init { setSprite(sprites.first()) }
     init {
         this.lifetime = 6 + this.random.nextInt(3)
         this.setParticleSpeed(0.0, 0.0, 0.0)
@@ -28,29 +29,27 @@ class ElectrifiedParticle private constructor(
         oRoll = random.nextFloat() * Mth.TWO_PI
     }
 
-    override fun extract(particleTypeRenderState: QuadParticleRenderState, camera: Camera, partialTickTime: Float) {
+    override fun render(buffer: VertexConsumer, camera: Camera, partialTickTime: Float) {
         val quaternion = Quaternionf()
         facingCameraMode.setRotation(quaternion, camera, partialTickTime)
         quaternion.rotateZ(oRoll)
-        this.extractRotatedQuad(particleTypeRenderState, camera, quaternion, partialTickTime)
+        this.renderRotatedQuad(buffer, camera, quaternion, partialTickTime)
     }
 
     override fun tick() {
         if (this.age++ >= this.lifetime) {
             this.remove()
         } else {
-            sprite = sprites.get(random)
+            setSprite(sprites.get(random))
         }
     }
 
 
 
-    override fun getLayer(): Layer {
-        return Layer.TRANSLUCENT
-    }
+    override fun getRenderType(): ParticleRenderType = ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT
 
-    override fun getLightCoords(a: Float): Int {
-        return LightCoordsUtil.addSmoothBlockEmission(super.getLightCoords(a), 1.0f)
+    override fun getLightColor(a: Float): Int {
+        return LightCoordsUtil.addSmoothBlockEmission(super.getLightColor(a), 1.0f)
     }
 
     class Provider(val sprites: SpriteSet) : ParticleProvider<SimpleParticleType> {
@@ -62,8 +61,7 @@ class ElectrifiedParticle private constructor(
             z: Double,
             velocityX: Double,
             velocityY: Double,
-            velocityZ: Double,
-            random: RandomSource
+            velocityZ: Double
         ): Particle {
             return ElectrifiedParticle(world, x, y, z, sprites)
         }

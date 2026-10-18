@@ -6,7 +6,6 @@ import net.minecraft.client.particle.ExplodeParticle
 import net.minecraft.client.particle.Particle
 import net.minecraft.client.particle.ParticleProvider
 import net.minecraft.client.particle.SpriteSet
-import net.minecraft.util.RandomSource
 
 class PaintBallParticle private constructor(
     level: ClientLevel, x: Double, y: Double, z: Double, xa: Double, ya: Double, za: Double, sprites: SpriteSet
@@ -26,8 +25,7 @@ class PaintBallParticle private constructor(
             z: Double,
             xAux: Double,
             yAux: Double,
-            zAux: Double,
-            random: RandomSource
+            zAux: Double
         ): Particle {
             val color = options.getColor()
             val particle = PaintBallParticle(level, x, y, z, xAux, yAux, zAux, sprites)

@@ -4,16 +4,17 @@ import joshxviii.plantz.NukeBlastParticleOptions
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.particle.Particle
 import net.minecraft.client.particle.ParticleProvider
-import net.minecraft.client.particle.SingleQuadParticle
+import net.minecraft.client.particle.ParticleRenderType
+import net.minecraft.client.particle.TextureSheetParticle
 import net.minecraft.client.particle.SpriteSet
-import net.minecraft.util.RandomSource
 import kotlin.math.floor
 
 class NukeBlastParticle(
     level: ClientLevel, x: Double, y: Double, z: Double, xa: Double, ya: Double, za: Double,
     private val scale: Float,
     private val sprites: SpriteSet
-) : SingleQuadParticle(level, x, y, z, 0.0, 0.0, 0.0, sprites.first()) {
+) : TextureSheetParticle(level, x, y, z, 0.0, 0.0, 0.0) {
+    init { setSprite(sprites.first()) }
 
     init {
         this.quadSize = scale
@@ -26,9 +27,9 @@ class NukeBlastParticle(
         this.setSpriteFromAge(sprites);
     }
 
-    public override fun getLayer(): Layer = Layer.TRANSLUCENT
+    override fun getRenderType(): ParticleRenderType = ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT
 
-    override fun getLightCoords(tint: Float): Int = 15728880
+    override fun getLightColor(tint: Float): Int = 15728880
 
     class Provider(private val sprite: SpriteSet) : ParticleProvider<NukeBlastParticleOptions> {
         override fun createParticle(
@@ -39,8 +40,7 @@ class NukeBlastParticle(
             z: Double,
             xAux: Double,
             yAux: Double,
-            zAux: Double,
-            random: RandomSource
+            zAux: Double
         ): Particle {
             val particle = NukeBlastParticle(level, x, y, z, xAux, yAux, zAux, options.scale, sprite)
             val color = options.getColor()

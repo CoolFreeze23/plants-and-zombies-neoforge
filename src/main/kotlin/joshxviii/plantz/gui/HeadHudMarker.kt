@@ -1,24 +1,25 @@
 package joshxviii.plantz.gui
 
-import com.mojang.blaze3d.pipeline.RenderPipeline
-import com.mojang.blaze3d.vertex.PoseStack
-import com.mojang.blaze3d.vertex.VertexConsumer
+import com.mojang.blaze3d.platform.Lighting
+import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.math.Axis
-import joshxviii.plantz.PazRenderPipelines
 import joshxviii.plantz.gui.ZombieHudMarkers.ICON_SIZE
+import joshxviii.plantz.compat.client.model.HumanoidModel
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.navigation.ScreenRectangle
-import net.minecraft.client.gui.render.TextureSetup
-import net.minecraft.client.model.HumanoidModel
-import net.minecraft.client.renderer.item.ItemStackRenderState
-import net.minecraft.client.renderer.state.gui.GuiElementRenderState
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.renderer.RenderType
 import net.minecraft.client.renderer.texture.OverlayTexture
 import net.minecraft.resources.ResourceLocation
 import joshxviii.plantz.compat.LightCoordsUtil
 import net.minecraft.world.entity.monster.Zombie
-import net.minecraft.world.item.ItemDisplayContext
 import net.minecraft.world.item.ItemStack
+import org.joml.Vector3f
 
+/**
+ * Zombie head icon on the HUD. 26.1 queued this as a GuiElementRenderState drawn with the HEAD_MARKER_BAKE
+ * pipeline (entity snippet, cutout, no cull, no cardinal lighting); 1.21.1 draws it immediately with
+ * entityCutoutNoCull, lit head-on so the visible face is full bright.
+ */
 class HeadHudMarker(
     val zombie: Zombie,
     val model: HumanoidModel<*>,
@@ -28,12 +29,12 @@ class HeadHudMarker(
     val cy: Double,
     val scale: Float,
     val outlinePad: Float = 0f
-): GuiElementRenderState {
+) {
     val mc = Minecraft.getInstance()
 
-    override fun buildVertices(vertexConsumer: VertexConsumer) {
+    fun render(graphics: GuiGraphics) {
         model.resetPose()
-        val pose = PoseStack()
+        val pose = graphics.pose()
         pose.pushPose()
         pose.translate(cx, cy, if (outlinePad>0f) 149.0 else 150.0)
         pose.translate(0.0, (ICON_SIZE + outlinePad)*0.5, 0.0)
@@ -41,19 +42,18 @@ class HeadHudMarker(
         pose.scale(scale, scale, scale)
         if (outlinePad>0f) pose.scale(outlinePad, outlinePad, outlinePad)
         model.head.setPos(0f, 0f, 0f)
-        model.head.render(pose, vertexConsumer, LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY)
-        mc.itemModelResolver.updateForTopItem(ItemStackRenderState(), itemStack, ItemDisplayContext.HEAD, mc.level, zombie, 0)
+
+        graphics.flush()
+        RenderSystem.setShaderLights(LIGHT_TOWARDS_VIEWER, LIGHT_TOWARDS_VIEWER)
+        model.head.render(pose, graphics.bufferSource().getBuffer(RenderType.entityCutoutNoCull(texture)), LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY)
+        graphics.flush()
+        Lighting.setupFor3DItems()
+        // (26.1 also resolved the worn head item here but never drew it; worn items are not rendered)
 
         pose.popPose()
     }
 
-    override fun pipeline(): RenderPipeline = if (outlinePad>0f) PazRenderPipelines.HEAD_MARKER_OUTLINE else PazRenderPipelines.HEAD_MARKER_BAKE
-
-    override fun textureSetup(): TextureSetup {
-        val t = mc.textureManager.getTexture(texture)
-        return TextureSetup.singleTexture(t.textureView, t.sampler)
+    companion object {
+        private val LIGHT_TOWARDS_VIEWER = Vector3f(0f, 0f, 1f)
     }
-
-    override fun scissorArea(): ScreenRectangle? = null
-    override fun bounds(): ScreenRectangle = ScreenRectangle(0, 0, mc.window.guiScaledWidth, mc.window.guiScaledHeight)
 }

@@ -3,17 +3,18 @@ package joshxviii.plantz.particles
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.particle.Particle
 import net.minecraft.client.particle.ParticleProvider
-import net.minecraft.client.particle.SingleQuadParticle
+import net.minecraft.client.particle.ParticleRenderType
+import net.minecraft.client.particle.TextureSheetParticle
 import net.minecraft.client.particle.SpriteSet
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
 import net.minecraft.core.particles.SimpleParticleType
 import joshxviii.plantz.compat.LightCoordsUtil
-import net.minecraft.util.RandomSource
 import kotlin.math.pow
 
 class NotifyParticle private constructor(
     level: ClientLevel, x: Double, y: Double, z: Double, xd: Double, yd: Double, zd: Double, sprite: TextureAtlasSprite
-) : SingleQuadParticle(level, x, y, z, xd, yd, zd, sprite) {
+) : TextureSheetParticle(level, x, y, z, xd, yd, zd) {
+    init { setSprite(sprite) }
 
     init {
         lifetime = random.nextInt(14, 15)
@@ -45,7 +46,7 @@ class NotifyParticle private constructor(
         zd *= 0.5f
     }
 
-    override fun getLayer(): Layer = Layer.OPAQUE
+    override fun getRenderType(): ParticleRenderType = ParticleRenderType.PARTICLE_SHEET_OPAQUE
 
     override fun getQuadSize(a: Float): Float {
         val halfLife = lifetime*.2f
@@ -57,8 +58,8 @@ class NotifyParticle private constructor(
         return this.quadSize * (s.coerceIn(0.0f, 1.0f)) * 2f
     }
 
-    public override fun getLightCoords(a: Float): Int {
-        return LightCoordsUtil.addSmoothBlockEmission(super.getLightCoords(a), 1.0f)
+    public override fun getLightColor(a: Float): Int {
+        return LightCoordsUtil.addSmoothBlockEmission(super.getLightColor(a), 1.0f)
     }
 
     class Provider(private val sprites: SpriteSet) : ParticleProvider<SimpleParticleType> {
@@ -70,10 +71,9 @@ class NotifyParticle private constructor(
             z: Double,
             xAux: Double,
             yAux: Double,
-            zAux: Double,
-            random: RandomSource
+            zAux: Double
         ): Particle {
-            return NotifyParticle(level, x, y, z, xAux, yAux, zAux, sprites.get(random))
+            return NotifyParticle(level, x, y, z, xAux, yAux, zAux, sprites.get(level.random))
         }
     }
 }

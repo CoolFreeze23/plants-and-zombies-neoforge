@@ -2,10 +2,9 @@ package joshxviii.plantz.gui
 
 import joshxviii.plantz.MailboxData
 import joshxviii.plantz.pazResource
-import joshxviii.plantz.renderer.outlineText
 import net.minecraft.ChatFormatting
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.components.ChatComponent
 import net.minecraft.client.gui.components.Tooltip
 import net.minecraft.network.chat.Component
@@ -41,8 +40,8 @@ class MiniAddressButton(
         val ADDRESS_SELECTED: ResourceLocation = pazResource("textures/gui/mail_collection_box/selected.png")
     }
 
-    override fun extractContents(graphics: GuiGraphicsExtractor, mx: Int, my: Int, a: Float) {
-        super.extractContents(graphics, mx, my, a)
+    override fun renderWidget(graphics: GuiGraphics, mx: Int, my: Int, a: Float) {
+        super.renderWidget(graphics, mx, my, a)
         val font = Minecraft.getInstance().font
         val pressed = isPressed()
         graphics.outlineText(font, Component.literal("•"), buttonX+buttonWidth-5, buttonY-4+(buttonHeight/2), color = mailboxData.color, outlineColor = ARGB.multiply(mailboxData.color, 0x444444))
