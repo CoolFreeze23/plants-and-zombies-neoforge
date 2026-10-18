@@ -11,10 +11,10 @@ import net.minecraft.world.entity.projectile.ThrowableItemProjectile
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.ExplosionDamageCalculator
+import net.minecraft.world.level.GameRules
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.SimpleExplosionDamageCalculator
 import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.level.GameRules
 import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.HitResult
 import java.util.*

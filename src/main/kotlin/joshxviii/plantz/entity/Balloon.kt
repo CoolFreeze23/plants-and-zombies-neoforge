@@ -1,9 +1,11 @@
 package joshxviii.plantz.entity
 
 import joshxviii.plantz.PazDataSerializers.DATA_DYE_COLOR
-import joshxviii.plantz.PazEntities
 import joshxviii.plantz.PazServerParticles
 import joshxviii.plantz.PazSounds
+import joshxviii.plantz.compat.ValueInput
+import joshxviii.plantz.compat.ValueOutput
+import joshxviii.plantz.entity.plant.InterpolationHandler
 import joshxviii.plantz.entity.zombie.BrownCoatVariant
 import joshxviii.plantz.entity.zombie.ImpVariant
 import joshxviii.plantz.entity.zombie.PazZombie
@@ -12,21 +14,16 @@ import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.SynchedEntityData
 import net.minecraft.server.level.ServerLevel
-import net.minecraft.sounds.SoundEvents
 import net.minecraft.util.Mth
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.entity.*
 import net.minecraft.world.entity.Leashable.LeashData
 import net.minecraft.world.entity.ai.attributes.Attributes
-import net.minecraft.world.entity.item.ItemEntity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.level.ItemLike
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.levelgen.Heightmap
-import joshxviii.plantz.compat.ValueInput
-import joshxviii.plantz.compat.ValueOutput
 import net.minecraft.world.phys.Vec3
 import kotlin.math.atan2
 import kotlin.math.sqrt
@@ -65,13 +62,7 @@ class Balloon(
 
     var clientTiltZ: Float = 0f
     var clientTiltX: Float = 0f
-    // 26.1 InterpolationHandler -> 1.21.1 lerpTo/lerpSteps (like vanilla boats)
-    private var lerpSteps = 0
-    private var lerpX = 0.0
-    private var lerpY = 0.0
-    private var lerpZ = 0.0
-    private var lerpYRot = 0.0
-    private var lerpXRot = 0.0
+    private val interpolation = InterpolationHandler(this)
 
     private var balloonLeashData: LeashData? = null
     var dyeColor: DyeColor
@@ -97,19 +88,13 @@ class Balloon(
         }
     }
 
-    override fun lerpTo(x: Double, y: Double, z: Double, yRot: Float, xRot: Float, steps: Int) {
-        lerpX = x
-        lerpY = y
-        lerpZ = z
-        lerpYRot = yRot.toDouble()
-        lerpXRot = xRot.toDouble()
-        lerpSteps = 3// 26.1 InterpolationHandler default
-    }
-    override fun lerpTargetX(): Double = if (lerpSteps > 0) lerpX else x
-    override fun lerpTargetY(): Double = if (lerpSteps > 0) lerpY else y
-    override fun lerpTargetZ(): Double = if (lerpSteps > 0) lerpZ else z
-    override fun lerpTargetXRot(): Float = if (lerpSteps > 0) lerpXRot.toFloat() else xRot
-    override fun lerpTargetYRot(): Float = if (lerpSteps > 0) lerpYRot.toFloat() else yRot
+    // 26.1 getInterpolation(): 1.21.1 routes position updates through lerpTo
+    override fun lerpTo(x: Double, y: Double, z: Double, yRot: Float, xRot: Float, steps: Int) = interpolation.interpolateTo(Vec3(x, y, z), yRot, xRot)
+    override fun lerpTargetX(): Double = interpolation.position().x
+    override fun lerpTargetY(): Double = interpolation.position().y
+    override fun lerpTargetZ(): Double = interpolation.position().z
+    override fun lerpTargetXRot(): Float = interpolation.xRot()
+    override fun lerpTargetYRot(): Float = interpolation.yRot()
 
     override fun load(tag: CompoundTag) {
         super.load(tag)
@@ -158,9 +143,8 @@ class Balloon(
         }
 
         if (isRemoved) return
-        if (lerpSteps > 0) {
-            lerpPositionAndRotationStep(lerpSteps, lerpX, lerpY, lerpZ, lerpYRot, lerpXRot)
-            lerpSteps--
+        if (interpolation.hasActiveInterpolation()) {
+            interpolation.interpolate()
         } else if (isControlledByLocalInstance) {
             move(MoverType.SELF, deltaMovement)
             applyGravity()
@@ -268,7 +252,7 @@ class Balloon(
         source: DamageSource,
         damage: Float
     ): Boolean {
-        if (level().isClientSide) return false// 26.1 hurtServer only
+        if (level().isClientSide) return false
         return isRemoved || if (this.isInvulnerableTo(source)) false
         else {
             pop()

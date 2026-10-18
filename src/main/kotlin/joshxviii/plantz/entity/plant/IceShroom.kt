@@ -3,17 +3,13 @@ package joshxviii.plantz.entity.plant
 import joshxviii.plantz.*
 import joshxviii.plantz.ai.goal.ExplodeGoal
 import net.minecraft.core.Holder
-import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.resources.ResourceKey
 import net.minecraft.server.level.ServerLevel
-import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.tags.BlockTags
-import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.damagesource.DamageType
 import net.minecraft.world.effect.MobEffectInstance
-import net.minecraft.world.entity.AreaEffectCloud
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.ai.attributes.Attributes

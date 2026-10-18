@@ -3,8 +3,8 @@ package joshxviii.plantz
 import joshxviii.plantz.effect.ButteredMobEffect
 import joshxviii.plantz.effect.ElectrifyMobEffect
 import joshxviii.plantz.effect.FreezeMobEffect
-import joshxviii.plantz.effect.HypnotizedMobEffect
 import joshxviii.plantz.effect.GardenHeroEffect
+import joshxviii.plantz.effect.HypnotizedMobEffect
 import joshxviii.plantz.effect.PaintedMobEffect
 import joshxviii.plantz.effect.TangledMobEffect
 import joshxviii.plantz.effect.ToxicMobEffect
@@ -17,14 +17,14 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.effect.MobEffect
 import net.minecraft.world.effect.MobEffectCategory
 import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.ai.attributes.AttributeModifier
 import net.minecraft.world.entity.ai.attributes.Attributes
-import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.ai.goal.Goal
-import java.util.WeakHashMap
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.item.alchemy.Potion
 import net.minecraft.world.level.block.Blocks
+import java.util.WeakHashMap
 
 object PazEffects {
 
@@ -95,7 +95,7 @@ object PazEffects {
         )
     }
 
-    // 26.1: a non-persistent Fabric attachment holding the goal added by HypnotizedMobEffect (runtime only, server side)
+    // 26.1 Fabric attachment (not persisted): the goal HypnotizedMobEffect added to a mob
     @JvmField val HYPNOTIZED_GOAL_ATTACHMENT: MutableMap<Entity, Goal> = WeakHashMap()
 
     fun initialize() {

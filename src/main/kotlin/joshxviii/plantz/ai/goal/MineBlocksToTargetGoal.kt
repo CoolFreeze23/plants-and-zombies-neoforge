@@ -12,9 +12,9 @@ import net.minecraft.tags.BlockTags
 import net.minecraft.tags.ItemTags
 import net.minecraft.world.entity.PathfinderMob
 import net.minecraft.world.entity.ai.goal.Goal
+import net.minecraft.world.level.GameRules
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.LevelEvent
-import net.minecraft.world.level.GameRules
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.min
@@ -128,7 +128,7 @@ class MineBlocksToTargetGoal(
             miner.navigation.setSpeedModifier(0.0)
             //level.levelEvent(LevelEvent.PARTICLES_ELECTRIC_SPARK, targetBlock, 15)
             if (!miner.swinging) {
-                level.playSound(null, targetBlock, targetBlockState.soundType.hitSound, SoundSource.BLOCKS, 0.3f,
+                level.playSound(null, targetBlock, targetBlockState.getSoundType(level, targetBlock, miner).hitSound, SoundSource.BLOCKS, 0.3f,
                     level.random.nextFloat() * 0.2f + 0.5f)
                 miner.swing(miner.usedItemHand)
             }

@@ -2,9 +2,7 @@ package joshxviii.plantz.entity.plant
 
 import joshxviii.plantz.PazDamageTypes
 import joshxviii.plantz.PazEffects
-import joshxviii.plantz.PazEntities
 import joshxviii.plantz.PazServerParticles
-import joshxviii.plantz.ai.PlantState
 import joshxviii.plantz.ai.goal.BeamAttackGoal
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.EntityDataSerializers

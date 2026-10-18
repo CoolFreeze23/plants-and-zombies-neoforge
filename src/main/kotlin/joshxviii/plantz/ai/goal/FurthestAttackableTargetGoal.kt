@@ -1,5 +1,6 @@
 package joshxviii.plantz.ai.goal
 
+import joshxviii.plantz.getFurthestEntities
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.LivingEntity
@@ -44,7 +45,7 @@ open class FurthestAttackableTargetGoal<T : LivingEntity>(
     protected fun findTarget() {
         val level = this.mob.level() as? ServerLevel ?: return
         if (this.targetType != Player::class.java && this.targetType != ServerPlayer::class.java) {
-            this.target = getFurthestEntities(
+            this.target = level.getFurthestEntities(
                 this.mob.level().getEntitiesOfClass<T>(
                     this.targetType,
                     this.getTargetSearchArea(this.followDistance),
@@ -69,28 +70,5 @@ open class FurthestAttackableTargetGoal<T : LivingEntity>(
     override fun start() {
         this.mob.target = this.target
         super.start()
-    }
-
-    // joshxviii.plantz.getFurthestEntities (26.1 ServerEntityGetter receiver), inlined for 1.21.1
-    private fun <E : LivingEntity> getFurthestEntities(
-        entities: List<E>,
-        targetConditions: TargetingConditions,
-        source: LivingEntity?,
-        x: Double,
-        y: Double,
-        z: Double
-    ): E? {
-        var best = -1.0
-        var result: E? = null
-        for (entity in entities) {
-            if (targetConditions.test(source, entity)) {
-                val dist = entity.distanceToSqr(x, y, z)
-                if (best == -1.0 || dist > best) {
-                    best = dist
-                    result = entity
-                }
-            }
-        }
-        return result
     }
 }

@@ -2,7 +2,6 @@ package joshxviii.plantz.effect
 
 import joshxviii.plantz.PazBlocks.PLANTZ_FLAG_POI
 import joshxviii.plantz.raid.getZombieRaids
-import net.minecraft.core.BlockPos
 import net.minecraft.core.Holder
 import net.minecraft.core.particles.ParticleOptions
 import net.minecraft.server.level.ServerLevel

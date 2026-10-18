@@ -3,8 +3,6 @@ package joshxviii.plantz.effect
 import joshxviii.plantz.PazEffects.HYPNOTIZED_GOAL_ATTACHMENT
 import joshxviii.plantz.PazTags
 import joshxviii.plantz.entity.plant.Plant
-import joshxviii.plantz.mixin.MobAccessor
-import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.effect.MobEffect
 import net.minecraft.world.effect.MobEffectCategory
 import net.minecraft.world.effect.MobEffectInstance
@@ -28,7 +26,6 @@ class HypnotizedMobEffect(category: MobEffectCategory, color: Int) : MobEffect(c
     }
 
     override fun applyEffectTick(mob: LivingEntity, amplification: Int): Boolean {
-        if (mob.level() !is ServerLevel) return true
         tryAddGoal(mob)
         return true
     }
@@ -43,7 +40,7 @@ class HypnotizedMobEffect(category: MobEffectCategory, color: Int) : MobEffect(c
         if (entity !is Plant) {
             if(entity is Mob) {
                 val goal = HYPNOTIZED_GOAL_ATTACHMENT.remove(entity)
-                if (goal != null) (entity as MobAccessor).targetSelector.removeGoal(goal)
+                if (goal != null) entity.targetSelector.removeGoal(goal)
             }
         }
     }
@@ -58,7 +55,7 @@ class HypnotizedMobEffect(category: MobEffectCategory, color: Int) : MobEffect(c
                 val goal = NearestAttackableTargetGoal(entity, LivingEntity::class.java, true) { target ->
                     target.type.`is`(PazTags.EntityTypes.ZOMBIE_RAIDERS) || (target is Enemy && target !is Creeper) }
 
-                (entity as MobAccessor).targetSelector.addGoal(0, goal)
+                entity.targetSelector.addGoal(0, goal)
                 HYPNOTIZED_GOAL_ATTACHMENT[entity] = goal
             }
         }

@@ -3,10 +3,12 @@ package joshxviii.plantz.entity
 import joshxviii.plantz.*
 import joshxviii.plantz.PazBlocks.SUN_BATTERY_POI
 import joshxviii.plantz.block.entity.SunBatteryBlockEntity
+import joshxviii.plantz.compat.ValueInput
+import joshxviii.plantz.compat.ValueOutput
+import joshxviii.plantz.entity.plant.InterpolationHandler
 import joshxviii.plantz.entity.plant.Plant
-import joshxviii.plantz.entity.plant.WallNut
-import net.minecraft.nbt.CompoundTag
 import net.minecraft.core.BlockPos
+import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.EntityDataSerializers
 import net.minecraft.network.syncher.SynchedEntityData
@@ -21,8 +23,6 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.entity.EntityTypeTest
-import joshxviii.plantz.compat.ValueInput
-import joshxviii.plantz.compat.ValueOutput
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.Shapes
@@ -38,13 +38,7 @@ class Sun(type: EntityType<out Sun>, level: Level) : Entity(type, level) {
     private var followingEntity: LivingEntity? = null
     private var batteryPos: Vec3? = null
     private var batteryState: BlockState? = null
-    // 26.1 InterpolationHandler (3 steps) -> 1.21.1 lerpTo/lerpSteps
-    private var lerpSteps = 0
-    private var lerpX = 0.0
-    private var lerpY = 0.0
-    private var lerpZ = 0.0
-    private var lerpYRot = 0.0
-    private var lerpXRot = 0.0
+    private val interpolation = InterpolationHandler(this)
 
     companion object {
         val DATA_VALUE: EntityDataAccessor<Int> =
@@ -156,28 +150,16 @@ class Sun(type: EntityType<out Sun>, level: Level) : Entity(type, level) {
 
     override fun getDefaultGravity(): Double = 0.015
 
-    override fun lerpTo(x: Double, y: Double, z: Double, yRot: Float, xRot: Float, steps: Int) {
-        lerpX = x
-        lerpY = y
-        lerpZ = z
-        lerpYRot = yRot.toDouble()
-        lerpXRot = xRot.toDouble()
-        lerpSteps = 3
-    }
-    override fun lerpTargetX(): Double = if (lerpSteps > 0) lerpX else x
-    override fun lerpTargetY(): Double = if (lerpSteps > 0) lerpY else y
-    override fun lerpTargetZ(): Double = if (lerpSteps > 0) lerpZ else z
-    override fun lerpTargetXRot(): Float = if (lerpSteps > 0) lerpXRot.toFloat() else xRot
-    override fun lerpTargetYRot(): Float = if (lerpSteps > 0) lerpYRot.toFloat() else yRot
-
-    // WallNut.canBeCollidedWith(other) returned false for suns in 26.1; 1.21.1 has no "other", so suns opt out here
-    override fun canCollideWith(entity: Entity): Boolean = entity !is WallNut && super.canCollideWith(entity)
+    // 26.1 getInterpolation(): 1.21.1 routes position updates through lerpTo
+    override fun lerpTo(x: Double, y: Double, z: Double, yRot: Float, xRot: Float, steps: Int) = interpolation.interpolateTo(Vec3(x, y, z), yRot, xRot)
+    override fun lerpTargetX(): Double = interpolation.position().x
+    override fun lerpTargetY(): Double = interpolation.position().y
+    override fun lerpTargetZ(): Double = interpolation.position().z
+    override fun lerpTargetXRot(): Float = interpolation.xRot()
+    override fun lerpTargetYRot(): Float = interpolation.yRot()
 
     override fun tick() {
-        if (lerpSteps > 0) {
-            lerpPositionAndRotationStep(lerpSteps, lerpX, lerpY, lerpZ, lerpYRot, lerpXRot)
-            lerpSteps--
-        }
+        interpolation.interpolate()
         if (firstTick && level().isClientSide) firstTick = false
         else {
             super.tick()

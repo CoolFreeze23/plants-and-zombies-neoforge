@@ -3,6 +3,9 @@ package joshxviii.plantz.entity.plant
 import joshxviii.plantz.*
 import joshxviii.plantz.PazTags.EntityTypes.CANNOT_CHOMP
 import joshxviii.plantz.ai.goal.MeleeAttackActionGoal
+import joshxviii.plantz.compat.ValueInput
+import joshxviii.plantz.compat.ValueOutput
+import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.EntityDataSerializers
 import net.minecraft.network.syncher.SynchedEntityData
@@ -13,14 +16,12 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.ai.attributes.AttributeModifier
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal
-import net.minecraft.world.entity.animal.Chicken
 import net.minecraft.world.entity.animal.AbstractFish
+import net.minecraft.world.entity.animal.Chicken
 import net.minecraft.world.entity.monster.Enemy
 import net.minecraft.world.entity.monster.Zombie
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.Level
-import joshxviii.plantz.compat.ValueInput
-import joshxviii.plantz.compat.ValueOutput
 
 class Chomper(type: EntityType<out Plant>, level: Level) : Plant(type, level) {
 
@@ -40,13 +41,13 @@ class Chomper(type: EntityType<out Plant>, level: Level) : Plant(type, level) {
         entityData.define(CHEW_TIME_ID, false)
     }
 
-    override fun addAdditionalSaveData(tag: net.minecraft.nbt.CompoundTag) {
+    override fun addAdditionalSaveData(tag: CompoundTag) {
         super.addAdditionalSaveData(tag)
         val output = ValueOutput.of(tag, registryAccess())
         output.putBoolean("plantz:IsChewing", isChewing)
     }
 
-    override fun readAdditionalSaveData(tag: net.minecraft.nbt.CompoundTag) {
+    override fun readAdditionalSaveData(tag: CompoundTag) {
         super.readAdditionalSaveData(tag)
         val input = ValueInput.of(tag, registryAccess())
         isChewing = input.getBooleanOr("plantz:IsChewing", false)

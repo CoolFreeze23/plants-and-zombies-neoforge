@@ -1,7 +1,5 @@
 package joshxviii.plantz.entity.plant
 
-import joshxviii.plantz.PazEntities
-import joshxviii.plantz.PazTags
 import joshxviii.plantz.ai.goal.ProjectileAttackGoal
 import joshxviii.plantz.entity.projectile.Melon
 import net.minecraft.world.entity.EntityType

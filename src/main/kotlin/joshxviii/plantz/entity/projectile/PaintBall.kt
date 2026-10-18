@@ -4,6 +4,9 @@ import joshxviii.plantz.PaintParticleOptions
 import joshxviii.plantz.PazDamageTypes
 import joshxviii.plantz.PazEffects
 import joshxviii.plantz.PazEntities
+import joshxviii.plantz.compat.ValueInput
+import joshxviii.plantz.compat.ValueOutput
+import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.EntityDataSerializers
 import net.minecraft.network.syncher.SynchedEntityData
@@ -12,8 +15,6 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.animal.Sheep
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.level.Level
-import joshxviii.plantz.compat.ValueInput
-import joshxviii.plantz.compat.ValueOutput
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
@@ -44,13 +45,13 @@ class PaintBall(
         entityData.define(COLOR,  DyeColor.WHITE.id)
     }
 
-    override fun addAdditionalSaveData(tag: net.minecraft.nbt.CompoundTag) {
+    override fun addAdditionalSaveData(tag: CompoundTag) {
         super.addAdditionalSaveData(tag)
         val output = ValueOutput.of(tag, registryAccess())
         output.store("dyeColor", DyeColor.CODEC, dyeColor)
     }
 
-    override fun readAdditionalSaveData(tag: net.minecraft.nbt.CompoundTag) {
+    override fun readAdditionalSaveData(tag: CompoundTag) {
         super.readAdditionalSaveData(tag)
         val input = ValueInput.of(tag, registryAccess())
         input.read("dyeColor", DyeColor.CODEC).ifPresent { dyeColor -> this.dyeColor = dyeColor }

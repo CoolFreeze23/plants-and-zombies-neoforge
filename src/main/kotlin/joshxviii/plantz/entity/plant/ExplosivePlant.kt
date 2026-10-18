@@ -6,9 +6,11 @@ import joshxviii.plantz.NukeWaveParticleOptions
 import joshxviii.plantz.PazConfig
 import joshxviii.plantz.PazDamageTypes
 import joshxviii.plantz.PazSounds
+import joshxviii.plantz.rootOwner
 import net.minecraft.ChatFormatting
 import net.minecraft.core.Holder
 import net.minecraft.core.particles.ParticleTypes
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.EntityDataSerializers
@@ -18,7 +20,6 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.util.Mth
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.damagesource.DamageType
@@ -31,7 +32,6 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.SimpleExplosionDamageCalculator
 import java.util.Optional
 import kotlin.math.sqrt
-import kotlin.time.times
 
 abstract class ExplosivePlant(type: EntityType<out ExplosivePlant>, level: Level) : Plant(type, level) {
     companion object {

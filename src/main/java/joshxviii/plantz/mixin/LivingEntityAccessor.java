@@ -4,25 +4,25 @@ import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-import java.util.List;
 import java.util.Map;
 
+/** Reads the effect flags {@link LivingEntityMixin} syncs to clients. */
 @Mixin(LivingEntity.class)
 public interface LivingEntityAccessor {
 
-    @Invoker("plantz$getHypnoId")
+    @Invoker("plantz$hypnoFlag")
     boolean plantz$getHypnoId();
 
-    @Invoker("plantz$getChillId")
+    @Invoker("plantz$chillFlag")
     boolean plantz$getChillId();
 
-    @Invoker("plantz$getFrozenId")
+    @Invoker("plantz$frozenFlag")
     boolean plantz$getFrozenId();
 
-    @Invoker("plantz$getButterId")
+    @Invoker("plantz$butterFlag")
     boolean plantz$getButterId();
 
-    @Invoker("plantz$getPaintedColors")
+    @Invoker("plantz$paintedColors")
     Map<Integer, Integer> plantz$getPaintedColors();
 
 }

@@ -3,6 +3,7 @@ package joshxviii.plantz.entity.projectile
 import joshxviii.plantz.PazDamageTypes
 import joshxviii.plantz.PazEntities
 import joshxviii.plantz.PazServerParticles
+import joshxviii.plantz.entity.plant.spawnProjectile
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
@@ -22,7 +23,7 @@ class Pea(
         if (onFire) {
             val level = level() as ServerLevel
             val p = PeaFire(level(), entityOwner)
-            level.addFreshEntity(p)// 26.1 Projectile.spawnProjectile(p, level, ItemStack.EMPTY)
+            spawnProjectile(p, level, ItemStack.EMPTY)
             p.deltaMovement = deltaMovement
             discard()
         }

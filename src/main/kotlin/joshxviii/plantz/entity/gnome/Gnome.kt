@@ -5,8 +5,11 @@ import joshxviii.plantz.PazDataSerializers.GNOME_VARIANT
 import joshxviii.plantz.PazSounds.GNOME_JUMP
 import joshxviii.plantz.PazTags
 import joshxviii.plantz.ai.goal.ProjectileAttackGoal
+import joshxviii.plantz.compat.ValueInput
+import joshxviii.plantz.compat.ValueOutput
 import joshxviii.plantz.entity.plant.Plant
 import net.minecraft.core.BlockPos
+import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.SynchedEntityData
 import net.minecraft.server.level.ServerLevel
@@ -27,18 +30,15 @@ import net.minecraft.world.entity.ai.targeting.TargetingConditions
 import net.minecraft.world.entity.monster.Monster
 import net.minecraft.world.entity.monster.Zombie
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.projectile.ProjectileUtil
 import net.minecraft.world.entity.projectile.AbstractArrow
+import net.minecraft.world.entity.projectile.ProjectileUtil
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.ServerLevelAccessor
 import net.minecraft.world.level.block.state.BlockState
-import joshxviii.plantz.compat.ValueInput
-import joshxviii.plantz.compat.ValueOutput
 import net.minecraft.world.phys.Vec3
-import net.minecraft.nbt.CompoundTag
 import kotlin.jvm.optionals.getOrDefault
 
 class Gnome(type: EntityType<out Gnome>, level: Level) :Monster(type, level) {
@@ -71,7 +71,7 @@ class Gnome(type: EntityType<out Gnome>, level: Level) :Monster(type, level) {
     private val meleeGoal = MeleeAttackGoal(this, 1.2, false)
 
     fun getArrow(): AbstractArrow {
-        val bowItem = this.getItemInHand(ProjectileUtil.getWeaponHoldingHand(this, Items.BOW))
+        val bowItem = this.getItemInHand(ProjectileUtil.getWeaponHoldingHand(this) { it == Items.BOW })
         val projectile = this.getProjectile(bowItem)
         return ProjectileUtil.getMobArrow(this, projectile, 1.0f, bowItem)
     }
@@ -115,7 +115,7 @@ class Gnome(type: EntityType<out Gnome>, level: Level) :Monster(type, level) {
         if (!this.level().isClientSide) {
             this.goalSelector.removeGoal(this.meleeGoal)
             this.goalSelector.removeGoal(this.bowGoal)
-            val usedWeapon = this.getItemInHand(ProjectileUtil.getWeaponHoldingHand(this, Items.BOW))
+            val usedWeapon = this.getItemInHand(ProjectileUtil.getWeaponHoldingHand(this) { it == Items.BOW })
             if (usedWeapon.`is`(Items.BOW))
                 this.goalSelector.addGoal(1, this.bowGoal)
             else
@@ -148,6 +148,7 @@ class Gnome(type: EntityType<out Gnome>, level: Level) :Monster(type, level) {
         this.reassessWeaponGoal()
     }
 
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun finalizeSpawn(
         level: ServerLevelAccessor,
         difficulty: DifficultyInstance,
@@ -204,7 +205,7 @@ class Gnome(type: EntityType<out Gnome>, level: Level) :Monster(type, level) {
         if (random.nextFloat() < (if (this.level().difficulty == Difficulty.HARD) 0.5f else 0.33f)) {
             val rand = random.nextInt(5)
             when (rand) {
-                // 26.1 copper axe / copper spear / copper pickaxe do not exist in 1.21.1: stone tools instead
+                // copper axe / spear / pickaxe don't exist in 1.21.1 (nor in Vanilla Backport): stone tools
                 0 -> this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack(Items.STONE_AXE))
                 1 -> this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack(Items.STONE_SWORD))
                 2 -> this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack(Items.BOW))
@@ -361,7 +362,6 @@ class Gnome(type: EntityType<out Gnome>, level: Level) :Monster(type, level) {
 
         override fun canUse(): Boolean {
             val level = gnome.level() as? ServerLevel ?: return false
-            // 26.1 ServerLevel.getNearestEntity(TagKey, ...)
             nearestRideable = level
                 .getNearestEntity(
                     level.getEntitiesOfClass(LivingEntity::class.java,
