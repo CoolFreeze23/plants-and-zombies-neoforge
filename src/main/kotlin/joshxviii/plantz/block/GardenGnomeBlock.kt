@@ -2,6 +2,7 @@ package joshxviii.plantz.block
 
 import com.mojang.serialization.MapCodec
 import joshxviii.plantz.block.entity.GardenGnomeBlockEntity
+import joshxviii.plantz.integration.PazCopperAgeBackportCompat
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.sounds.SoundEvents
@@ -87,7 +88,7 @@ class GardenGnomeBlock(
     }
 
     fun updatePose(level: Level, state: BlockState, pos: BlockPos, player: Player) {
-        level.playSound(null, pos, SoundEvents.DECORATED_POT_INSERT /* 26.1 COPPER_GOLEM_BECOME_STATUE: not in 1.21.1 or Vanilla Backport */, SoundSource.BLOCKS)
+        level.playSound(null, pos, PazCopperAgeBackportCompat.sound("entity.copper_golem.become_statue", SoundEvents.DECORATED_POT_INSERT), SoundSource.BLOCKS)
         level.setBlock(pos, state.setValue(POSE, state.getValue(POSE).getNextPose()), 3)
         level.gameEvent(player as Entity, GameEvent.BLOCK_CHANGE, pos)
     }

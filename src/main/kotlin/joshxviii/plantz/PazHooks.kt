@@ -1,5 +1,6 @@
 package joshxviii.plantz
 
+import joshxviii.plantz.integration.PazCopperAgeBackportCompat
 import joshxviii.plantz.integration.PazVanillaBackportCompat
 import net.neoforged.bus.api.IEventBus
 import net.neoforged.neoforge.event.AddPackFindersEvent
@@ -9,6 +10,7 @@ import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent
 object PazHooks {
     fun registerModBus(modBus: IEventBus) {
         modBus.addListener { event: AddPackFindersEvent -> PazVanillaBackportCompat.addPackFinders(event) }
+        modBus.addListener { event: AddPackFindersEvent -> PazCopperAgeBackportCompat.addPackFinders(event) }
         modBus.addListener { event: ModifyDefaultComponentsEvent -> PazItems.modifyDefaultComponents(event) }
     }
 

@@ -12,10 +12,10 @@ the minimum changes 1.21.1 forces; the newer vanilla APIs upstream relies on are
 | `src/main/kotlin/joshxviii/plantz/**`, `src/main/java/joshxviii/plantz/{model,animation}/**` | Upstream code (main and client source sets merged into one; client classes are only touched on the client) |
 | `src/main/java/joshxviii/plantz/compat/**` | 26.1 APIs re-implemented on 1.21.1 (below) |
 | `src/main/java/joshxviii/plantz/mixin/**` | Upstream mixins retargeted to 1.21.1, plus port mixins (bucket helmet, wall-nut collision, graveyard sun burn/ambience) |
-| `src/main/kotlin/joshxviii/plantz/integration/**` | Optional Iris and Vanilla Backport support |
+| `src/main/kotlin/joshxviii/plantz/integration/**` | Optional Iris, Vanilla Backport and Copper Age Backport support (registry lookups with 1.21.1 fallbacks, so nothing links against the backports) |
 | `src/main/kotlin/joshxviii/plantz/client/GraveyardAmbience.kt` | The graveyard's 26.1 environment attributes (fog, clouds, sunrise, light) |
-| `src/main/resources/resourcepacks/vanillabackport_compat` | Built-in data pack, enabled only when Vanilla Backport is installed |
-| `src/gametest/**` | Dev-only GameTests (not packaged), 128 tests covering plants, zombies, raids, blocks/items and data |
+| `src/main/resources/resourcepacks/{vanillabackport,copperagebackport}_compat` | Built-in data packs, each enabled only when its backport is installed (they override different files) |
+| `src/gametest/**` | Dev-only GameTests (not packaged), 129 tests covering plants, zombies, raids, blocks/items and data |
 
 ## Entry points
 - `PazMain` (`@Mod`): wires NeoForge events. All `Paz*.initialize()` objects still register eagerly with

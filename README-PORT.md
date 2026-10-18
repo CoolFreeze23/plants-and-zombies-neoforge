@@ -16,18 +16,22 @@ Optional, detected automatically:
   data pack (auto-enabled) adds pale moss, leaf litter and firefly bushes to the graveyard, pale oak dead trees with
   pale moss and leaf litter, gravestones on pale moss, and leaf-litter tint; tags pick up pale moss carpet and the pale
   garden; the tangle kelp's creaking sound and the plant pot's harness sound return. Tested with Vanilla Backport 1.1.7.10 + Platform 1.3.3.
+- **Copper Age Backport**: brings back the 26.1 copper content. Gnomes spawn with copper axes and pickaxes, gravestone
+  treasure has copper nuggets again, the relocation advancement shows a copper shovel (built-in data pack,
+  auto-enabled), and mailboxes, the collection box and garden gnome posing use the copper chest and copper golem
+  statue sounds. Copper golems are immune to electric plants. Tested with Copper Age Backport 0.1.5 (0.1.4 crashes on startup on current NeoForge 21.1, a bug fixed in 0.1.5); works alongside Vanilla Backport.
 
 ## Build / test
 ```
 ./gradlew build                 # jar in build/libs
 ./gradlew runGameTestServer     # all GameTests (dev only, not packaged)
 ./gradlew runClient             # dev client;  runServer / runClientMp for multiplayer
-./gradlew runClient -PwithIris -PwithVanillaBackport   # dev runs with the optional mods
+./gradlew runClient -PwithIris -PwithVanillaBackport -PwithCopperAgeBackport   # dev runs with the optional mods
 ```
 
 ## What was verified
 - Every upstream source and resource file was compared against the port; differences are restored or listed below.
-- **All 128 required GameTests pass** (repeated runs): every plant's behaviour, all special zombies and blueprint machines, ownership, a full zombie
+- **All 129 required GameTests pass** (repeated runs): every plant's behaviour, all special zombies and blueprint machines, ownership, a full zombie
   raid (waves, victory, rewards), mailboxes (delivery, queue, full/discard), collection box, sun battery, time machine,
   flags, gravestones, garden gnomes, pots, watering can, gardening glove, seed packets and cooldowns, wearables
   (incl. the bucket), dispensers, blueprints, every upstream recipe, loot tables, advancements, tags, worldgen
@@ -35,13 +39,15 @@ Optional, detected automatically:
 - Dedicated server + client over the network: config sync, a zombie raid with its HUD, boss bar and head markers.
 - Dev client: every entity and block entity renderer, item icons, screens (mailbox, collection box, time machine),
   raid overlay, particles, graveyard ambience; with Iris + a shader pack; with Vanilla Backport.
+- GameTests also pass with Vanilla Backport + Copper Age Backport installed (the data tests check the backport content).
 
 ## Differences from the 26.1 original (things 1.21.1 doesn't have)
-- No spears: the spear arm pose and spear goals are gone, and gnomes use stone tools instead of copper ones (no copper
-  tools even with Vanilla Backport). Copper nuggets in loot became an equivalent chance of a copper ingot; the
-  relocation advancement icon is an iron shovel.
-- Sounds that exist in neither 1.21.1 nor Vanilla Backport use close vanilla ones (mailbox open/close, gnome pose,
-  bubble pop, lead break); raid sounds play on the Master volume slider (no UI category).
+- No spears: the spear arm pose and spear goals are gone, and gnomes that would carry a spear get a stone sword.
+- Without Copper Age Backport: gnomes use stone tools instead of copper ones, copper nuggets in loot become an
+  equivalent chance of a copper ingot, and the relocation advancement icon is an iron shovel.
+- Sounds missing from 1.21.1 use close vanilla ones unless a backport provides them: mailbox open/close and gnome pose
+  (Copper Age Backport restores them), bubble pop and lead break (no backport has them); raid sounds play on the
+  Master volume slider (no UI category).
 - Raid music shows "Now playing" in the action bar when it starts (1.21.1 has no now-playing toast).
 - Baby zombies wear armor with the adult armor textures (1.21.1 has no baby armor textures).
 - Graveyard: without Vanilla Backport it has no pale moss, leaf litter or firefly bushes and dead trees use stripped

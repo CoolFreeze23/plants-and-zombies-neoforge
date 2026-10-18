@@ -103,7 +103,7 @@ dependencies {
     // Iris: only its API is used (shader-pack checks), and only when the mod is present at runtime
     compileOnly "maven.modrinth:iris:${iris_version}"
 
-    // Optional mods for dev runs: ./gradlew runClient -PwithIris  /  -PwithVanillaBackport
+    // Optional mods for dev runs: ./gradlew runClient -PwithIris  /  -PwithVanillaBackport  /  -PwithCopperAgeBackport
     if (project.hasProperty('withIris')) {
         runtimeOnly "maven.modrinth:sodium:${sodium_version}"
         runtimeOnly "maven.modrinth:iris:${iris_version}"
@@ -111,6 +111,9 @@ dependencies {
     if (project.hasProperty('withVanillaBackport')) {
         runtimeOnly "maven.modrinth:vanillabackport:${vanillabackport_version}"
         runtimeOnly "maven.modrinth:platform:${platform_version}"
+    }
+    if (project.hasProperty('withCopperAgeBackport')) {
+        runtimeOnly "maven.modrinth:backport-copper-age:${copperagebackport_version}"
     }
 }
 
@@ -125,6 +128,7 @@ tasks.withType(ProcessResources).configureEach {
             terrablender_version_range: terrablender_version_range,
             iris_version_range       : iris_version_range,
             vanillabackport_version_range: vanillabackport_version_range,
+            copperagebackport_version_range: copperagebackport_version_range,
             mod_id                   : mod_id,
             mod_name                 : mod_name,
             mod_license              : mod_license,

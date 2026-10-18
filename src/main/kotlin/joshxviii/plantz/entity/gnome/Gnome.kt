@@ -8,6 +8,7 @@ import joshxviii.plantz.ai.goal.ProjectileAttackGoal
 import joshxviii.plantz.compat.ValueInput
 import joshxviii.plantz.compat.ValueOutput
 import joshxviii.plantz.entity.plant.Plant
+import joshxviii.plantz.integration.PazCopperAgeBackportCompat
 import net.minecraft.core.BlockPos
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.syncher.EntityDataAccessor
@@ -205,11 +206,11 @@ class Gnome(type: EntityType<out Gnome>, level: Level) :Monster(type, level) {
         if (random.nextFloat() < (if (this.level().difficulty == Difficulty.HARD) 0.5f else 0.33f)) {
             val rand = random.nextInt(5)
             when (rand) {
-                // copper axe / spear / pickaxe don't exist in 1.21.1 (nor in Vanilla Backport): stone tools
-                0 -> this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack(Items.STONE_AXE))
+                // copper tools come from Copper Age Backport (stone without it); 1.21.1 has no spears: stone sword
+                0 -> this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack(PazCopperAgeBackportCompat.item("copper_axe", Items.STONE_AXE)))
                 1 -> this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack(Items.STONE_SWORD))
                 2 -> this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack(Items.BOW))
-                else -> this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack(Items.STONE_PICKAXE))
+                else -> this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack(PazCopperAgeBackportCompat.item("copper_pickaxe", Items.STONE_PICKAXE)))
             }
         }
     }

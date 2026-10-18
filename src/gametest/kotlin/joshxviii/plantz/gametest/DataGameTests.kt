@@ -1,7 +1,9 @@
 package joshxviii.plantz.gametest
 
+import joshxviii.plantz.PazEntities
 import joshxviii.plantz.PazRegistries
 import joshxviii.plantz.PazTags
+import joshxviii.plantz.integration.PazCopperAgeBackportCompat
 import joshxviii.plantz.pazResource
 import net.minecraft.core.BlockPos
 import net.minecraft.core.component.DataComponents
@@ -12,6 +14,7 @@ import net.minecraft.gametest.framework.GameTestHelper
 import net.minecraft.locale.Language
 import net.minecraft.resources.ResourceKey
 import net.minecraft.resources.ResourceLocation
+import net.minecraft.sounds.SoundEvents
 import net.minecraft.tags.BlockTags
 import net.minecraft.tags.DamageTypeTags
 import net.minecraft.tags.EntityTypeTags
@@ -21,6 +24,7 @@ import net.minecraft.world.damagesource.DamageType
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.Mob
 import net.minecraft.world.entity.MobCategory
+import net.minecraft.world.entity.MobSpawnType
 import net.minecraft.world.item.SpawnEggItem
 import net.minecraft.world.entity.npc.VillagerProfession
 import net.minecraft.world.entity.npc.VillagerTrades
@@ -52,13 +56,15 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate
 /**
  * Data parity tests: recipes, loot tables, advancements, tags, worldgen, trades and data registries behave like the
  * upstream 26.1 data. The recipe and advancement tables are generated from the untouched upstream JSON (e92d5937).
- * They pass with and without Vanilla Backport (`./gradlew runGameTestServer -PwithVanillaBackport`).
+ * They pass with and without Vanilla Backport and Copper Age Backport (`./gradlew runGameTestServer -PwithVanillaBackport
+ * -PwithCopperAgeBackport`).
  */
 @GameTestHolder("plantz")
 @PrefixGameTestTemplate(false)
 object DataGameTests {
     private const val PLATFORM = CoreGameTests.PLATFORM
     private val vanillaBackport: Boolean get() = ModList.get().isLoaded("vanillabackport")
+    private val copperAgeBackport: Boolean get() = ModList.get().isLoaded("copperagebackport")
 
     private fun rl(id: String) = ResourceLocation.parse(id)
     private fun item(id: String): Item {
@@ -197,20 +203,22 @@ object DataGameTests {
         return out.filter { !it.isEmpty }
     }
 
-    /** Gravestone treasure rolls only upstream's items (its copper nuggets become copper ingots: 1.21.1 has no copper nugget). */
+    /** Gravestone treasure rolls only upstream's items (its copper nuggets are copper ingots without Copper Age Backport). */
     @JvmStatic
     @GameTest(template = PLATFORM)
     fun gravestoneTreasureRollsUpstreamItems(helper: GameTestHelper) {
+        val copper = if (copperAgeBackport) "minecraft:copper_nugget" else "minecraft:copper_ingot"
         val allowed = setOf(
-            "minecraft:copper_ingot", "minecraft:emerald", "minecraft:gold_ingot", "minecraft:gold_nugget",
+            copper, "minecraft:copper_ingot", "minecraft:emerald", "minecraft:gold_ingot", "minecraft:gold_nugget",
             "minecraft:iron_ingot", "minecraft:iron_nugget", "minecraft:ominous_bottle", "minecraft:rotten_flesh",
             "plantz:brainz_alloy", "plantz:cone", "plantz:ducky_tube", "plantz:newspaper",
         )
         val drops = roll(helper, "plantz:chests/gravestone_treasure", 400, chestParams(helper))
         val ids = drops.map(::itemId).toSet()
         helper.assertTrue(allowed.containsAll(ids), "unexpected treasure: ${ids - allowed}")
-        helper.assertTrue(ids.containsAll(listOf("minecraft:rotten_flesh", "minecraft:copper_ingot", "plantz:cone", "plantz:brainz_alloy", "minecraft:ominous_bottle")),
+        helper.assertTrue(ids.containsAll(listOf("minecraft:rotten_flesh", copper, "plantz:cone", "plantz:brainz_alloy", "minecraft:ominous_bottle")),
             "treasure never rolled: ${allowed - ids}")
+        if (copperAgeBackport) helper.assertTrue(drops.filter { itemId(it) == copper }.all { it.count in 1..4 }, "copper nuggets outside 1-4")
         val bottle = drops.first { it.`is`(Items.OMINOUS_BOTTLE) }
         helper.assertTrue(bottle.has(DataComponents.OMINOUS_BOTTLE_AMPLIFIER), "ominous bottle without an amplifier")
         helper.succeed()
@@ -354,6 +362,38 @@ object DataGameTests {
             if (adv.display().isPresent && adv.display().get().icon.isEmpty) problems += "${a.id}: empty icon"
         }
         helper.assertTrue(problems.isEmpty(), problems.joinToString("; "))
+        helper.succeed()
+    }
+
+    /**
+     * Copper Age Backport brings back upstream's copper content (its pack, the copper shovel icon, copper gnome tools and
+     * the copper chest / copper golem sounds); without it the 1.21.1 stand-ins are used.
+     */
+    @JvmStatic
+    @GameTest(template = PLATFORM)
+    fun copperAgeBackportContent(helper: GameTestHelper) {
+        val server = helper.level.server
+        val packOn = server.packRepository.selectedIds.any { it.contains("copperagebackport_compat") }
+        helper.assertTrue(packOn == copperAgeBackport, "copper pack enabled=$packOn, mod loaded=$copperAgeBackport")
+        val icon = server.advancements.get(pazResource("relocation"))!!.value().display().get().icon
+        helper.assertTrue(itemId(icon) == if (copperAgeBackport) "minecraft:copper_shovel" else "minecraft:iron_shovel", "relocation icon ${itemId(icon)}")
+
+        val tools = mutableSetOf<String>()
+        repeat(120) {
+            val gnome = helper.spawnWithNoFreeWill(PazEntities.GNOME, 7, 2, 7)
+            gnome.finalizeSpawn(helper.level, helper.level.getCurrentDifficultyAt(gnome.blockPosition()), MobSpawnType.NATURAL, null)
+            gnome.mainHandItem.takeIf { !it.isEmpty }?.let { tools += itemId(it) }
+            gnome.discard()
+        }
+        val expectedTools = if (copperAgeBackport) setOf("minecraft:copper_axe", "minecraft:stone_sword", "minecraft:bow", "minecraft:copper_pickaxe")
+            else setOf("minecraft:stone_axe", "minecraft:stone_sword", "minecraft:bow", "minecraft:stone_pickaxe")
+        helper.assertTrue(tools == expectedTools, "gnome tools $tools, expected $expectedTools")
+
+        for ((id, fallback) in listOf("block.copper_chest.open" to SoundEvents.COPPER_TRAPDOOR_OPEN, "block.copper_chest.close" to SoundEvents.COPPER_TRAPDOOR_CLOSE,
+                "entity.copper_golem.become_statue" to SoundEvents.DECORATED_POT_INSERT)) {
+            val sound = PazCopperAgeBackportCompat.sound(id, fallback).location
+            helper.assertTrue(sound == if (copperAgeBackport) ResourceLocation.withDefaultNamespace(id) else fallback.location, "$id plays $sound")
+        }
         helper.succeed()
     }
 

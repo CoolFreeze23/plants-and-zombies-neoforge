@@ -51,3 +51,10 @@ type="optional"
 versionRange="${vanillabackport_version_range}"
 ordering="AFTER"
 side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="copperagebackport"
+type="optional"
+versionRange="${copperagebackport_version_range}"
+ordering="AFTER"
+side="BOTH"

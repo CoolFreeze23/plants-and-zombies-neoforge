@@ -696,6 +696,7 @@ object PazEntities {
         return type
     }
 
+    @Suppress("FINAL_UPPER_BOUND") // upstream signature
     private fun <T : Gnome> registerGnome(
         name : String,
         builder: EntityType.Builder<T> = EntityType.Builder.createNothing(MobCategory.MONSTER),
