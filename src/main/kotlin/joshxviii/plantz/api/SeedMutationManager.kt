@@ -3,7 +3,6 @@ package joshxviii.plantz.api
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import joshxviii.plantz.PazRegistries
-import joshxviii.plantz.pazResource
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Holder
 import net.minecraft.core.HolderSet
@@ -125,7 +124,7 @@ sealed interface TimePredicate {
 
     data class Range(val min: Int, val max: Int) : TimePredicate {
         override fun matches(level: Level): Boolean {
-            val t = (level.dayTime % 24000L).toInt()// 26.1 overworldClockTime; 1.21.1 dimensions share the overworld day time
+            val t = (level.dayTime % 24000L).toInt()// 26.1 overworldClockTime
             return if (min <= max) t in min..max else t !in (max + 1)..<min
         }
     }

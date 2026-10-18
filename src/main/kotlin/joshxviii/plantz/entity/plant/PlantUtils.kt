@@ -1,7 +1,7 @@
 package joshxviii.plantz.entity.plant
 
 import joshxviii.plantz.*
-import joshxviii.plantz.item.GardeningGloveItem
+import joshxviii.plantz.compat.ValueOutput
 import joshxviii.plantz.item.SeedPacketItem
 import net.minecraft.ChatFormatting
 import net.minecraft.core.component.DataComponents
@@ -48,7 +48,7 @@ fun Plant.processSunItem(player: Player, item: ItemStack, hand: InteractionHand,
     }
     else if (growNeeds == PlantGrowNeeds.SUN && verifyOwner(player)) {// grow seeds
         playSound(
-            SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, 1.0f,// 26.1 ui.hud.bubble_pop does not exist in 1.21.1
+            SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, 1.0f,// 26.1 ui.hud.bubble_pop is not in 1.21.1 or Vanilla Backport
             receivedSun.toFloat()/sunRequiredForSeeds() + 0.9f
         )
         if (receivedSun++ >= sunRequiredForSeeds()) awardSeedPacket(player)
@@ -114,7 +114,7 @@ fun Plant.processGloveItem(player: Player, item: ItemStack, hand: InteractionHan
             }
 
             val data = this.saveAsCompoundTag()
-            // 26.1 TypedEntityData(type, tag) serializes as the tag plus an "id" field, same as 1.21.1 CustomData
+            // 26.1 TypedEntityData(type, tag): the tag with an "id" field
             data.putString("id", EntityType.getKey(this.type).toString())
             item.set(DataComponents.ENTITY_DATA, CustomData.of(data))
 
@@ -137,7 +137,7 @@ fun Plant.processGloveItem(player: Player, item: ItemStack, hand: InteractionHan
 fun Entity.saveAsCompoundTag(): CompoundTag {
     val tag = CompoundTag()
     saveWithoutId(tag)
-    if (this is Plant) plantSaveData(joshxviii.plantz.compat.ValueOutput.of(tag, registryAccess()))
+    if (this is Plant) plantSaveData(ValueOutput.of(tag, registryAccess()))
     return tag.apply {
         remove("UUID")
         remove("Pos")
@@ -146,7 +146,7 @@ fun Entity.saveAsCompoundTag(): CompoundTag {
 
 // seed packet interaction
 fun Plant.processSeedPacketInteraction(player: Player, itemStack: ItemStack, blockState: BlockState? = null): PacketInteractionResult {
-    val type = itemStack.get(DataComponents.ENTITY_DATA)?.let { EntityType.by(it.unsafe).orElse(null) }
+    val type = itemStack.get(DataComponents.ENTITY_DATA)?.let { EntityType.by(it.copyTag()).orElse(null) }
     val availableSun = player.getTotalSun()
     val sunCost = itemStack.get(PazComponents.SUN_COST)?.getSunCost(type)?: 0
     val cantAfford = sunCost > availableSun && !player.hasInfiniteMaterials()

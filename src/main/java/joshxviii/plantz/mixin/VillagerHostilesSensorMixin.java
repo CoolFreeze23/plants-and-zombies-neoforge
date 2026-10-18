@@ -1,7 +1,6 @@
 package joshxviii.plantz.mixin;
 
 import joshxviii.plantz.PazTags;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.sensing.VillagerHostilesSensor;
 import org.spongepowered.asm.mixin.Mixin;

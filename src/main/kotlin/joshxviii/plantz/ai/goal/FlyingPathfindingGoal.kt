@@ -1,10 +1,8 @@
 package joshxviii.plantz.ai.goal
 
-import joshxviii.plantz.ai.ZombieState
 import joshxviii.plantz.entity.zombie.PazZombie
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.PathfinderMob
-import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.ai.goal.Goal
 import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.level.pathfinder.Path

@@ -1,10 +1,10 @@
 package joshxviii.plantz.ai.goal
 
-import joshxviii.plantz.entity.plant.knownSpeed
-
 import joshxviii.plantz.PazSounds
 import joshxviii.plantz.applyImpulse
 import joshxviii.plantz.entity.plant.Plant
+import joshxviii.plantz.entity.plant.knownSpeed
+import joshxviii.plantz.entity.plant.spawnProjectile
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.util.Mth
@@ -84,7 +84,8 @@ class ProjectileAttackGoal(
 
         val level = usingEntity.level() as ServerLevel
         val projectile = projectileFactory()
-        level.addFreshEntity(projectile)// 26.1: Projectile.spawnProjectile(projectile, level, ItemStack.EMPTY) for projectiles
+        if (projectile is Projectile) spawnProjectile(projectile, level, ItemStack.EMPTY)
+        else level.addFreshEntity(projectile)
 
         val targetPosNow = Vec3(
             target.x - projectile.x,

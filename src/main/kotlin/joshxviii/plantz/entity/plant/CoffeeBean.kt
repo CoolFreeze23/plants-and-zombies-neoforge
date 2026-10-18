@@ -1,17 +1,17 @@
 package joshxviii.plantz.entity.plant
 
-import joshxviii.plantz.PazEntities
 import joshxviii.plantz.PazTags.BlockTags.PLANTABLE
 import joshxviii.plantz.ai.goal.WakeUpSleepingPlantsGoal
 import net.minecraft.core.BlockPos
 import net.minecraft.core.particles.DustParticleOptions
 import net.minecraft.tags.BlockTags
 import net.minecraft.util.RandomSource
-import net.minecraft.world.entity.MobSpawnType
 import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.MobSpawnType
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.LevelAccessor
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.Vec3
 
 class CoffeeBean(type: EntityType<out Plant>, level: Level) : Plant(type, level) {
 
@@ -37,7 +37,7 @@ class CoffeeBean(type: EntityType<out Plant>, level: Level) : Plant(type, level)
             actionSuccessEffect = {
                 addParticlesAroundSelf(
                     level(),
-                    DustParticleOptions(net.minecraft.world.phys.Vec3.fromRGB24(8606770).toVector3f(), 1f),
+                    DustParticleOptions(Vec3.fromRGB24(8606770).toVector3f(), 1f),
                     amount = 12..14,
                     horizontalSpreadScale = 0.1,
                     verticalSpreadScale = 0.3,

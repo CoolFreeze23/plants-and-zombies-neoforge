@@ -1,22 +1,16 @@
 package joshxviii.plantz.effect
 
-import io.netty.buffer.ByteBuf
 import joshxviii.plantz.PazEffects.PAINTED
 import joshxviii.plantz.PazServerParticles
 import net.minecraft.core.particles.ParticleOptions
-import net.minecraft.network.codec.ByteBufCodecs
-import net.minecraft.network.syncher.EntityDataAccessor
-import net.minecraft.network.syncher.EntityDataSerializers
-import net.minecraft.network.syncher.SynchedEntityData
 import net.minecraft.server.level.ServerLevel
-import net.minecraft.tags.FluidTags
 import net.minecraft.util.RandomSource
 import net.minecraft.world.effect.MobEffect
 import net.minecraft.world.effect.MobEffectCategory
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.DyeColor
-import org.spongepowered.asm.mixin.Unique
+import net.neoforged.neoforge.common.NeoForgeMod
 
 class PaintedMobEffect(
     category: MobEffectCategory,
@@ -48,8 +42,8 @@ class PaintedMobEffect(
     }
 
     override fun applyEffectTick(mob: LivingEntity, amplification: Int): Boolean {
-        if (mob.level() !is ServerLevel) return true// 26.1 only ticks effects on the server
-        if (mob.isEyeInFluid(FluidTags.WATER)) return false
+        if (mob.level() !is ServerLevel) return true
+        if (mob.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) return false
         return super.applyEffectTick(mob, amplification)
     }
 

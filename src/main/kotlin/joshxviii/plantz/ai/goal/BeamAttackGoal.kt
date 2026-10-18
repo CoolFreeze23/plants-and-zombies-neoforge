@@ -1,12 +1,10 @@
 package joshxviii.plantz.ai.goal
 
-import joshxviii.plantz.entity.plant.rootOwner
-
 import joshxviii.plantz.PazConfig
 import joshxviii.plantz.PazDamageTypes
 import joshxviii.plantz.entity.plant.Plant
+import joshxviii.plantz.rootOwner
 import net.minecraft.resources.ResourceKey
-import net.minecraft.server.level.ServerLevel
 import net.minecraft.util.Mth
 import net.minecraft.world.damagesource.DamageType
 import net.minecraft.world.entity.Entity

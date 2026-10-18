@@ -3,9 +3,8 @@ package joshxviii.plantz.entity.projectile
 import joshxviii.plantz.*
 import joshxviii.plantz.entity.plant.Plant
 import joshxviii.plantz.entity.plant.headLookAngle
-import joshxviii.plantz.entity.plant.rootOwner
-import net.minecraft.util.Mth
 import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.core.particles.ParticleOptions
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
@@ -17,6 +16,7 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
+import net.minecraft.util.Mth
 import net.minecraft.world.damagesource.DamageType
 import net.minecraft.world.entity.*
 import net.minecraft.world.entity.ai.attributes.Attributes
@@ -53,7 +53,23 @@ abstract class PazProjectile(
 
     companion object {
         val EXPLOSION_CALCULATOR: ExplosionDamageCalculator = SimpleExplosionDamageCalculator(false, true, Optional.of(1.0f), Optional.ofNullable(null))
-        // 26.1 ProjectileUtil helpers (1.21.1 lacks them / returns the entity position instead of the hit location)
+        /** 26.1 `CollisionGetter.clipIncludingBorder`: the world border stops projectiles like a block (1.21.1 has no border flag on the hit). */
+        fun clipIncludingBorder(level: Level, context: ClipContext): BlockHitResult {
+            val hitResult = level.clip(context)
+            val border = level.worldBorder
+            if (border.isWithinBounds(context.from) && !border.isWithinBounds(hitResult.location)) {
+                val delta = hitResult.location.subtract(context.from)
+                val hit = Vec3(
+                    Mth.clamp(hitResult.location.x, border.minX, border.maxX - 1.0E-5),
+                    hitResult.location.y,
+                    Mth.clamp(hitResult.location.z, border.minZ, border.maxZ - 1.0E-5)
+                )
+                return BlockHitResult(hit, Direction.getNearest(delta.x, delta.y, delta.z), BlockPos.containing(hit), false)
+            }
+            return hitResult
+        }
+
+        // 26.1 ProjectileUtil.getEntityHitResult/getManyEntityHitResult (missing or different on 1.21.1)
         fun computeMargin(source: Entity): Float = Math.max(0.0f, Math.min(0.3f, (source.tickCount - 2).toFloat() / 20.0f))
 
         fun getEntityHitResult(level: Level, source: Entity, from: Vec3, to: Vec3, targetSearchArea: AABB, matching: Predicate<Entity>, entityMargin: Float): EntityHitResult? {
@@ -158,16 +174,16 @@ abstract class PazProjectile(
 
         val originalPosition = this.position()
         if (physicsEnabled) {
-            val blockHitResult = level
-                .clip(
-                    ClipContext(
-                        originalPosition,
-                        originalPosition.add(movement),
-                        ClipContext.Block.COLLIDER,
-                        ClipContext.Fluid.NONE,
-                        this
-                    )
+            val blockHitResult = clipIncludingBorder(
+                level,
+                ClipContext(
+                    originalPosition,
+                    originalPosition.add(movement),
+                    ClipContext.Block.COLLIDER,
+                    ClipContext.Fluid.NONE,
+                    this
                 )
+            )
             this.stepMoveAndHit(blockHitResult)
         } else {
             this.setPos(originalPosition.add(movement))

@@ -1,17 +1,13 @@
 package joshxviii.plantz.entity.plant
 
 import joshxviii.plantz.*
-import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.entity.AreaEffectCloud
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.entity.ai.attributes.Attributes
-import net.minecraft.world.entity.monster.Zombie
 import net.minecraft.world.level.Level
 
 class HypnoShroom(type: EntityType<out Plant>, level: Level) : Plant(type, level) {

@@ -1,12 +1,15 @@
 package joshxviii.plantz.entity.plant
 
-import joshxviii.plantz.compat.AnimationState
 import joshxviii.plantz.*
 import joshxviii.plantz.PazDataSerializers.DATA_PLANT_STATE
 import joshxviii.plantz.PazTags.BlockTags.PLANTABLE
 import joshxviii.plantz.ai.PlantState
 import joshxviii.plantz.ai.goal.SleepGoal
 import joshxviii.plantz.api.SeedMutationManager
+import joshxviii.plantz.compat.AnimationState
+import joshxviii.plantz.compat.EntityReference
+import joshxviii.plantz.compat.ValueInput
+import joshxviii.plantz.compat.ValueOutput
 import joshxviii.plantz.entity.Sun
 import joshxviii.plantz.item.SeedPacketItem
 import net.minecraft.ChatFormatting
@@ -26,6 +29,7 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
+import net.minecraft.tags.EntityTypeTags
 import net.minecraft.tags.FluidTags
 import net.minecraft.tags.ItemTags
 import net.minecraft.util.Mth
@@ -49,20 +53,16 @@ import net.minecraft.world.entity.ai.goal.target.OwnerHurtTargetGoal
 import net.minecraft.world.entity.ai.village.poi.PoiManager
 import net.minecraft.world.entity.item.ItemEntity
 import net.minecraft.world.entity.monster.Enemy
-import net.minecraft.world.entity.monster.Shulker
 import net.minecraft.world.entity.monster.Zombie
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.*
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.levelgen.Heightmap
-import joshxviii.plantz.compat.EntityReference
-import joshxviii.plantz.compat.ValueInput
-import joshxviii.plantz.compat.ValueOutput
 import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 import net.neoforged.neoforge.common.NeoForgeMod
 import net.neoforged.neoforge.fluids.FluidType
-import net.minecraft.world.phys.Vec3
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -82,6 +82,7 @@ abstract class Plant(type: EntityType<out Plant>, level: Level) : TamableAnimal(
         /**
          * Default plant spawn rules
          */
+        @Suppress("DEPRECATION")// LevelReader.getSeaLevel(): no replacement on 1.21.1
         fun checkPlantSpawnRules(
             type: EntityType<out Plant>,
             level: LevelAccessor,
@@ -210,7 +211,7 @@ abstract class Plant(type: EntityType<out Plant>, level: Level) : TamableAnimal(
             this.entityData.set(ATTACHED_PLAYER, Optional.ofNullable(value?.uuid))
         }
 
-    // 1.21.1's OwnableEntity only resolves player owners; 26.1 resolves any living entity.
+    // 26.1 resolves any living owner; 1.21.1 OwnableEntity only looks up players
     override fun getOwner(): LivingEntity? {
         val uuid = ownerUUID ?: return null
         return level().getPlayerByUUID(uuid) ?: (level().entities.get(uuid) as? LivingEntity)
@@ -337,8 +338,8 @@ abstract class Plant(type: EntityType<out Plant>, level: Level) : TamableAnimal(
         level: ServerLevel,
         partner: AgeableMob
     ): AgeableMob? { return this }
-    /** 26.1 canBreatheUnderwater() is overridable; on NeoForge 1.21.1 it is final, so plants override this instead. */
-    open fun plantCanBreatheUnderwater(): Boolean = canBreatheUnderwater()
+    // 26.1 canBreatheUnderwater() is final on NeoForge 1.21.1, so plants override this instead
+    open fun plantCanBreatheUnderwater(): Boolean = type.`is`(EntityTypeTags.CAN_BREATHE_UNDER_WATER)
     override fun canDrownInFluidType(type: FluidType): Boolean {
         if (type == NeoForgeMod.WATER_TYPE.value() && plantCanBreatheUnderwater()) return false
         return super.canDrownInFluidType(type)
@@ -361,7 +362,7 @@ abstract class Plant(type: EntityType<out Plant>, level: Level) : TamableAnimal(
     override fun canUsePortal(ignorePassenger: Boolean): Boolean = super.canUsePortal(ignorePassenger) && !isAttached()
     fun isAttached(): Boolean = attachedEntity!=null
 
-    // 26.1 hurtServer/hurtClient -> 1.21.1 hurt (client side keeps vanilla behaviour)
+    // 26.1 hurtServer; the client side keeps vanilla behaviour (26.1 hurtClient)
     override fun hurt(source: DamageSource, damage: Float): Boolean {
         if (level() !is ServerLevel) return super.hurt(source, damage)
         if (source.`is`(PazTags.DamageTypes.IGNORED_BY_PLANTS)) return false
@@ -436,7 +437,7 @@ abstract class Plant(type: EntityType<out Plant>, level: Level) : TamableAnimal(
 
     override fun tick() {
         super.tick()
-        // 26.1 isAffectedByBlocks(): attached plants (noPhysics) still get block-inside effects
+        // 26.1 isAffectedByBlocks(): attached plants are noPhysics, which skips block effects on 1.21.1
         if (isAttached() && !isRemoved) checkInsideBlocks()
         attachedEntity?.positionPlant(this)
         if (attachedEntity?.canWearPlant() == false) {
@@ -596,7 +597,7 @@ abstract class Plant(type: EntityType<out Plant>, level: Level) : TamableAnimal(
 
     fun timeRequiredForSeeds() : Int {
         val sunCost = PazConfig.getSunCost(type)
-        val zenBuff = level().hasChunkAt(blockPosition()) && getBlockBelow().`is`(PazBlocks.ZEN_PLANT_POT)
+        val zenBuff = level().isLoaded(blockPosition()) && getBlockBelow().`is`(PazBlocks.ZEN_PLANT_POT)
         return PazConfig.getGrowTime(sunCost, zenBuff)
     }
 

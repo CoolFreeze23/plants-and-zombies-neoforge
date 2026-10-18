@@ -6,11 +6,14 @@ import joshxviii.plantz.PazDamageTypes
 import joshxviii.plantz.PazTags
 import joshxviii.plantz.PazTags.EntityTypes.WALLNUT_DEFLECTABLE
 import joshxviii.plantz.applyImpulse
+import joshxviii.plantz.compat.ValueInput
+import joshxviii.plantz.compat.ValueOutput
 import joshxviii.plantz.entity.Sun
-import joshxviii.plantz.isHypnotized
 import joshxviii.plantz.item.GardeningGloveItem
 import joshxviii.plantz.pazResource
+import joshxviii.plantz.rootOwner
 import net.minecraft.core.Direction
+import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.EntityDataSerializers
 import net.minecraft.network.syncher.SynchedEntityData
@@ -30,8 +33,6 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.state.BlockState
-import joshxviii.plantz.compat.ValueInput
-import joshxviii.plantz.compat.ValueOutput
 import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
 
@@ -93,11 +94,6 @@ open class WallNut(type: EntityType<out Plant>, level: Level) : Plant(type, leve
 
     override fun tick() {
         super.tick()
-        if (!isRolling && level() is ServerLevel && isAlive && !isAttached()) {
-            // see canBeCollidedWith(): zombies pushing against the nut attack it
-            level().getEntitiesOfClass(Zombie::class.java, boundingBox.inflate(0.01)) { it != attachedEntity }
-                .forEach { hurtOnCollide(it) }
-        }
         if (!isRolling) return
         if (level() !is ServerLevel) return
 
@@ -151,13 +147,13 @@ open class WallNut(type: EntityType<out Plant>, level: Level) : Plant(type, leve
         entityData.define(ROLLING, false)
     }
 
-    override fun addAdditionalSaveData(tag: net.minecraft.nbt.CompoundTag) {
+    override fun addAdditionalSaveData(tag: CompoundTag) {
         super.addAdditionalSaveData(tag)
         val output = ValueOutput.of(tag, registryAccess())
         output.putBoolean("plantz:IsRolling", isRolling)
     }
 
-    override fun readAdditionalSaveData(tag: net.minecraft.nbt.CompoundTag) {
+    override fun readAdditionalSaveData(tag: CompoundTag) {
         super.readAdditionalSaveData(tag)
         val input = ValueInput.of(tag, registryAccess())
         isRolling = input.getBooleanOr("plantz:IsRolling", false)
@@ -165,11 +161,16 @@ open class WallNut(type: EntityType<out Plant>, level: Level) : Plant(type, leve
 
     override fun attackGoals() {}
 
-    // 26.1 canBeCollidedWith(other): 1.21.1 has no "other" parameter. Sun opts out on its side (Sun.canCollideWith),
-    // the wearer is excluded via isAttached(), and colliding zombies are polled in tick() (hurtOnCollide).
-    override fun canBeCollidedWith(): Boolean {
+    // 26.1 canBeCollidedWith(other); mixin.EntityCollisionMixin passes the colliding entity on 1.21.1
+    override fun canBeCollidedWith(): Boolean = canBeCollidedWith(null)
+
+    fun canBeCollidedWith(other: Entity?): Boolean {
         if (isRolling) return super.canBeCollidedWith()
-        return isAlive && !isAttached()
+
+        hurtOnCollide(other)
+
+        if (other is Sun) return false
+        return isAlive && other != attachedEntity
     }
 
     override fun hurt(source: DamageSource, damage: Float): Boolean{

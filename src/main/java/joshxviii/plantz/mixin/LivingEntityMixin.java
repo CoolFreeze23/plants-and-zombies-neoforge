@@ -2,6 +2,8 @@ package joshxviii.plantz.mixin;
 
 import com.mojang.serialization.Codec;
 import joshxviii.plantz.*;
+import joshxviii.plantz.compat.ValueInput;
+import joshxviii.plantz.compat.ValueOutput;
 import joshxviii.plantz.effect.PaintedMobEffect;
 import joshxviii.plantz.effect.PazMobEffectHooks;
 import joshxviii.plantz.entity.plant.Plant;
@@ -12,9 +14,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tags.FluidTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffect;
@@ -27,9 +27,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.pathfinder.PathType;
-import joshxviii.plantz.compat.ValueInput;
-import joshxviii.plantz.compat.ValueOutput;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.common.NeoForgeMod;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -115,26 +114,25 @@ abstract public class LivingEntityMixin implements PlantHeadAttachment, GardenHe
         completedRaidWaveList = value;
     }
 
-
-
+    // read through LivingEntityAccessor's invokers
     @Unique
-    public boolean plantz$getHypnoId() {
+    private boolean plantz$hypnoFlag() {
         return ((Entity) (Object) this).getEntityData().get(DATA_HYPNO_ID);
     }
     @Unique
-    public boolean plantz$getChillId() {
+    private boolean plantz$chillFlag() {
         return ((Entity) (Object) this).getEntityData().get(DATA_CHILL_ID);
     }
     @Unique
-    public boolean plantz$getFrozenId() {
+    private boolean plantz$frozenFlag() {
         return ((Entity) (Object) this).getEntityData().get(DATA_FROZEN_ID);
     }
     @Unique
-    public boolean plantz$getButterId() {
+    private boolean plantz$butterFlag() {
         return ((Entity) (Object) this).getEntityData().get(DATA_BUTTER_ID);
     }
     @Unique
-    public Map<Integer, Integer> plantz$getPaintedColors() {
+    private Map<Integer, Integer> plantz$paintedColors() {
         return ((Entity) (Object) this).getEntityData().get(DATA_PAINTED_COLORS);
     }
 
@@ -172,8 +170,8 @@ abstract public class LivingEntityMixin implements PlantHeadAttachment, GardenHe
         //base
         double upwardForce = fluidType == Fluids.LAVA ? 0.1 : 0.015;
         // submerged
-        if (entity.isEyeInFluid(FluidTags.WATER)) upwardForce = 0.135;
-        if (entity.isEyeInFluid(FluidTags.LAVA)) upwardForce = 0.15;
+        if (entity.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) upwardForce = 0.135;
+        if (entity.isEyeInFluidType(NeoForgeMod.LAVA_TYPE.value())) upwardForce = 0.15;
         // sneaking
         if (entity.isShiftKeyDown()) upwardForce *= fluidType == Fluids.LAVA? 0.0 : 0.2;
 

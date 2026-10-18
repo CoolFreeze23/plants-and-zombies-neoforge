@@ -1,6 +1,5 @@
 package joshxviii.plantz.entity.plant
 
-import joshxviii.plantz.PazEntities
 import joshxviii.plantz.ai.goal.MeleeAttackActionGoal
 import joshxviii.plantz.applyImpulse
 import net.minecraft.network.syncher.EntityDataAccessor
@@ -8,9 +7,9 @@ import net.minecraft.network.syncher.EntityDataSerializers
 import net.minecraft.network.syncher.SynchedEntityData
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.DifficultyInstance
-import net.minecraft.world.entity.MobSpawnType
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.MobSpawnType
 import net.minecraft.world.entity.SpawnGroupData
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal
 import net.minecraft.world.entity.monster.Creeper

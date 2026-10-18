@@ -1,7 +1,6 @@
 package joshxviii.plantz.ai.goal
 
 import joshxviii.plantz.PazConfig.POWERED_UP_COOLDOWN_REDUCTION
-import joshxviii.plantz.ai.PlantState
 import joshxviii.plantz.entity.plant.Plant
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.PathfinderMob

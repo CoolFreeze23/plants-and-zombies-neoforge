@@ -2,7 +2,6 @@ package joshxviii.plantz.entity.plant
 
 import joshxviii.plantz.PazBlocks
 import joshxviii.plantz.PazCriteria
-import joshxviii.plantz.PazEntities
 import joshxviii.plantz.PazLootTables
 import joshxviii.plantz.PazTags
 import joshxviii.plantz.ai.goal.ActionGoal
@@ -12,9 +11,7 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.entity.EntityType
-import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.item.ItemEntity
-import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.storage.loot.LootParams

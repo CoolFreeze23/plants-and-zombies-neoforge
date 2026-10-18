@@ -5,6 +5,7 @@ import joshxviii.plantz.PazEntities
 import net.minecraft.core.particles.ItemParticleOption
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.Level
 import net.minecraft.world.phys.HitResult
@@ -29,7 +30,7 @@ class Melon(
         spawnParticle(
             ItemParticleOption(
                 ParticleTypes.ITEM,
-                net.minecraft.world.item.ItemStack(Items.MELON_SLICE)
+                ItemStack(Items.MELON_SLICE)
             ),
             amount = 45,
             speed = 0.13,

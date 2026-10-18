@@ -1,8 +1,8 @@
 package joshxviii.plantz.entity.plant
 
-import joshxviii.plantz.integration.PazVanillaBackportCompat
 import joshxviii.plantz.*
 import joshxviii.plantz.ai.goal.MeleeAttackActionGoal
+import joshxviii.plantz.integration.PazVanillaBackportCompat
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.network.syncher.EntityDataAccessor
@@ -16,9 +16,9 @@ import net.minecraft.util.Mth
 import net.minecraft.util.RandomSource
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.MobSpawnType
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.MobSpawnType
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal
 import net.minecraft.world.entity.monster.Enemy
@@ -126,7 +126,7 @@ class TangleKelp(type: EntityType<out Plant>, level: Level) : Plant(type, level)
         if (target is ServerPlayer) target.connection.send(ClientboundSetEntityMotionPacket(target))
         target.addDeltaMovement(direction)
         target.hasImpulse = true
-        target.checkSlowFallDistance()// 26.1 checkFallDistanceAccumulation()
+        target.checkSlowFallDistance()
 
         if (tickCount % 4 == 0) {
             (level() as? ServerLevel)?.sendParticles(
@@ -159,7 +159,7 @@ class TangleKelp(type: EntityType<out Plant>, level: Level) : Plant(type, level)
         override fun doAction() : Boolean {
             val success = super.doAction()
             if (success) {
-                // 26.1 CREAKING_ACTIVATE; Vanilla Backport provides it on 1.21.1, otherwise hanging roots
+                // CREAKING_ACTIVATE comes from Vanilla Backport on 1.21.1, hanging roots without it
                 tangleKelp.playSound(PazVanillaBackportCompat.sound("entity.creaking.activate", SoundEvents.HANGING_ROOTS_BREAK), 1f, 1f)
                 tangleKelp.tangleTime = TANGLE_TIME + tangleKelp.random.nextInt(-10,20)
                 tangleKelp.target?.addEffect(MobEffectInstance(PazEffects.TANGLED, 80, 0), tangleKelp)

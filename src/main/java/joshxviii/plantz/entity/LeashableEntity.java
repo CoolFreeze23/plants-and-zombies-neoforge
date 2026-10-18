@@ -10,6 +10,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Leashable;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
@@ -18,13 +19,10 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Base class for leashable non-mob entities (balloons).
- * <p>
- * Port note: 1.21.1's {@link Leashable} lacks the 26.1 elastic leash physics and hooks, so the 26.1 behaviour is
- * re-implemented here: {@link #leashElasticDistance()}, {@link #leashSnapDistance()}, {@link #onElasticLeashPull()},
- * {@link #onLeashRemoved()}, {@link #dropLeash()}, {@link #removeLeash()} and the spring/torque leash pull.
- * Vanilla's {@code Leashable.tickLeash} (server side, from {@code Entity.baseTick}) calls
- * {@link #handleLeashAtDistance}, which runs the 26.1 logic and returns false so the 1.21.1 distance rules are skipped.
+ * Leashable non-mob entity (balloons) with the 26.1 leash behaviour, which 1.21.1's {@link Leashable} lacks:
+ * {@link #leashElasticDistance()}, {@link #leashSnapDistance()}, {@link #onElasticLeashPull()}, {@link #onLeashRemoved()},
+ * {@link #dropLeash()}, {@link #removeLeash()} and the spring/torque leash pull. Vanilla's {@code Leashable.tickLeash}
+ * calls {@link #handleLeashAtDistance}, which runs the 26.1 logic and returns false to skip the 1.21.1 distance rules.
  */
 public abstract class LeashableEntity extends Entity implements Leashable {
     private static final Vec3 AXIS_SPECIFIC_ELASTICITY = new Vec3(0.8, 0.2, 0.8);
@@ -38,7 +36,25 @@ public abstract class LeashableEntity extends Entity implements Leashable {
         super(type, level);
     }
 
-    // ---- 26.1 Leashable API ----
+    /**
+     * 26.1 {@code Leashable.tickLeash}: when either end can no longer interact with the level the leash goes through
+     * {@link #dropLeash()} (or {@link #removeLeash()} without entity drops). 1.21.1 would drop a lead directly, before
+     * {@link #handleLeashAtDistance} runs, so this check comes first.
+     */
+    @Override
+    public void baseTick() {
+        Leashable.LeashData leashData = this.getLeashData();
+        if (this.level() instanceof ServerLevel level && leashData != null && leashData.leashHolder != null
+            && (!canInteractWithLevel(this) || !canInteractWithLevel(leashData.leashHolder))) {
+            if (level.getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) this.dropLeash();
+            else this.removeLeash();
+        }
+        super.baseTick();
+    }
+
+    private static boolean canInteractWithLevel(Entity entity) {
+        return entity.isAlive() && !entity.isRemoved() && !entity.isSpectator();
+    }
 
     public double leashSnapDistance() {
         return 12.0;
@@ -98,6 +114,7 @@ public abstract class LeashableEntity extends Entity implements Leashable {
         if (leashData == null) return false;
         double distanceTo = this.leashDistanceTo(leashHolder);
         if (distanceTo > this.leashSnapDistance()) {
+            // 26.1 LEAD_BREAK (item.lead.break) is not in 1.21.1 or Vanilla Backport
             level.playSound(null, leashHolder.getX(), leashHolder.getY(), leashHolder.getZ(), SoundEvents.LEASH_KNOT_BREAK, SoundSource.NEUTRAL, 1.0F, 1.0F);
             this.leashTooFarBehaviour();
         } else if (distanceTo > this.leashElasticDistance() - (double) leashHolder.getBbWidth() - (double) this.getBbWidth()
