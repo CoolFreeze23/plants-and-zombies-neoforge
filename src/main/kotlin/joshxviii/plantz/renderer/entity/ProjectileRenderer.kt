@@ -77,8 +77,8 @@ class ProjectileRenderer<M: EntityModel<ProjectileRenderState>>(
         super.extractRenderState(entity, state, partialTick)
         if (entity is PaintBall) state.color = entity.dyeColor.fireworkColor
         if (entity is LaserBullet) state.color = entity.laserColor
-        state.xRot = entity.getXRot(partialTick)
-        state.yRot = entity.getYRot(partialTick)
+        state.xRot = entity.getViewXRot(partialTick)
+        state.yRot = entity.getViewYRot(partialTick)
         state.texturePath = BuiltInRegistries.ENTITY_TYPE.getKey(entity.type).path
     }
 }

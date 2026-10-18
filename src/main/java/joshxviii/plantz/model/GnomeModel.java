@@ -6,7 +6,6 @@ import joshxviii.plantz.animation.GnomeAnimation;
 import joshxviii.plantz.block.GardenGnomePose;
 import joshxviii.plantz.renderer.entity.GnomeRenderState;
 import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
-import net.minecraft.client.model.ArmedModel;
 import joshxviii.plantz.compat.client.model.EntityModel;
 import net.minecraft.client.model.HeadedModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -16,11 +15,10 @@ import net.minecraft.client.model.geom.builders.*;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.HumanoidArm;
 import org.jetbrains.annotations.NotNull;
-import org.jspecify.annotations.NonNull;
 
 import static joshxviii.plantz.UtilsKt.pazResource;
 
-public class GnomeModel<T extends GnomeRenderState> extends EntityModel<T> implements ArmedModel<T>, HeadedModel {
+public class GnomeModel<T extends GnomeRenderState> extends EntityModel<T> implements HeadedModel {
 	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(pazResource("gnome"), "main");
 	private final KeyframeAnimation waveAnimation;
 	private final KeyframeAnimation relaxAnimation;
@@ -148,10 +146,6 @@ public class GnomeModel<T extends GnomeRenderState> extends EntityModel<T> imple
 				this.arm_R.xRot = (float) (-Math.PI / 2) + this.head.xRot;
 				this.arm_L.xRot = (float) (-Math.PI / 2) + this.head.xRot;
 				break;
-			case SPEAR:
-				this.arm_R.yRot = (float) (Math.PI / 180.0) * Math.clamp((180.0F / (float)Math.PI) * arm_R.yRot, -60.0F, 60.0F);
-				this.arm_R.xRot = (float) (Math.PI / 180.0) * Math.clamp((180.0F / (float)Math.PI) * arm_R.xRot, -120.0F, 30.0F);
-				break;
 		}
 
 		switch (state.leftArmPose) {
@@ -164,15 +158,10 @@ public class GnomeModel<T extends GnomeRenderState> extends EntityModel<T> imple
 				this.arm_L.xRot = (float) (-Math.PI / 2) + this.head.xRot;
 				this.arm_R.xRot = (float) (-Math.PI / 2) + this.head.xRot;
 				break;
-			case SPEAR:
-				this.arm_L.yRot = (float) (Math.PI / 180.0) * Math.clamp((180.0F / (float)Math.PI) * arm_L.yRot, -60.0F, 60.0F);
-				this.arm_L.xRot = (float) (Math.PI / 180.0) * Math.clamp((180.0F / (float)Math.PI) * arm_L.xRot, -120.0F, 30.0F);
-				break;
 		}
 	}
 
-	@Override
-	public void translateToHand(T state, @NonNull HumanoidArm arm, @NonNull PoseStack poseStack) {
+	public void translateToHand(T state, @NotNull HumanoidArm arm, @NotNull PoseStack poseStack) {
 		root.translateAndRotate(poseStack);
 		body.translateAndRotate(poseStack);
 		torso.translateAndRotate(poseStack);
@@ -182,8 +171,7 @@ public class GnomeModel<T extends GnomeRenderState> extends EntityModel<T> imple
 		poseStack.translate(0.046875 * (arm == HumanoidArm.LEFT? 1f : -1f), -0.12, 0.078125);
 	}
 
-	@Override
-	public void translateToHead(@NonNull PoseStack poseStack) {
+	public void translateToHead(@NotNull PoseStack poseStack) {
 		root.translateAndRotate(poseStack);
 		body.translateAndRotate(poseStack);
 		torso.translateAndRotate(poseStack);
@@ -193,7 +181,7 @@ public class GnomeModel<T extends GnomeRenderState> extends EntityModel<T> imple
 	}
 
 	@Override
-	public @NonNull ModelPart getHead() {
+	public @NotNull ModelPart getHead() {
 		return this.head;
 	}
 

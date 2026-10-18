@@ -4,13 +4,11 @@ import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
 import joshxviii.plantz.entity.Sun
 import joshxviii.plantz.pazResource
-import net.minecraft.client.renderer.RenderPipelines
+import joshxviii.plantz.PazRenderPipelines
 import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector
 import joshxviii.plantz.compat.client.renderer.EntityRenderer
 import net.minecraft.client.renderer.entity.EntityRendererProvider
 import joshxviii.plantz.compat.client.state.EntityRenderState
-import net.minecraft.client.renderer.rendertype.OutputTarget
-import net.minecraft.client.renderer.rendertype.RenderSetup
 import net.minecraft.client.renderer.RenderType
 import joshxviii.plantz.compat.client.CameraRenderState
 import net.minecraft.client.renderer.texture.OverlayTexture
@@ -43,7 +41,7 @@ class SunRenderer(context: EntityRendererProvider.Context) :
         val br = 0xFFFF77
         val rc = 0xFFFF77
         val gc = 0xFFFF77
-        val bc = ((Mth.sin(rr + 10.0) + r) * xo * br).toInt()
+        val bc = ((Mth.sin(rr + 10.0f) + r) * xo * br).toInt()
         poseStack.translate(0.0f, 0.1f, 0.0f)
         poseStack.mulPose(camera.orientation)
         val s = 1.2f-(8.0f/(state.value.coerceAtLeast(1)+8f))
@@ -77,19 +75,8 @@ class SunRenderer(context: EntityRendererProvider.Context) :
 
     companion object {
         private val SUN_LOCATION = pazResource("textures/entity/sun.png")
-        val EMISSIVE_SUN =
-            RenderType.create(
-                "sun",
-                RenderSetup.builder(RenderPipelines.ENERGY_SWIRL)
-                    .withTexture("Sampler0", SUN_LOCATION)
-                    .setOutputTarget(OutputTarget.ITEM_ENTITY_TARGET)
-                    .useLightmap()
-                    .useOverlay()
-                    .affectsCrumbling()
-                    .sortOnUpload()
-                    .setOutline(RenderSetup.OutlineProperty.AFFECTS_OUTLINE)
-                    .createRenderSetup()
-            )
+        // 26.1 RenderPipelines.ENERGY_SWIRL render setup
+        val EMISSIVE_SUN: RenderType = PazRenderPipelines.emissiveSun(SUN_LOCATION)
 
 
         private fun vertex(

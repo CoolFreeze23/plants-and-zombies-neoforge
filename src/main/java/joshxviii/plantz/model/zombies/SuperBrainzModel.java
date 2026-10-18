@@ -5,7 +5,7 @@ import joshxviii.plantz.animation.zombies.SuperBrainzAnimation;
 import joshxviii.plantz.renderer.entity.zombie.PazZombieRenderState;
 import joshxviii.plantz.renderer.entity.zombie.SuperBrainzRenderState;
 import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
-import net.minecraft.client.model.AnimationUtils;
+import joshxviii.plantz.renderer.ModelCompatUtils;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -95,7 +95,7 @@ public class SuperBrainzModel<S extends PazZombieRenderState> extends PazZombieM
     public void setupAnim(@NotNull S state) {
         super.setupAnim(state);
         this.resetPose();
-        AnimationUtils.animateZombieArms(this.leftArm, this.rightArm, false, state);
+        ModelCompatUtils.animateZombieArms(this.leftArm, this.rightArm, false, state);
         this.head.xRot = state.xRot * Mth.DEG_TO_RAD;
 
         if (!(state instanceof SuperBrainzRenderState superBrainzState)) return;
@@ -120,18 +120,18 @@ public class SuperBrainzModel<S extends PazZombieRenderState> extends PazZombieM
         }
         if (superBrainzState.getRightPunchAnimationState().isStarted()) {
             this.rightArm.getAllParts().forEach(ModelPart::resetPose);
-            AnimationUtils.animateZombieArms(this.rightArm, this.rightArm, false, state);
+            ModelCompatUtils.animateZombieArms(this.rightArm, this.rightArm, false, state);
             rightPunchAnimation.apply(superBrainzState.getRightPunchAnimationState(), state.ageInTicks);
         }
         if (superBrainzState.getLeftPunchAnimationState().isStarted()) {
             this.leftArm.getAllParts().forEach(ModelPart::resetPose);
-            AnimationUtils.animateZombieArms(this.leftArm, this.leftArm, false, state);
+            ModelCompatUtils.animateZombieArms(this.leftArm, this.leftArm, false, state);
             leftPunchAnimation.apply(superBrainzState.getLeftPunchAnimationState(), state.ageInTicks);
         }
 
 
         cape.resetPose();
-        cape.rotateBy(
+        ModelCompatUtils.rotateBy(cape,
                 new Quaternionf()
                         .rotateY((float) -Math.PI)
                         .rotateX((6.0F + superBrainzState.getCapeLean() / 2.0F + superBrainzState.getCapeFlap()) * (float) -(Math.PI / 180.0))

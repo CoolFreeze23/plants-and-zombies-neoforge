@@ -42,7 +42,7 @@ class GardenGnomeBlockRenderer(
         val pose = blockState.getValue(GardenGnomeBlock.POSE)
         state.pose = pose
         state.color = blockState.getValue(GardenGnomeBlock.COLOR)
-        state.rotation = Direction.getYRot(dir)
+        state.rotation = dir.toYRot()
         super.extractRenderState(blockEntity, state, partialTicks, cameraPosition, breakProgress)
     }
 

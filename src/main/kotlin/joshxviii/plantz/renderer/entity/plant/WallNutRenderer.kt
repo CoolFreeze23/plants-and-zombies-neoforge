@@ -60,7 +60,7 @@ class WallNutRenderer(
         val distance = sqrt(dx * dx + dz * dz) * tickScale
         if (distance < 1e-4f) return
 
-        val yawRad = Mth.DEG_TO_RAD * (180.0f - entity.yRot).toDouble()
+        val yawRad = Mth.DEG_TO_RAD * (180.0f - entity.yRot)
         val cos = Mth.cos(yawRad)
         val sin = Mth.sin(-yawRad)
 

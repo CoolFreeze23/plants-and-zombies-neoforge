@@ -8,7 +8,7 @@ import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
-import org.jspecify.annotations.NonNull;
+import org.jetbrains.annotations.NotNull;
 
 import static joshxviii.plantz.UtilsKt.pazResource;
 
@@ -81,7 +81,7 @@ public class ElectroTurretModel<T extends BlueprintMachineRenderState> extends E
 	}
 
 	@Override
-	public void setupAnim(@NonNull T state) {
+	public void setupAnim(@NotNull T state) {
 		super.setupAnim(state);
 		this.head.xRot = state.xRot * (float) (Math.PI / 180.0);
 		this.neck.yRot = state.yRot * (float) (Math.PI / 180.0);

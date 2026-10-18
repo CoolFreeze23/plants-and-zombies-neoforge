@@ -6,17 +6,15 @@ import com.mojang.math.Axis
 import joshxviii.plantz.block.SunBatteryBlock
 import joshxviii.plantz.block.entity.SunBatteryBlockEntity
 import joshxviii.plantz.pazResource
-import net.minecraft.client.renderer.RenderPipelines
+import joshxviii.plantz.PazRenderPipelines
 import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector
 import joshxviii.plantz.compat.client.renderer.blockentity.BlockEntityRenderer
 import joshxviii.plantz.compat.client.state.BlockEntityRenderState
 import joshxviii.plantz.compat.client.renderer.ModelFeatureRenderer
-import net.minecraft.client.renderer.rendertype.OutputTarget
-import net.minecraft.client.renderer.rendertype.RenderSetup
 import net.minecraft.client.renderer.RenderType
 import joshxviii.plantz.compat.client.CameraRenderState
 import net.minecraft.client.renderer.texture.OverlayTexture
-import net.minecraft.client.resources.model.sprite.SpriteId
+import net.minecraft.client.resources.model.Material
 import net.minecraft.core.Direction
 import joshxviii.plantz.compat.LightCoordsUtil
 import net.minecraft.util.Mth
@@ -27,19 +25,8 @@ import kotlin.math.pow
 class SunBatteryRenderer() : BlockEntityRenderer<SunBatteryBlockEntity, SunBatteryRenderSate> {
     companion object {
         private val TEXTURE_LOCATION = pazResource("textures/block/solar_battery_sun.png")
-        public val EMISSIVE_SUN =
-            RenderType.create(
-                "sun",
-                RenderSetup.builder(RenderPipelines.BEACON_BEAM_TRANSLUCENT)
-                    .withTexture("Sampler0", TEXTURE_LOCATION)
-                    .setOutputTarget(OutputTarget.ITEM_ENTITY_TARGET)
-                    .useLightmap()
-                    .useOverlay()
-                    .affectsCrumbling()
-                    .sortOnUpload()
-                    .setOutline(RenderSetup.OutlineProperty.AFFECTS_OUTLINE)
-                    .createRenderSetup()
-            )
+        // 26.1 RenderPipelines.BEACON_BEAM_TRANSLUCENT render setup
+        public val EMISSIVE_SUN: RenderType = PazRenderPipelines.translucentBeam(TEXTURE_LOCATION)
 
         fun vertex(
             buffer: VertexConsumer,
@@ -161,5 +148,5 @@ class SunBatteryRenderSate : BlockEntityRenderState() {
     var sunPercent: Float = 0f
     var attachedFace: AttachFace = AttachFace.FLOOR
     var facing: Direction = Direction.NORTH
-    var sprite: SpriteId? = null
+    var sprite: Material? = null
 }

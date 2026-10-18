@@ -17,7 +17,7 @@ import joshxviii.plantz.compat.client.state.BlockEntityRenderState
 import joshxviii.plantz.compat.client.renderer.ModelFeatureRenderer
 import joshxviii.plantz.compat.client.CameraRenderState
 import net.minecraft.client.renderer.texture.OverlayTexture
-import net.minecraft.client.resources.model.sprite.SpriteId
+import net.minecraft.client.resources.model.Material
 import net.minecraft.network.chat.Component
 import net.minecraft.world.level.block.state.properties.RotationSegment
 import net.minecraft.world.phys.Vec3
@@ -26,11 +26,11 @@ class FlagRenderer(
     val flagModel: FlagBlockModel
 ) : BlockEntityRenderer<FlagBlockEntity, FlagRenderState> {
     companion object {
-        val PLANTZ_FLAG_MATERIAL = SpriteId(
+        val PLANTZ_FLAG_MATERIAL = Material(
             pazResource("textures/block/plantz_flag.png"),
             pazResource("base")
         )
-        val BRAINZ_FLAG_MATERIAL = SpriteId(
+        val BRAINZ_FLAG_MATERIAL = Material(
             pazResource("textures/block/brainz_flag.png"),
             pazResource("base")
         )
@@ -89,6 +89,6 @@ class FlagRenderer(
 class FlagRenderState : BlockEntityRenderState() {
     var health: Float = 0f
     var phase: Float = 0f
-    var sprite: SpriteId? = null
+    var sprite: Material? = null
     var angle: Float = 0f
 }

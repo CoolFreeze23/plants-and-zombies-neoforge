@@ -9,7 +9,6 @@ import joshxviii.plantz.animation.zombies.GraveDiggerAnimation;
 import joshxviii.plantz.renderer.RenderingUtilsKt;
 import joshxviii.plantz.renderer.entity.zombie.PazZombieRenderState;
 import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
-import net.minecraft.client.model.AnimationUtils;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;

@@ -11,6 +11,8 @@ import net.minecraft.client.model.geom.builders.*;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 
+import joshxviii.plantz.renderer.ModelCompatUtils;
+
 import static joshxviii.plantz.UtilsKt.pazResource;
 
 public class RoboZombieModel<S extends PazZombieRenderState> extends PazZombieModel<S> {
@@ -95,7 +97,7 @@ public class RoboZombieModel<S extends PazZombieRenderState> extends PazZombieMo
             var dir = state.getMovementDirection();
             if (dir.lengthSqr() > 0.005) {
                 this.treads.yRot = -roboState.bodyRot * (float) (Math.PI / 180.0);
-                this.treads.yRot += dir.rotation().y * Mth.DEG_TO_RAD;
+                this.treads.yRot += ModelCompatUtils.rotationOf(dir).y * Mth.DEG_TO_RAD;
             }
         }
         else idleAnimation.apply(roboState.getIdleAnimationState(), roboState.ageInTicks);

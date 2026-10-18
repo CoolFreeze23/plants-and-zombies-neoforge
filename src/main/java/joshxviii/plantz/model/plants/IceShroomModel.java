@@ -4,7 +4,6 @@ import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 
 import joshxviii.plantz.animation.plants.HypnoShroomAnimation;
 import joshxviii.plantz.animation.plants.IceShroomAnimation;
-import joshxviii.plantz.entity.plant.IceShroom;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
