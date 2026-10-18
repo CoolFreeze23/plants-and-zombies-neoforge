@@ -13,14 +13,12 @@ import net.minecraft.nbt.Tag
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.util.VisibleForDebug
-import net.minecraft.util.datafix.DataFixTypes
 import net.minecraft.world.entity.monster.Zombie
 import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.level.dimension.DimensionType
 import net.minecraft.world.level.GameRules
 import net.minecraft.world.level.saveddata.SavedData
 import net.minecraft.core.HolderLookup
-import org.spongepowered.asm.mixin.Unique
 import java.util.*
 import java.util.function.Function
 
@@ -172,10 +170,8 @@ class ZombieRaids(
                 ).apply<ZombieRaids>(i, ::ZombieRaids)
             }
         )
-        /** 1.21.1 saved data is keyed by a file name, not an id: data/plantz_zombie_raids.dat */
+        // 1.21.1 saved data is keyed by file name (data/plantz_zombie_raids.dat); no vanilla raid datafixers run on it
         val FILE_NAME: String = "${RAID_FILE_ID.namespace}_${RAID_FILE_ID.path}"
-
-        // Neo allows a null DataFixTypes: no vanilla raid datafixers run over this mod's data
         val TYPE: SavedData.Factory<ZombieRaids> =
             SavedData.Factory<ZombieRaids>({ ZombieRaids() }, { tag, _ -> load(tag) }, null)
 

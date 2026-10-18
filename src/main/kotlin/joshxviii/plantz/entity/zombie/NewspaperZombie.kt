@@ -3,10 +3,8 @@ package joshxviii.plantz.entity.zombie
 import joshxviii.plantz.PazItems
 import joshxviii.plantz.PazSounds
 import joshxviii.plantz.PazTags
-import joshxviii.plantz.entity.plant.WallNut.Companion.ROLLING_ID
 import joshxviii.plantz.pazResource
 import net.minecraft.resources.ResourceLocation
-import net.minecraft.server.level.ServerLevel
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.tags.TagKey

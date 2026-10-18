@@ -1,7 +1,5 @@
 package joshxviii.plantz.entity.blueprint_machines
 
-import joshxviii.plantz.PazDamageTypes
-import joshxviii.plantz.ai.ZombieState
 import joshxviii.plantz.ai.goal.FlyingPathfindingGoal
 import joshxviii.plantz.ai.goal.MeleeAttackActionGoal
 import joshxviii.plantz.ai.goal.NavigateToTargetGoal

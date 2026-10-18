@@ -39,6 +39,7 @@ import net.minecraft.sounds.SoundEvent
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.entity.MobSpawnType
 import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.SpawnGroupData
 import net.minecraft.world.entity.monster.Zombie
 import net.minecraft.world.entity.projectile.FireworkRocketEntity
@@ -47,6 +48,8 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.FireworkExplosion
 import net.minecraft.world.item.component.Fireworks
+import net.minecraft.world.item.enchantment.EnchantedItemInUse
+import net.minecraft.world.item.enchantment.EnchantmentHelper
 import net.minecraft.world.level.levelgen.Heightmap
 import java.util.function.Predicate
 import java.util.Optional
@@ -71,6 +74,15 @@ class ZombieRaid(
     val difficulty: Difficulty = Difficulty.NORMAL,
 ) {
     companion object {
+        /** 26.1 Projectile.spawnProjectile: adds the projectile, then runs the item's projectile-spawned enchantment effects. */
+        private fun spawnProjectile(projectile: Projectile, level: ServerLevel, itemStack: ItemStack) {
+            level.addFreshEntity(projectile)
+            val itemInUse = EnchantedItemInUse(itemStack, null, projectile.owner as? LivingEntity) {}
+            EnchantmentHelper.runIterationOnItem(itemStack) { enchantment, enchantmentLevel ->
+                enchantment.value().onProjectileSpawned(level, enchantmentLevel, itemInUse, projectile)
+            }
+        }
+
         private fun getVictoryFirework(): ItemStack {
             val rocket = ItemStack(Items.FIREWORK_ROCKET).apply { set(
                 DataComponents.FIREWORKS,
@@ -199,7 +211,7 @@ class ZombieRaid(
             if (status == ZombieRaidStatus.VICTORY) {
                 if (ticksActive % 20L == 0L) {
                     val firework = getVictoryFirework()
-                    level.addFreshEntity(FireworkRocketEntity(level, firework, center.x.toDouble(), center.y.toDouble(), center.z.toDouble(), false)) // 26.1 Projectile.spawnProjectile
+                    spawnProjectile(FireworkRocketEntity(level, firework, center.x.toDouble(), center.y.toDouble(), center.z.toDouble(), false), level, firework)
                 }
             }
             return
@@ -384,6 +396,7 @@ class ZombieRaid(
     }
 
     private fun vanishAllZombies(level: ServerLevel) {
+        // 26.1 SoundSource.UI: 1.21.1 has no UI category and plays UI sounds on MASTER
         level.playLocalSound(center, SoundEvents.WITHER_DEATH, SoundSource.MASTER, 1f, 0.4f, false)
         waveZombieMap.values.forEach { zombies ->
             zombies.forEach { zombie ->
@@ -478,7 +491,7 @@ class ZombieRaid(
     }
 
     private fun showTitleMessage(title: Component, subtitle: Component = Component.empty(), sound: Holder.Reference<SoundEvent> = PazSounds.SPECIAL_WAVE) {
-        zombieRaidEvent.players.forEach {
+        zombieRaidEvent.players.forEach {// SoundSource.MASTER: see vanishAllZombies
             it.connection.send(ClientboundSoundPacket(sound, SoundSource.MASTER, it.x, it.y, it.z, 1.0f, 1.0f, random.nextLong()))
             it.connection.send(ClientboundSetTitleTextPacket(title))
             it.connection.send(ClientboundSetSubtitleTextPacket(subtitle))

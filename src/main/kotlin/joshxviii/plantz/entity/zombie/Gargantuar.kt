@@ -253,7 +253,7 @@ class Gargantuar(type: EntityType<out Gargantuar>, level: Level) : PazZombie(typ
         super.doPush(entity)
         if (isPathFinding && this.target!=null) {
             if (entity is LivingEntity && entity !is Zombie) {
-                val level = level() as? ServerLevel?: return
+                if (level() !is ServerLevel) return
                 entity.hurt(this.damageSources().source(PazDamageTypes.ZOMBIE_TRAMPLE, this), 2.5f)
                 entity.knockback(
                     0.2, position().x - entity.position().x, position().z - entity.position().z
