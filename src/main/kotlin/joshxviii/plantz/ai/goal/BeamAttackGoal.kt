@@ -1,5 +1,7 @@
 package joshxviii.plantz.ai.goal
 
+import joshxviii.plantz.entity.plant.rootOwner
+
 import joshxviii.plantz.PazConfig
 import joshxviii.plantz.PazDamageTypes
 import joshxviii.plantz.entity.plant.Plant
@@ -77,7 +79,7 @@ class BeamAttackGoal(
                 val source = usingEntity.damageSources().source(damageType, usingEntity,
                     if (PazConfig.PLAYER_CREDIT_FOR_PLANT_KILLS && usingEntity is OwnableEntity) usingEntity.rootOwner else null)
 
-                if (target.hurtServer(usingEntity.level() as ServerLevel, source, damage)) {
+                if (target.hurt(source, damage)) {
                     afterHitEntityEffect(target)
                     target.knockback(
                         knockback,

@@ -4,6 +4,7 @@ import joshxviii.plantz.PazConfig
 import joshxviii.plantz.PazDamageTypes
 import joshxviii.plantz.attackRange
 import joshxviii.plantz.entity.plant.Plant
+import joshxviii.plantz.entity.plant.rootOwner
 import joshxviii.plantz.withinAttackRange
 import net.minecraft.resources.ResourceKey
 import net.minecraft.server.level.ServerLevel
@@ -61,7 +62,7 @@ open class MeleeAttackActionGoal(
             if (PazConfig.PLAYER_CREDIT_FOR_PLANT_KILLS && usingEntity is OwnableEntity) usingEntity.rootOwner else usingEntity)
 
         beforeHitEntityEffect(target)
-        if (target.hurtServer(usingEntity.level() as ServerLevel, source, damage)) {
+        if (target.hurt(source, damage)) {
             target.knockback(
                 knockback,
                 usingEntity.x - target.x,

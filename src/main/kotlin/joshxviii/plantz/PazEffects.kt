@@ -9,8 +9,6 @@ import joshxviii.plantz.effect.PaintedMobEffect
 import joshxviii.plantz.effect.TangledMobEffect
 import joshxviii.plantz.effect.ToxicMobEffect
 import joshxviii.plantz.effect.ZombieOmenMobEffect
-import net.fabricmc.fabric.api.attachment.v1.AttachmentType
-import net.fabricmc.fabric.impl.attachment.AttachmentRegistryImpl
 import net.minecraft.core.Holder
 import net.minecraft.core.Registry
 import net.minecraft.core.particles.BlockParticleOption
@@ -21,7 +19,9 @@ import net.minecraft.world.effect.MobEffectCategory
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.entity.ai.attributes.AttributeModifier
 import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.ai.goal.Goal
+import java.util.WeakHashMap
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.item.alchemy.Potion
 import net.minecraft.world.level.block.Blocks
@@ -95,8 +95,8 @@ object PazEffects {
         )
     }
 
-    val HYPNOTIZED_GOAL_ATTACHMENT: AttachmentType<Goal> =
-        AttachmentRegistryImpl.builder<Goal>().buildAndRegister(pazResource("hypnotized_goal"))
+    // 26.1: a non-persistent Fabric attachment holding the goal added by HypnotizedMobEffect (runtime only, server side)
+    @JvmField val HYPNOTIZED_GOAL_ATTACHMENT: MutableMap<Entity, Goal> = WeakHashMap()
 
     fun initialize() {
 

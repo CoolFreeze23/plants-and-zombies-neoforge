@@ -46,7 +46,7 @@ class FumeShroom(type: EntityType<out Plant>, level: Level) : Plant(type, level)
             afterHitEntityEffect = {
                 it.addEffect(MobEffectInstance(PazEffects.TOXIC, 100, 0))
         }))
-        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target, level ->
+        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target ->
             target !is Plant
                     && (target is Zombie
                     || (target is Enemy && isTame))

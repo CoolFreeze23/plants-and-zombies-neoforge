@@ -44,7 +44,7 @@ class Repeater(type: EntityType<out Plant>, level: Level) : Plant(type, level) {
                     cooldown = 10
                 }
             }))
-        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target, level ->
+        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target ->
             target !is Plant
                     && target !is Creeper
                     && (target is Zombie

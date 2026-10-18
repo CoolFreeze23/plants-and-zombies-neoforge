@@ -14,16 +14,16 @@ class ButteredMobEffect(
     category: MobEffectCategory,
     color: Int,
     particleOptions: ParticleOptions
-) : MobEffect(category, color, particleOptions) {
+) : MobEffect(category, color, particleOptions), PazMobEffectHooks {
     companion object {
 
     }
 
     override fun onEffectStarted(effectInstance: MobEffectInstance, entity: LivingEntity) {
-        super.onEffectStarted(effectInstance, entity)
+        super<PazMobEffectHooks>.onEffectStarted(effectInstance, entity)
     }
 
     override fun onEffectRemoved(effectInstance: MobEffectInstance, entity: LivingEntity) {
-        super.onEffectRemoved(effectInstance, entity)
+        super<PazMobEffectHooks>.onEffectRemoved(effectInstance, entity)
     }
 }

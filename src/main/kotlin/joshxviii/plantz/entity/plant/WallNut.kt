@@ -93,6 +93,11 @@ open class WallNut(type: EntityType<out Plant>, level: Level) : Plant(type, leve
 
     override fun tick() {
         super.tick()
+        if (!isRolling && level() is ServerLevel && isAlive && !isAttached()) {
+            // see canBeCollidedWith(): zombies pushing against the nut attack it
+            level().getEntitiesOfClass(Zombie::class.java, boundingBox.inflate(0.01)) { it != attachedEntity }
+                .forEach { hurtOnCollide(it) }
+        }
         if (!isRolling) return
         if (level() !is ServerLevel) return
 
@@ -111,9 +116,9 @@ open class WallNut(type: EntityType<out Plant>, level: Level) : Plant(type, leve
 
     override fun getLookControl(): LookControl = noLookControl
 
-    override fun isInvulnerableTo(level: ServerLevel, source: DamageSource): Boolean {
+    override fun isInvulnerableTo(source: DamageSource): Boolean {
         if (isRolling && source.`is`(PazTags.DamageTypes.IGNORED_BY_ROLLING_NUT)) return true
-        return super.isInvulnerableTo(level, source)
+        return super.isInvulnerableTo(source)
     }
 
     override fun attackedWithGlove(player: Player, item: ItemStack, hand: InteractionHand) {
@@ -129,7 +134,7 @@ open class WallNut(type: EntityType<out Plant>, level: Level) : Plant(type, leve
             val level = level() as? ServerLevel?: return
             val source = this.damageSources().source(PazDamageTypes.PLANT, this, if (PazConfig.PLAYER_CREDIT_FOR_PLANT_KILLS) this.rootOwner else this)
             val damage = knownSpeed.length().toFloat() * 7f * PLANT_DAMAGE.toFloat()
-            if (entity.hurtServer(level, source, damage)) {
+            if (entity.hurt(source, damage)) {
                 val vector = entity.position().subtract(position()).normalize()
                 entity.applyImpulse(vector, pow = 1.25f, uncertainty = 0.3f)
                 rolledOverEntities.add(entity.id)
@@ -146,36 +151,36 @@ open class WallNut(type: EntityType<out Plant>, level: Level) : Plant(type, leve
         entityData.define(ROLLING, false)
     }
 
-    override fun addAdditionalSaveData(output: ValueOutput) {
-        super.addAdditionalSaveData(output)
+    override fun addAdditionalSaveData(tag: net.minecraft.nbt.CompoundTag) {
+        super.addAdditionalSaveData(tag)
+        val output = ValueOutput.of(tag, registryAccess())
         output.putBoolean("plantz:IsRolling", isRolling)
     }
 
-    override fun readAdditionalSaveData(input: ValueInput) {
-        super.readAdditionalSaveData(input)
+    override fun readAdditionalSaveData(tag: net.minecraft.nbt.CompoundTag) {
+        super.readAdditionalSaveData(tag)
+        val input = ValueInput.of(tag, registryAccess())
         isRolling = input.getBooleanOr("plantz:IsRolling", false)
     }
 
     override fun attackGoals() {}
 
-    override fun canBeCollidedWith(other: Entity?): Boolean {
-        if (isRolling) return super.canBeCollidedWith(other)
-
-        hurtOnCollide(other)
-
-        if (other is Sun) return false
-        return isAlive && other != attachedEntity
+    // 26.1 canBeCollidedWith(other): 1.21.1 has no "other" parameter. Sun opts out on its side (Sun.canCollideWith),
+    // the wearer is excluded via isAttached(), and colliding zombies are polled in tick() (hurtOnCollide).
+    override fun canBeCollidedWith(): Boolean {
+        if (isRolling) return super.canBeCollidedWith()
+        return isAlive && !isAttached()
     }
 
-    override fun hurtServer(level: ServerLevel, source: DamageSource, damage: Float): Boolean{
+    override fun hurt(source: DamageSource, damage: Float): Boolean{
         source.directEntity?.let {
-            if (it.`is`(WALLNUT_DEFLECTABLE)) return false
+            if (it.type.`is`(WALLNUT_DEFLECTABLE)) return false
         }
-        return super.hurtServer(level, source, damage)
+        return super.hurt(source, damage)
     }
 
-    override fun actuallyHurt(level: ServerLevel, source: DamageSource, damage: Float) {
-        super.actuallyHurt(level, source,
+    override fun actuallyHurt(source: DamageSource, damage: Float) {
+        super.actuallyHurt(source,
             wallNutReducedDamage(source.entity, damage)
         )
     }

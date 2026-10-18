@@ -1,6 +1,5 @@
 package joshxviii.plantz.entity.plant
 
-import com.mojang.logging.LogUtils
 import joshxviii.plantz.*
 import joshxviii.plantz.item.GardeningGloveItem
 import joshxviii.plantz.item.SeedPacketItem
@@ -11,17 +10,16 @@ import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.sounds.SoundEvents
-import net.minecraft.util.ProblemReporter.ScopedCollector
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.ItemUtils
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.alchemy.Potions
-import net.minecraft.world.item.component.TypedEntityData
+import net.minecraft.world.item.component.CustomData
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.level.storage.TagValueOutput
 import net.minecraft.world.phys.Vec3
 
 
@@ -50,7 +48,7 @@ fun Plant.processSunItem(player: Player, item: ItemStack, hand: InteractionHand,
     }
     else if (growNeeds == PlantGrowNeeds.SUN && verifyOwner(player)) {// grow seeds
         playSound(
-            SoundEvents.BUBBLE_POP, 1.0f,
+            SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, 1.0f,// 26.1 ui.hud.bubble_pop does not exist in 1.21.1
             receivedSun.toFloat()/sunRequiredForSeeds() + 0.9f
         )
         if (receivedSun++ >= sunRequiredForSeeds()) awardSeedPacket(player)
@@ -111,12 +109,14 @@ fun Plant.processGloveItem(player: Player, item: ItemStack, hand: InteractionHan
         // hold plant
         (player.isSecondaryUseActive) -> {
             if (item.has(DataComponents.ENTITY_DATA)) {
-                player.sendOverlayMessage(Component.translatable("message.plantz.glove_full").withStyle(ChatFormatting.RED))
+                player.displayClientMessage(Component.translatable("message.plantz.glove_full").withStyle(ChatFormatting.RED), true)
                 return true
             }
 
             val data = this.saveAsCompoundTag()
-            item.set(DataComponents.ENTITY_DATA, TypedEntityData.of(this.type, data))
+            // 26.1 TypedEntityData(type, tag) serializes as the tag plus an "id" field, same as 1.21.1 CustomData
+            data.putString("id", EntityType.getKey(this.type).toString())
+            item.set(DataComponents.ENTITY_DATA, CustomData.of(data))
 
             playSound(SoundEvents.ARMOR_EQUIP_LEATHER.value())
             addParticlesAroundSelf(level(), ParticleTypes.DUST_PLUME, verticalSpreadScale = 0.5, height = 0f)
@@ -135,20 +135,18 @@ fun Plant.processGloveItem(player: Player, item: ItemStack, hand: InteractionHan
 }
 
 fun Entity.saveAsCompoundTag(): CompoundTag {
-    ScopedCollector(problemPath(), LogUtils.getLogger()).use { reporter ->
-        val output = TagValueOutput.createWithContext(reporter, registryAccess())
-        saveWithoutId(output)
-        if (this is Plant) plantSaveData(output)
-        return output.buildResult().apply {
-            remove("UUID")
-            remove("Pos")
-        }
+    val tag = CompoundTag()
+    saveWithoutId(tag)
+    if (this is Plant) plantSaveData(joshxviii.plantz.compat.ValueOutput.of(tag, registryAccess()))
+    return tag.apply {
+        remove("UUID")
+        remove("Pos")
     }
 }
 
 // seed packet interaction
 fun Plant.processSeedPacketInteraction(player: Player, itemStack: ItemStack, blockState: BlockState? = null): PacketInteractionResult {
-    val type = itemStack.get(DataComponents.ENTITY_DATA)?.type()
+    val type = itemStack.get(DataComponents.ENTITY_DATA)?.let { EntityType.by(it.unsafe).orElse(null) }
     val availableSun = player.getTotalSun()
     val sunCost = itemStack.get(PazComponents.SUN_COST)?.getSunCost(type)?: 0
     val cantAfford = sunCost > availableSun && !player.hasInfiniteMaterials()
@@ -157,7 +155,7 @@ fun Plant.processSeedPacketInteraction(player: Player, itemStack: ItemStack, blo
         PazEntities.COFFEE_BEAN -> {
             when {
                 isGrowingSeeds -> {
-                    player.sendOverlayMessage(Component.translatable("message.plantz.growing", name.copy().withStyle(ChatFormatting.RED)).withStyle(ChatFormatting.DARK_RED))
+                    player.displayClientMessage(Component.translatable("message.plantz.growing", name.copy().withStyle(ChatFormatting.RED)).withStyle(ChatFormatting.DARK_RED), true)
                     PacketInteractionResult.FAIL
                 }
                 cantAfford -> PacketInteractionResult.CANT_AFFORD
@@ -171,7 +169,7 @@ fun Plant.processSeedPacketInteraction(player: Player, itemStack: ItemStack, blo
         else -> PacketInteractionResult.NO_INTERACTION
     }
     // show message
-    if (result == PacketInteractionResult.CANT_AFFORD) player.sendOverlayMessage(Component.translatable("message.plantz.not_enough_sun", availableSun, sunCost).withStyle(ChatFormatting.RED))
+    if (result == PacketInteractionResult.CANT_AFFORD) player.displayClientMessage(Component.translatable("message.plantz.not_enough_sun", availableSun, sunCost).withStyle(ChatFormatting.RED), true)
     // remove used sun
     if (result == PacketInteractionResult.SUCCESS && !player.hasInfiniteMaterials()) {
         player.removeSunFromStorageAndInventory(sunCost)

@@ -15,7 +15,7 @@ import net.minecraft.world.level.storage.loot.LootTable
 class GardenHeroEffect(
     category: MobEffectCategory,
     color: Int,
-) : MobEffect(category, color) {
+) : MobEffect(category, color), PazMobEffectHooks {
 
     companion object {
         const val EFFECT_COLOR = 0x8100AB
@@ -23,7 +23,7 @@ class GardenHeroEffect(
 
     override fun onEffectRemoved(effectInstance: MobEffectInstance, entity: LivingEntity) {
         (entity as? GardenHeroRewards)?.`plantz$setWaveList`(mutableListOf())
-        super.onEffectRemoved(effectInstance, entity)
+        super<PazMobEffectHooks>.onEffectRemoved(effectInstance, entity)
     }
 
     // add default waves to list when effect is added

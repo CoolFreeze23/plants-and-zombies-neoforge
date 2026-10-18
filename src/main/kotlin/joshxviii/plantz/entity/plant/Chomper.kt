@@ -40,20 +40,22 @@ class Chomper(type: EntityType<out Plant>, level: Level) : Plant(type, level) {
         entityData.define(CHEW_TIME_ID, false)
     }
 
-    override fun addAdditionalSaveData(output: ValueOutput) {
-        super.addAdditionalSaveData(output)
+    override fun addAdditionalSaveData(tag: net.minecraft.nbt.CompoundTag) {
+        super.addAdditionalSaveData(tag)
+        val output = ValueOutput.of(tag, registryAccess())
         output.putBoolean("plantz:IsChewing", isChewing)
     }
 
-    override fun readAdditionalSaveData(input: ValueInput) {
-        super.readAdditionalSaveData(input)
+    override fun readAdditionalSaveData(tag: net.minecraft.nbt.CompoundTag) {
+        super.readAdditionalSaveData(tag)
+        val input = ValueInput.of(tag, registryAccess())
         isChewing = input.getBooleanOr("plantz:IsChewing", false)
     }
 
     override fun registerGoals() {
         super.registerGoals()
         this.goalSelector.addGoal(1, ChompAttackGoal(this))
-        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target, level ->
+        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target ->
             target !is Plant
                     && (target is Zombie
                     || target is AbstractFish
@@ -114,7 +116,7 @@ class Chomper(type: EntityType<out Plant>, level: Level) : Plant(type, level) {
 
         override fun doAction() : Boolean {
             val target = usingEntity.target?: return false
-            if(!(target.`is`(CANNOT_CHOMP) || target.maxHealth > 100)) {
+            if(!(target.type.`is`(CANNOT_CHOMP) || target.maxHealth > 100)) {
                 //Add modifier to increase damage for insta kills
                 usingEntity.getAttribute(Attributes.ATTACK_DAMAGE)?.addOrUpdateTransientModifier(CHOMP_ATTACK_MODIFIER)
             }

@@ -13,9 +13,10 @@ class ToxicMobEffect(category: MobEffectCategory, color: Int) : MobEffect(catego
         const val HURT_PERCENT: Float = 0.25f
     }
 
-    override fun applyEffectTick(level: ServerLevel, mob: LivingEntity, amplification: Int): Boolean {
+    override fun applyEffectTick(mob: LivingEntity, amplification: Int): Boolean {
+        if (mob.level() !is ServerLevel) return true
         if (mob.health > 0) {
-            mob.hurtServer(level, mob.damageSources().source(PazDamageTypes.TOXIC), (mob.health*HURT_PERCENT).coerceAtLeast(0.25f))
+            mob.hurt(mob.damageSources().source(PazDamageTypes.TOXIC), (mob.health*HURT_PERCENT).coerceAtLeast(0.25f))
         }
         return true
     }

@@ -30,7 +30,7 @@ class MinerNavigation(entity: PathfinderMob, level: Level) : GroundPathNavigatio
         maxPathLength: Float
     ): Path? {
         val path = super.createPath(targets, radiusOffset, above, reachRange, maxPathLength)
-        val canBreakBlocks = (mob.level() as? ServerLevel)?.gameRules?.get(GameRules.MOB_GRIEFING)?: false
+        val canBreakBlocks = (mob.level() as? ServerLevel)?.gameRules?.getBoolean(GameRules.RULE_MOBGRIEFING)?: false
         val canReachTarget = path.canReachTarget(targets.last())
 
         (this.nodeEvaluator as? MinerNodeEvaluator)?.userMiner = (!canReachTarget && mob.isAggressive && canBreakBlocks)

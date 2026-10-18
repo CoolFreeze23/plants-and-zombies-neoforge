@@ -22,7 +22,7 @@ class Pea(
         if (onFire) {
             val level = level() as ServerLevel
             val p = PeaFire(level(), entityOwner)
-            spawnProjectile(p, level, ItemStack.EMPTY)
+            level.addFreshEntity(p)// 26.1 Projectile.spawnProjectile(p, level, ItemStack.EMPTY)
             p.deltaMovement = deltaMovement
             discard()
         }

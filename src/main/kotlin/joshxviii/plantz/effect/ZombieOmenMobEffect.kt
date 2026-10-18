@@ -27,7 +27,8 @@ class ZombieOmenMobEffect(
         return remainingDuration == 1
     }
 
-    override fun applyEffectTick(level: ServerLevel, mob: LivingEntity, amplification: Int): Boolean {
+    override fun applyEffectTick(mob: LivingEntity, amplification: Int): Boolean {
+        val level = mob.level() as? ServerLevel ?: return true
         if (mob !is ServerPlayer || mob.isSpectator) return false
 
         val zombieRaidPos = level.poiManager.findClosest(

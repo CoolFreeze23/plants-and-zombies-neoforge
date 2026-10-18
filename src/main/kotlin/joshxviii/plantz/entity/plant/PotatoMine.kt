@@ -58,7 +58,7 @@ class PotatoMine(type: EntityType<out ExplosivePlant>, level: Level) : Explosive
         addParticlesAroundSelf(
             particle = ItemParticleOption(
                 ParticleTypes.ITEM,
-                Items.POTATO
+                net.minecraft.world.item.ItemStack(Items.POTATO)
             ),
             amount = 22..24,
             speed = 0.2,

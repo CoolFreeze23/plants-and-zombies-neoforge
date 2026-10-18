@@ -15,8 +15,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(VillagerHostilesSensor.class)
 public class VillagerHostilesSensorMixin {
     @Inject(method = "isMatchingEntity", at = @At(value = "HEAD"), cancellable = true)
-    public void addPazZombies(ServerLevel level, LivingEntity body, LivingEntity mob, CallbackInfoReturnable<Boolean> cir) {
-        if (mob.is(PazTags.EntityTypes.ZOMBIE_RAIDERS)) {
+    public void addPazZombies(LivingEntity body, LivingEntity mob, CallbackInfoReturnable<Boolean> cir) {
+        if (mob.getType().is(PazTags.EntityTypes.ZOMBIE_RAIDERS)) {
             if (mob.distanceToSqr(body) <= 64f) {
                 cir.setReturnValue(true);
             }

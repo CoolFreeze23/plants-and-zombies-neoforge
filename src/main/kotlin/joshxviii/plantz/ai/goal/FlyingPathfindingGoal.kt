@@ -64,7 +64,7 @@ open class FlyingPathfindingGoal(
             val surfaceY = level.getHeight(Heightmap.Types.WORLD_SURFACE, blockX, blockZ).toDouble()
             val ry = surfaceY + targetHover + (entity.random.nextDouble() * 1.0 - 0.5) - 3.0
 
-            if (ry <= level.minY + 2 || ry >= level.maxY - 2) continue
+            if (ry <= level.minBuildHeight + 2 || ry >= (level.maxBuildHeight - 1) - 2) continue
 
             val destBlockPos = BlockPos.containing(rx, ry, rz)
             if (level.isEmptyBlock(destBlockPos)) {

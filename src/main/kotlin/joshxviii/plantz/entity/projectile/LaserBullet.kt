@@ -43,13 +43,15 @@ class LaserBullet(
         entityData.define(COLOR, DEFAULT_COLOR)
     }
 
-    override fun addAdditionalSaveData(output: ValueOutput) {
-        super.addAdditionalSaveData(output)
+    override fun addAdditionalSaveData(tag: net.minecraft.nbt.CompoundTag) {
+        super.addAdditionalSaveData(tag)
+        val output = ValueOutput.of(tag, registryAccess())
         output.putInt("laserColor", laserColor)
     }
 
-    override fun readAdditionalSaveData(input: ValueInput) {
-        super.readAdditionalSaveData(input)
+    override fun readAdditionalSaveData(tag: net.minecraft.nbt.CompoundTag) {
+        super.readAdditionalSaveData(tag)
+        val input = ValueInput.of(tag, registryAccess())
         laserColor = input.getIntOr("laserColor", DEFAULT_COLOR)
     }
 

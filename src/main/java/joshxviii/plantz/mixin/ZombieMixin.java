@@ -1,9 +1,7 @@
 package joshxviii.plantz.mixin;
 
 import joshxviii.plantz.*;
-import joshxviii.plantz.entity.zombie.Gargantuar;
 import joshxviii.plantz.entity.zombie.PazZombie;
-import joshxviii.plantz.entity.zombie.ZombieYeti;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -31,7 +29,6 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 import java.util.Objects;
 
-import static joshxviii.plantz.entity.zombie.PazZombie.LEADER_MODIFIER_ID;
 
 /**
  * @author Josh
@@ -58,24 +55,27 @@ public class ZombieMixin implements ZombieRaider {
     }
 
     @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
-    private void saveCustomFlags(ValueOutput output, CallbackInfo ci) {
+    private void saveCustomFlags(CompoundTag tag, CallbackInfo ci) {
+        ValueOutput output = ValueOutput.of(tag, ((Entity) (Object) this).registryAccess());
         output.putBoolean("plantz:IsFromRaid", this.plantz$getIsFromRaid());
     }
 
     @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
-    private void loadCustomFlags(ValueInput input, CallbackInfo ci) {
+    private void loadCustomFlags(CompoundTag tag, CallbackInfo ci) {
+        ValueInput input = ValueInput.of(tag, ((Entity) (Object) this).registryAccess());
         this.plantz$setIsFromRaid(input.getBooleanOr("plantz:IsFromRaid", false));
     }
 
-    @ModifyArgs(method = "hurtServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/Monster;hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
+    // 26.1 hurtServer -> 1.21.1 hurt (Zombie.hurt calls super.hurt(source, amount) first)
+    @ModifyArgs(method = "hurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/monster/Monster;hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
     private void updateDamage(Args args) {
-        DamageSource source = args.get(1);
-        float damage = args.get(2);
-        if (source.is(PazDamageTypes.PLANT_EXPLODE)) args.set(2, damage*3f);
+        DamageSource source = args.get(0);
+        float damage = args.get(1);
+        if (source.is(PazDamageTypes.PLANT_EXPLODE)) args.set(1, damage*3f);
     }
 
-    @Inject(method = "hurtServer", at = @At("HEAD"), cancellable = true)
-    public void zombieAoeIgnore(ServerLevel level, DamageSource source, float damage, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "hurt", at = @At("HEAD"), cancellable = true)
+    public void zombieAoeIgnore(DamageSource source, float damage, CallbackInfoReturnable<Boolean> cir) {
         Zombie entity = (Zombie) (Object) this;
         if (source.is(PazDamageTypes.ZOMBIE_SMASH) && !entity.hasEffect(PazEffects.HYPNOTIZE)) {
             cir.setReturnValue(false);
@@ -94,7 +94,7 @@ public class ZombieMixin implements ZombieRaider {
         if (spawnReason == MobSpawnType.REINFORCEMENT || spawnReason == MobSpawnType.EVENT) return;
 
         Zombie entity = (Zombie) (Object) this;
-        if (!entity.is(PazTags.EntityTypes.CAN_BE_LEADER)) return;
+        if (!entity.getType().is(PazTags.EntityTypes.CAN_BE_LEADER)) return;
 
         boolean isBornLeader = PazZombie.Companion.isBornLeader(entity);
         boolean bonusPromotionChance = level.getRandom().nextFloat() < BONUS_LEADER_CHANCE;

@@ -3,6 +3,7 @@ package joshxviii.plantz.mixin;
 import com.mojang.serialization.Codec;
 import joshxviii.plantz.*;
 import joshxviii.plantz.effect.PaintedMobEffect;
+import joshxviii.plantz.effect.PazMobEffectHooks;
 import joshxviii.plantz.entity.plant.Plant;
 import joshxviii.plantz.raid.WaveType;
 import net.minecraft.core.BlockPos;
@@ -65,7 +66,7 @@ abstract public class LivingEntityMixin implements PlantHeadAttachment, GardenHe
     public int swingTime;
 
     @Shadow
-    public abstract @org.jspecify.annotations.Nullable MobEffectInstance getEffect(Holder<MobEffect> effect);
+    public abstract @Nullable MobEffectInstance getEffect(Holder<MobEffect> effect);
 
     @Unique
     private CompoundTag plantData = new CompoundTag();
@@ -160,7 +161,7 @@ abstract public class LivingEntityMixin implements PlantHeadAttachment, GardenHe
 
         //Duck tube floating
         var item = entity.getItemBySlot(EquipmentSlot.LEGS);
-        if (!item.is(PazItems.DUCKY_TUBE) && !entity.is(PazTags.EntityTypes.PLANTABLE_ON_WATER)) return;
+        if (!item.is(PazItems.DUCKY_TUBE) && !entity.getType().is(PazTags.EntityTypes.PLANTABLE_ON_WATER)) return;
         if (entity instanceof Player player && player.getAbilities().flying) return;
         var fluidType = entity.level().getBlockState(BlockPos.containing(entity.position().add(0.0, entity.getBbHeight() * 0.5, 0.0))).getFluidState().getType();
         if (fluidType == Fluids.EMPTY ) return;
@@ -190,8 +191,9 @@ abstract public class LivingEntityMixin implements PlantHeadAttachment, GardenHe
         entityData.define(DATA_PAINTED_COLORS, new HashMap<>());
     }
     @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
-    private void saveCustomFlags(ValueOutput output, CallbackInfo ci) {
+    private void saveCustomFlags(CompoundTag tag, CallbackInfo ci) {
         var self = (LivingEntity) (Object) this;
+        ValueOutput output = ValueOutput.of(tag, self.registryAccess());
         output.putBoolean("plantz:IsHypnotized", self.getEntityData().get(DATA_HYPNO_ID));
         output.putBoolean("plantz:IsChilled", self.getEntityData().get(DATA_CHILL_ID));
         output.putBoolean("plantz:IsFrozen", self.getEntityData().get(DATA_FROZEN_ID));
@@ -204,8 +206,9 @@ abstract public class LivingEntityMixin implements PlantHeadAttachment, GardenHe
 
     }
     @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
-    private void loadCustomFlags(ValueInput input, CallbackInfo ci) {
+    private void loadCustomFlags(CompoundTag tag, CallbackInfo ci) {
         var self = (LivingEntity) (Object) this;
+        ValueInput input = ValueInput.of(tag, self.registryAccess());
         self.getEntityData().set(DATA_HYPNO_ID, input.getBooleanOr("plantz:IsHypnotized", false));
         self.getEntityData().set(DATA_CHILL_ID, input.getBooleanOr("plantz:IsChilled", false));
         self.getEntityData().set(DATA_FROZEN_ID, input.getBooleanOr("plantz:IsFrozen", false));
@@ -227,27 +230,54 @@ abstract public class LivingEntityMixin implements PlantHeadAttachment, GardenHe
     @Inject(method = "onEffectAdded", at = @At(value = "TAIL"))
     public void onHypnoAdded(MobEffectInstance effect, Entity source, CallbackInfo ci) {
         updateEffects();
+        // 26.1 Fabric API MobEffect.onEffectAdded(instance, entity)
+        if (effect.getEffect().value() instanceof PazMobEffectHooks hooks) hooks.onEffectAdded(effect, (LivingEntity) (Object) this);
     }
-    @Inject(method = "onEffectsRemoved", at = @At(value = "TAIL"))
-    public void onHypnoRemoved(Collection<MobEffectInstance> effects, CallbackInfo ci) {
-        updateEffects();
+
+    // 26.1 Fabric API MobEffect.onEffectStarted(instance, entity): runs where vanilla calls MobEffectInstance.onEffectStarted
+    @Inject(method = "addEffect(Lnet/minecraft/world/effect/MobEffectInstance;Lnet/minecraft/world/entity/Entity;)Z",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/effect/MobEffectInstance;onEffectStarted(Lnet/minecraft/world/entity/LivingEntity;)V", shift = At.Shift.AFTER))
+    public void plantz$onEffectStarted(MobEffectInstance effect, Entity source, CallbackInfoReturnable<Boolean> cir) {
+        if (effect.getEffect().value() instanceof PazMobEffectHooks hooks) hooks.onEffectStarted(effect, (LivingEntity) (Object) this);
+    }
+
+    // 26.1 onEffectsRemoved(Collection) -> 1.21.1 onEffectRemoved(MobEffectInstance), called per effect
+    // (removeAllEffects calls it before the effect leaves the map, so the removed effect is excluded explicitly)
+    @Inject(method = "onEffectRemoved", at = @At(value = "TAIL"))
+    public void onHypnoRemoved(MobEffectInstance effect, CallbackInfo ci) {
+        updateEffects(effect);
+        // 26.1 Fabric API MobEffect.onEffectRemoved(instance, entity)
+        if (effect.getEffect().value() instanceof PazMobEffectHooks hooks) hooks.onEffectRemoved(effect, (LivingEntity) (Object) this);
     }
     @Unique
     public void updateEffects() {
+        updateEffects(null);
+    }
+    @Unique
+    private boolean plantz$hasEffectExcept(Holder<MobEffect> effect, @Nullable MobEffectInstance removed) {
+        return this.hasEffect(effect) && (removed == null || !removed.is(effect));
+    }
+    @Unique
+    public void updateEffects(@Nullable MobEffectInstance removed) {
         var self = (LivingEntity) (Object) this;
 
-        self.getEntityData().set(DATA_HYPNO_ID, this.hasEffect(PazEffects.HYPNOTIZE));
-        self.getEntityData().set(DATA_CHILL_ID, this.hasEffect(PazEffects.CHILLED));
-        self.getEntityData().set(DATA_FROZEN_ID, this.hasEffect(PazEffects.FROZEN));
-        self.getEntityData().set(DATA_BUTTER_ID, this.hasEffect(PazEffects.BUTTERED));
-        self.getEntityData().set(DATA_PAINTED_COLORS, PaintedMobEffect.getPaintColors(self));
+        self.getEntityData().set(DATA_HYPNO_ID, plantz$hasEffectExcept(PazEffects.HYPNOTIZE, removed));
+        self.getEntityData().set(DATA_CHILL_ID, plantz$hasEffectExcept(PazEffects.CHILLED, removed));
+        self.getEntityData().set(DATA_FROZEN_ID, plantz$hasEffectExcept(PazEffects.FROZEN, removed));
+        self.getEntityData().set(DATA_BUTTER_ID, plantz$hasEffectExcept(PazEffects.BUTTERED, removed));
+        Map<Integer, Integer> colors = PaintedMobEffect.getPaintColors(self);
+        if (removed != null && removed.getEffect().value() instanceof PaintedMobEffect painted && self.hasEffect(removed.getEffect())) {
+            colors = new HashMap<>(colors);
+            colors.remove(painted.getPaintColor());
+        }
+        self.getEntityData().set(DATA_PAINTED_COLORS, colors);
     }
 
     @Inject(method = "canBeAffected", at = @At(value = "RETURN"), cancellable = true)
     public void immuneToHypnosisOrFreeze(MobEffectInstance newEffect, CallbackInfoReturnable<Boolean> cir) {
         var entity = (LivingEntity) (Object) this;
         if (newEffect.is(PazEffects.HYPNOTIZE)) {
-            cir.setReturnValue(!entity.is(PazTags.EntityTypes.CANNOT_HYPNOTIZE));
+            cir.setReturnValue(!entity.getType().is(PazTags.EntityTypes.CANNOT_HYPNOTIZE));
         }
         if (newEffect.is(PazEffects.CHILLED) || newEffect.is(PazEffects.FROZEN)) {
             cir.setReturnValue(entity.canFreeze());
@@ -255,7 +285,7 @@ abstract public class LivingEntityMixin implements PlantHeadAttachment, GardenHe
         updateEffects();
     }
 
-    @Inject(method = "canAttack", at = @At(value = "RETURN"), cancellable = true)
+    @Inject(method = "canAttack(Lnet/minecraft/world/entity/LivingEntity;)Z", at = @At(value = "RETURN"), cancellable = true)
     public void noAttackWhenFrozen(LivingEntity target, CallbackInfoReturnable<Boolean> cir) {
         if (this.hasEffect(PazEffects.FROZEN)) {
             cir.setReturnValue(false);
@@ -267,20 +297,22 @@ abstract public class LivingEntityMixin implements PlantHeadAttachment, GardenHe
         updateEffects();
     }
 
-    @Inject(method = "canAttack", at = @At(value = "RETURN"), cancellable = true)
+    @Inject(method = "canAttack(Lnet/minecraft/world/entity/LivingEntity;)Z", at = @At(value = "RETURN"), cancellable = true)
     public void stopTargetingFriendlies(LivingEntity target, CallbackInfoReturnable<Boolean> cir) {
         if (this.hasEffect(PazEffects.HYPNOTIZE) && (target instanceof Plant || target instanceof Player || target.hasEffect(PazEffects.HYPNOTIZE))) {
             cir.setReturnValue(false);
         }
     }
 
-    @Inject(method = "hurtServer", at = @At("HEAD"), cancellable = true)
-    public void ownerIgnorePlantAttacks(ServerLevel level, DamageSource source, float damage, CallbackInfoReturnable<Boolean> cir) {
+    // 26.1 hurtServer -> 1.21.1 hurt (server side only, like hurtServer)
+    @Inject(method = "hurt", at = @At("HEAD"), cancellable = true)
+    public void ownerIgnorePlantAttacks(DamageSource source, float damage, CallbackInfoReturnable<Boolean> cir) {
         var self = (LivingEntity) (Object) this;
+        if (self.level().isClientSide()) return;
         var sourceEntity = source.getEntity();
         var directEntity = source.getDirectEntity();
         if (source.is(DamageTypes.LIGHTNING_BOLT)) self.addEffect(new MobEffectInstance(PazEffects.ELECTRIFIED, 300, 1));
-        if (source.is(PazTags.DamageTypes.IS_ELECTRIC) && self.is(PazTags.EntityTypes.IMMUNE_TO_ELECTRICITY)) {
+        if (source.is(PazTags.DamageTypes.IS_ELECTRIC) && self.getType().is(PazTags.EntityTypes.IMMUNE_TO_ELECTRICITY)) {
             cir.setReturnValue(false);
             cir.cancel();
         }

@@ -64,7 +64,7 @@ class BonkChoy(type: EntityType<out Plant>, level: Level) : Plant(type, level) {
 
     override fun registerGoals() {
         super.registerGoals()
-        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target, level ->
+        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target ->
             target !is Plant
                     && target !is Creeper
                     && (target is Zombie

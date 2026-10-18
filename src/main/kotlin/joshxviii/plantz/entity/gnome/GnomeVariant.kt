@@ -3,7 +3,6 @@ package joshxviii.plantz.entity.gnome
 import com.mojang.serialization.Codec
 import io.netty.buffer.ByteBuf
 import joshxviii.plantz.pazResource
-import net.minecraft.core.ClientAsset
 import net.minecraft.network.codec.ByteBufCodecs
 import net.minecraft.network.codec.StreamCodec
 import net.minecraft.resources.ResourceLocation
@@ -21,7 +20,7 @@ enum class GnomeVariant(val color: String, val id: Int) : StringRepresentable {
     YELLOW("yellow", 3);
 
     override fun getSerializedName(): String = color
-    fun getTexture(): ResourceLocation = ClientAsset.ResourceTexture(pazResource("entity/gnome/${color}")).texturePath
+    fun getTexture(): ResourceLocation = pazResource("textures/entity/gnome/${color}.png")// 26.1 ClientAsset.ResourceTexture(id).texturePath
 
     companion object {
         fun getDefault(): GnomeVariant = BLUE

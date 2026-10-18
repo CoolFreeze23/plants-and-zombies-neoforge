@@ -19,7 +19,7 @@ class PuffShroom(type: EntityType<out Plant>, level: Level) : Plant(type, level)
             usingEntity = this,
             projectileFactory = { Spore(level(), this) },
             cooldownTime = 20))
-        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target, level ->
+        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target ->
             target !is Plant
                     && target !is Creeper
                     && (target is Zombie

@@ -1,5 +1,7 @@
 package joshxviii.plantz.ai.goal
 
+import joshxviii.plantz.entity.plant.knownSpeed
+
 import joshxviii.plantz.PazSounds
 import joshxviii.plantz.applyImpulse
 import joshxviii.plantz.entity.plant.Plant
@@ -82,8 +84,7 @@ class ProjectileAttackGoal(
 
         val level = usingEntity.level() as ServerLevel
         val projectile = projectileFactory()
-        if (projectile is Projectile) Projectile.spawnProjectile(projectile, level, ItemStack.EMPTY)
-        else level.addFreshEntity(projectile)
+        level.addFreshEntity(projectile)// 26.1: Projectile.spawnProjectile(projectile, level, ItemStack.EMPTY) for projectiles
 
         val targetPosNow = Vec3(
             target.x - projectile.x,
@@ -107,10 +108,10 @@ class ProjectileAttackGoal(
 
         val horizUnitX = targetPos.x / horizDist
         val horizUnitZ = targetPos.z / horizDist
-        val horizComp = Mth.cos(finalAngle)
+        val horizComp = Mth.cos(finalAngle.toFloat())
 
         val shootX = (horizUnitX * horizComp)
-        val shootY = Mth.sin(finalAngle).toDouble()
+        val shootY = Mth.sin(finalAngle.toFloat()).toDouble()
         val shootZ = (horizUnitZ * horizComp)
 
         if (projectile is Projectile) projectile.shoot(shootX, shootY, shootZ, finalVel.toFloat(), inaccuracy)
@@ -138,7 +139,7 @@ class ProjectileAttackGoal(
             val arcs = calculateProjectileArcs(predicted, g, v) ?: return predicted
             val angle = if (useHighArc) arcs.first else arcs.second
 
-            val horizontalSpeed = v * Mth.cos(angle)
+            val horizontalSpeed = v * Mth.cos(angle.toFloat())
             if (horizontalSpeed <= 0.000001) return predicted
 
             val horizontalDistance = predicted.horizontalDistance()

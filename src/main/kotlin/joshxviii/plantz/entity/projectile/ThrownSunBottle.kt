@@ -3,6 +3,7 @@ package joshxviii.plantz.entity.projectile
 import joshxviii.plantz.PazEntities
 import joshxviii.plantz.PazItems
 import joshxviii.plantz.entity.Sun
+import joshxviii.plantz.entity.plant.unitVec3
 import net.minecraft.core.Position
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.entity.EntityType

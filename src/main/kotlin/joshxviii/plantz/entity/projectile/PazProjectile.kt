@@ -2,6 +2,9 @@ package joshxviii.plantz.entity.projectile
 
 import joshxviii.plantz.*
 import joshxviii.plantz.entity.plant.Plant
+import joshxviii.plantz.entity.plant.headLookAngle
+import joshxviii.plantz.entity.plant.rootOwner
+import net.minecraft.util.Mth
 import net.minecraft.core.BlockPos
 import net.minecraft.core.particles.ParticleOptions
 import net.minecraft.core.particles.ParticleTypes
@@ -14,7 +17,6 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
-import net.minecraft.util.random.WeightedList
 import net.minecraft.world.damagesource.DamageType
 import net.minecraft.world.entity.*
 import net.minecraft.world.entity.ai.attributes.Attributes
@@ -51,6 +53,54 @@ abstract class PazProjectile(
 
     companion object {
         val EXPLOSION_CALCULATOR: ExplosionDamageCalculator = SimpleExplosionDamageCalculator(false, true, Optional.of(1.0f), Optional.ofNullable(null))
+        // 26.1 ProjectileUtil helpers (1.21.1 lacks them / returns the entity position instead of the hit location)
+        fun computeMargin(source: Entity): Float = Math.max(0.0f, Math.min(0.3f, (source.tickCount - 2).toFloat() / 20.0f))
+
+        fun getEntityHitResult(level: Level, source: Entity, from: Vec3, to: Vec3, targetSearchArea: AABB, matching: Predicate<Entity>, entityMargin: Float): EntityHitResult? {
+            var nearest = Double.MAX_VALUE
+            var nearestLocation: Vec3? = null
+            var hitEntity: Entity? = null
+            for (entity in level.getEntities(source, targetSearchArea, matching)) {
+                val bb = entity.boundingBox.inflate(entityMargin.toDouble())
+                val location = bb.clip(from, to)
+                if (location.isPresent) {
+                    val dd = from.distanceToSqr(location.get())
+                    if (dd < nearest) {
+                        hitEntity = entity
+                        nearest = dd
+                        nearestLocation = location.get()
+                    }
+                }
+            }
+            return if (hitEntity == null) null else EntityHitResult(hitEntity, nearestLocation!!)
+        }
+
+        fun getManyEntityHitResult(level: Level, source: Entity, from: Vec3, to: Vec3, targetSearchArea: AABB, matching: Predicate<Entity>, entityMargin: Float, includeFromEntity: Boolean): MutableCollection<EntityHitResult> {
+            val collector = ArrayList<EntityHitResult>()
+            for (entity in level.getEntities(source, targetSearchArea, matching)) {
+                val entityBB = entity.boundingBox
+                if (includeFromEntity && entityBB.contains(from)) {
+                    collector.add(EntityHitResult(entity, from))
+                } else {
+                    val exactHit = entityBB.clip(from, to)
+                    if (exactHit.isPresent) {
+                        collector.add(EntityHitResult(entity, exactHit.get()))
+                    } else if (entityMargin > 0.0f) {
+                        val outsideHit = entityBB.inflate(entityMargin.toDouble()).clip(from, to)
+                        if (outsideHit.isPresent) {
+                            val outsideHitPosition = outsideHit.get()
+                            var towardsTarget = entityBB.center
+                            val hitResult = level.clip(ClipContext(outsideHitPosition, towardsTarget, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, source))
+                            if (hitResult.type != HitResult.Type.MISS) towardsTarget = hitResult.location
+                            val surfaceHit = entity.boundingBox.clip(outsideHitPosition, towardsTarget)
+                            if (surfaceHit.isPresent) collector.add(EntityHitResult(entity, surfaceHit.get()))
+                        }
+                    }
+                }
+            }
+            return collector
+        }
+
         val PIERCE_LEVEL: EntityDataAccessor<Byte> = SynchedEntityData.defineId(PazProjectile::class.java, EntityDataSerializers.BYTE)
         val IN_GROUND: EntityDataAccessor<Boolean> = SynchedEntityData.defineId(PazProjectile::class.java, EntityDataSerializers.BOOLEAN)
     }
@@ -109,7 +159,7 @@ abstract class PazProjectile(
         val originalPosition = this.position()
         if (physicsEnabled) {
             val blockHitResult = level
-                .clipIncludingBorder(
+                .clip(
                     ClipContext(
                         originalPosition,
                         originalPosition.add(movement),
@@ -121,7 +171,7 @@ abstract class PazProjectile(
             this.stepMoveAndHit(blockHitResult)
         } else {
             this.setPos(originalPosition.add(movement))
-            this.applyEffectsFromBlocks()
+            this.checkInsideBlocks()
         }
 
         applyInertia()
@@ -148,10 +198,10 @@ abstract class PazProjectile(
                     arr.asList()
                 }
             } else {
-                val nearest = ProjectileUtil.getEntityHitResult(
+                val nearest = getEntityHitResult(
                     this.level(), this, initialPosition, blockHitLoc,
                     this.boundingBox.expandTowards(this.deltaMovement),
-                    canHitPredicate, ProjectileUtil.computeMargin(this)
+                    canHitPredicate, computeMargin(this)
                 )
                 if (nearest == null) emptyList() else listOf(nearest)
             }
@@ -159,13 +209,13 @@ abstract class PazProjectile(
             val firstEntityHit = if (entitiesHit.isEmpty()) null else entitiesHit[0]
             val nextLocation = (firstEntityHit ?: blockHitResult).location
             this.setPos(nextLocation)
-            this.applyEffectsFromBlocks(initialPosition, nextLocation)
+            this.checkInsideBlocks()
             if (portalProcess != null && portalProcess!!.isInsidePortalThisTick) handlePortal()
 
             if (entitiesHit.isEmpty()) {
                 if (this.isAlive && blockHitResult.type != HitResult.Type.MISS) {
                     this.hitTargetOrDeflectSelf(blockHitResult)
-                    this.needsSync = true
+                    this.hasImpulse = true
                 }
                 break
             } else if (this.isAlive && !this.noPhysics) {
@@ -178,7 +228,7 @@ abstract class PazProjectile(
                     }
                     if (!isAlive) break
                 }
-                this.needsSync = true
+                this.hasImpulse = true
                 if (pierceLevel > 0 && deflection === ProjectileDeflection.NONE) {
                     continue
                 }
@@ -188,10 +238,10 @@ abstract class PazProjectile(
     }
 
     protected open fun findHitEntities(from: Vec3, to: Vec3): MutableCollection<EntityHitResult> {
-        return ProjectileUtil.getManyEntityHitResult(
+        return getManyEntityHitResult(
             this.level(), this, from, to,
             this.boundingBox.expandTowards(this.deltaMovement),
-            canHitPredicate, false
+            canHitPredicate, computeMargin(this), false
         )
     }
 
@@ -215,7 +265,7 @@ abstract class PazProjectile(
 
         // get damage from attribute
         val source = this.damageSources().source(damageType, this, owner)
-        if(target.hurtServer(serverLevel, source, damage)) {
+        if(target.hurt(source, damage)) {
             if (target is LivingEntity) {
                 val knockbackDirection = calculateHorizontalHurtKnockbackDirection(target, source)
                 target.knockback(knockback, -knockbackDirection.leftDouble(), -knockbackDirection.rightDouble())
@@ -296,7 +346,7 @@ abstract class PazProjectile(
             if (knockback > 0.0) {
                 nearby.push(knockbackVector.x, 0.03, knockbackVector.z)
                 val source = this.damageSources().source(damageType, this, getOwner())
-                if(nearby.hurtServer(serverLevel, source, (damage/direction.length()*distance).toFloat())) {
+                if(nearby.hurt(source, (damage/direction.length()*distance).toFloat())) {
                     val knockbackDirection = calculateHorizontalHurtKnockbackDirection(nearby, source)
                     nearby.knockback(knockback, -knockbackDirection.leftDouble(), -knockbackDirection.rightDouble())
                     if (nearby is ServerPlayer) nearby.connection.send(ClientboundSetEntityMotionPacket(nearby))
@@ -316,7 +366,6 @@ abstract class PazProjectile(
             Level.ExplosionInteraction.MOB,
             ParticleTypes.LARGE_SMOKE,
             ParticleTypes.EXPLOSION,
-            WeightedList.of(),
             PazSounds.PLANT_EXPLODE
         )
         if (level is ServerLevel) {
@@ -351,15 +400,19 @@ abstract class PazProjectile(
 
     private fun handleFirstTickBubbleColumn() {
         if (this.firstTick) {
-            for (pos in BlockPos.betweenClosed(this.boundingBox)) {
+            val box = this.boundingBox
+            for (pos in BlockPos.betweenClosed(
+                Mth.floor(box.minX), Mth.floor(box.minY), Mth.floor(box.minZ),
+                Mth.floor(box.maxX), Mth.floor(box.maxY), Mth.floor(box.maxZ))) {
                 val state = this.level().getBlockState(pos)
-                if (state.`is`(Blocks.BUBBLE_COLUMN)) state.entityInside(this.level(), pos, this, InsideBlockEffectApplier.NOOP, true)
+                if (state.`is`(Blocks.BUBBLE_COLUMN)) state.entityInside(this.level(), pos, this)
             }
         }
     }
 
     // center hit box
-    override fun makeBoundingBox(p: Vec3): AABB {
+    override fun makeBoundingBox(): AABB {
+        val p = this.position()
         val width = this.type.dimensions.width() / 2.0f
         val height = this.type.dimensions.height() / 2.0f
         return AABB(

@@ -19,6 +19,8 @@ import net.minecraft.world.entity.monster.Zombie
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.Level
 import net.minecraft.world.phys.AABB
+import net.minecraft.server.level.ServerLevel
+import java.util.function.Predicate
 
 class ScaredyShroom(type: EntityType<out Plant>, level: Level) : Plant(type, level) {
 
@@ -56,11 +58,11 @@ class ScaredyShroom(type: EntityType<out Plant>, level: Level) : Plant(type, lev
             actionPredicate = {
                 !isHiding
             }))
-        this.goalSelector.addGoal(3, HideGoal(this, LivingEntity::class.java) { target, _ ->
+        this.goalSelector.addGoal(3, HideGoal(this, LivingEntity::class.java) { target ->
             (!isTame && target is Player)
                 || target is Enemy
         })
-        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target, _ ->
+        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target ->
             target !is Plant
                     && target !is Creeper
                     && (target is Zombie
@@ -72,7 +74,7 @@ class ScaredyShroom(type: EntityType<out Plant>, level: Level) : Plant(type, lev
     class HideGoal <T: LivingEntity> (
         val shroom: ScaredyShroom,
         val targetType: Class<T>,
-        val selector: TargetingConditions.Selector? = null,
+        val selector: Predicate<LivingEntity>? = null,
     ) : Goal() {
         companion object {
             const val HIDE_DISTANCE: Double = 3.5
@@ -95,7 +97,7 @@ class ScaredyShroom(type: EntityType<out Plant>, level: Level) : Plant(type, lev
         }
 
         fun findTarget() {
-            val level = getServerLevel(shroom)
+            val level = shroom.level() as? ServerLevel ?: return
             target = level.getNearestEntity<T>(
                 shroom.level().getEntitiesOfClass<T>(targetType, getTargetSearchArea(HIDE_DISTANCE)) { true },
                 targetConditions,

@@ -4,6 +4,8 @@ import joshxviii.plantz.*
 import joshxviii.plantz.PazBlocks.SUN_BATTERY_POI
 import joshxviii.plantz.block.entity.SunBatteryBlockEntity
 import joshxviii.plantz.entity.plant.Plant
+import joshxviii.plantz.entity.plant.WallNut
+import net.minecraft.nbt.CompoundTag
 import net.minecraft.core.BlockPos
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.EntityDataSerializers
@@ -36,7 +38,13 @@ class Sun(type: EntityType<out Sun>, level: Level) : Entity(type, level) {
     private var followingEntity: LivingEntity? = null
     private var batteryPos: Vec3? = null
     private var batteryState: BlockState? = null
-    private val interpolation = InterpolationHandler(this)
+    // 26.1 InterpolationHandler (3 steps) -> 1.21.1 lerpTo/lerpSteps
+    private var lerpSteps = 0
+    private var lerpX = 0.0
+    private var lerpY = 0.0
+    private var lerpZ = 0.0
+    private var lerpYRot = 0.0
+    private var lerpXRot = 0.0
 
     companion object {
         val DATA_VALUE: EntityDataAccessor<Int> =
@@ -51,7 +59,7 @@ class Sun(type: EntityType<out Sun>, level: Level) : Entity(type, level) {
         private const val DEFAULT_VALUE: Short = 0
         private const val DEFAULT_COUNT = 1
         fun award(level: ServerLevel, pos: Vec3, amount: Int) {
-            awardWithDirection(level, pos, Vec3.Y_AXIS, amount)
+            awardWithDirection(level, pos, Vec3(0.0, 1.0, 0.0), amount)
         }
 
         fun awardWithDirection(level: ServerLevel, pos: Vec3, roughDirection: Vec3, amount: Int) {
@@ -148,8 +156,28 @@ class Sun(type: EntityType<out Sun>, level: Level) : Entity(type, level) {
 
     override fun getDefaultGravity(): Double = 0.015
 
+    override fun lerpTo(x: Double, y: Double, z: Double, yRot: Float, xRot: Float, steps: Int) {
+        lerpX = x
+        lerpY = y
+        lerpZ = z
+        lerpYRot = yRot.toDouble()
+        lerpXRot = xRot.toDouble()
+        lerpSteps = 3
+    }
+    override fun lerpTargetX(): Double = if (lerpSteps > 0) lerpX else x
+    override fun lerpTargetY(): Double = if (lerpSteps > 0) lerpY else y
+    override fun lerpTargetZ(): Double = if (lerpSteps > 0) lerpZ else z
+    override fun lerpTargetXRot(): Float = if (lerpSteps > 0) lerpXRot.toFloat() else xRot
+    override fun lerpTargetYRot(): Float = if (lerpSteps > 0) lerpYRot.toFloat() else yRot
+
+    // WallNut.canBeCollidedWith(other) returned false for suns in 26.1; 1.21.1 has no "other", so suns opt out here
+    override fun canCollideWith(entity: Entity): Boolean = entity !is WallNut && super.canCollideWith(entity)
+
     override fun tick() {
-        interpolation.interpolate()
+        if (lerpSteps > 0) {
+            lerpPositionAndRotationStep(lerpSteps, lerpX, lerpY, lerpZ, lerpYRot, lerpXRot)
+            lerpSteps--
+        }
         if (firstTick && level().isClientSide) firstTick = false
         else {
             super.tick()
@@ -164,12 +192,12 @@ class Sun(type: EntityType<out Sun>, level: Level) : Entity(type, level) {
                 followingEntity = getNearestEntity(MAX_FOLLOW_DIST)
             }
 
-            if (batteryPos != null) needsSync = true
+            if (batteryPos != null) hasImpulse = true
             if (followingEntity == null && !level().isClientSide && colliding) {
                 val nextColliding = !level().noCollision(boundingBox.move(deltaMovement))
                 if (nextColliding) {
                     moveTowardsClosestSpace(x, (boundingBox.minY + boundingBox.maxY) / 2.0, z)
-                    needsSync = true
+                    hasImpulse = true
                 }
             }
 
@@ -329,10 +357,9 @@ class Sun(type: EntityType<out Sun>, level: Level) : Entity(type, level) {
 
     override fun doWaterSplashEffect() {}
 
-    override fun hurtClient(source: DamageSource): Boolean = !isInvulnerableToBase(source)
-
-    override fun hurtServer(level: ServerLevel, source: DamageSource, damage: Float): Boolean {
-        if (isInvulnerableToBase(source)) return false
+    override fun hurt(source: DamageSource, damage: Float): Boolean {
+        if (level().isClientSide) return !isInvulnerableTo(source)
+        if (isInvulnerableTo(source)) return false
         else {
             markHurt()
             health = (health - damage).toInt()
@@ -341,23 +368,23 @@ class Sun(type: EntityType<out Sun>, level: Level) : Entity(type, level) {
         }
     }
 
-    override fun addAdditionalSaveData(output: ValueOutput) {
+    override fun addAdditionalSaveData(tag: CompoundTag) {
+        val output = ValueOutput.of(tag, registryAccess())
         output.putShort("Health", health.toShort())
         output.putShort("Age", age.toShort())
         output.putShort("Value", value.toShort())
         output.putInt("Count", count)
     }
 
-    override fun readAdditionalSaveData(input: ValueInput) {
-        health = input.getShortOr("Health", DEFAULT_HEALTH)
-        age = input.getShortOr("Age", DEFAULT_AGE)
-        value = input.getShortOr("Value", DEFAULT_VALUE)
+    override fun readAdditionalSaveData(tag: CompoundTag) {
+        val input = ValueInput.of(tag, registryAccess())
+        health = input.getShortOr("Health", DEFAULT_HEALTH).toInt()
+        age = input.getShortOr("Age", DEFAULT_AGE).toInt()
+        value = input.getShortOr("Value", DEFAULT_VALUE).toInt()
         count = input.read("Count", ExtraCodecs.POSITIVE_INT).orElse(DEFAULT_COUNT) as Int
     }
 
     override fun isAttackable(): Boolean = false
 
     override fun getSoundSource(): SoundSource = SoundSource.AMBIENT
-
-    override fun getInterpolation(): InterpolationHandler = interpolation
 }

@@ -15,7 +15,7 @@ class FreezeMobEffect(
 
     }
 
-    override fun applyEffectTick(level: ServerLevel, mob: LivingEntity, amplification: Int): Boolean {
+    override fun applyEffectTick(mob: LivingEntity, amplification: Int): Boolean {
         return true
     }
 

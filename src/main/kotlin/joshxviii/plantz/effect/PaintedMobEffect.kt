@@ -22,7 +22,7 @@ class PaintedMobEffect(
     category: MobEffectCategory,
     var paintColor: Int = DyeColor.WHITE.fireworkColor,
     private var random: RandomSource = RandomSource.create()
-) : MobEffect(category, paintColor, PazServerParticles.PAINT_DRIP) {
+) : MobEffect(category, paintColor, PazServerParticles.PAINT_DRIP), PazMobEffectHooks {
     companion object {
 
         @JvmStatic
@@ -47,22 +47,23 @@ class PaintedMobEffect(
         return true
     }
 
-    override fun applyEffectTick(serverLevel: ServerLevel, mob: LivingEntity, amplification: Int): Boolean {
+    override fun applyEffectTick(mob: LivingEntity, amplification: Int): Boolean {
+        if (mob.level() !is ServerLevel) return true// 26.1 only ticks effects on the server
         if (mob.isEyeInFluid(FluidTags.WATER)) return false
-        return super.applyEffectTick(serverLevel, mob, amplification)
+        return super.applyEffectTick(mob, amplification)
     }
 
     override fun onEffectAdded(effectInstance: MobEffectInstance, entity: LivingEntity) {
-        super.onEffectAdded(effectInstance, entity)
+        super<PazMobEffectHooks>.onEffectAdded(effectInstance, entity)
     }
 
     override fun onEffectStarted(effectInstance: MobEffectInstance, entity: LivingEntity) {
         random = RandomSource.create(entity.level().gameTime)
-        super.onEffectStarted(effectInstance, entity)
+        super<PazMobEffectHooks>.onEffectStarted(effectInstance, entity)
     }
 
     override fun onEffectRemoved(effectInstance: MobEffectInstance, entity: LivingEntity) {
-        super.onEffectRemoved(effectInstance, entity)
+        super<PazMobEffectHooks>.onEffectRemoved(effectInstance, entity)
     }
 
     fun getRandomness(): RandomSource {

@@ -1,6 +1,8 @@
 package joshxviii.plantz.ai.goal
 
 import joshxviii.plantz.entity.plant.Plant
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.PathfinderMob
 import net.minecraft.world.entity.ai.goal.target.TargetGoal
 import net.minecraft.world.entity.ai.targeting.TargetingConditions
@@ -13,7 +15,7 @@ open class NearestPlantTargetGoal(
     randomInterval: Int,
     mustSee: Boolean,
     mustReach: Boolean,
-    selector: TargetingConditions.Selector?
+    selector: Predicate<LivingEntity>?
 ) : TargetGoal(usingEntity, mustSee, mustReach) {
     protected val randomInterval: Int = reducedTickDelay(randomInterval)
     protected var target: Plant? = null
@@ -38,7 +40,7 @@ open class NearestPlantTargetGoal(
     }
 
     protected fun findTarget() {
-        val level = getServerLevel(this.mob)
+        val level = this.mob.level() as? ServerLevel ?: return
         this.target = level.getNearestEntity(
             this.mob.level().getEntitiesOfClass(
                 Plant::class.java,

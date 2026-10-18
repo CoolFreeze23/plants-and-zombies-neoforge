@@ -2,10 +2,8 @@ package joshxviii.plantz.entity.projectile
 
 import joshxviii.plantz.PazSounds
 import joshxviii.plantz.createFallingBlock
-import net.minecraft.core.particles.ExplosionParticleInfo
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.server.level.ServerLevel
-import net.minecraft.util.random.WeightedList
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.Mob
 import net.minecraft.world.entity.item.FallingBlockEntity
@@ -24,7 +22,7 @@ import java.util.*
 class PowderSnowChunk(
     val level: Level,
     val mob: Mob
-) : ThrowableItemProjectile(EntityType.SNOWBALL, mob, level, Items.AIR.defaultInstance) {
+) : ThrowableItemProjectile(EntityType.SNOWBALL, mob, level) {
 
     companion object {
         val EXPLOSION_DAMAGE_CALCULATOR: ExplosionDamageCalculator = SimpleExplosionDamageCalculator(false, true, Optional.ofNullable(null), Optional.ofNullable(null))
@@ -33,16 +31,17 @@ class PowderSnowChunk(
     private val block : FallingBlockEntity? = createFallingBlock(this.level(), this.blockPosition().above().center, Blocks.POWDER_SNOW.defaultBlockState())
 
     init {
+        item = Items.AIR.defaultInstance
         block?.dropItem = false
         this.setOwner(block)
-        if((level as ServerLevel).gameRules.get(GameRules.MOB_GRIEFING)==false) block?.disableDrop()
+        if(!(level as ServerLevel).gameRules.getBoolean(GameRules.RULE_MOBGRIEFING)) block?.disableDrop()
     }
 
     override fun baseTick() {
         super.baseTick()
         if(tickCount<=1) {
             block?.deltaMovement = deltaMovement
-            block?.needsSync = true
+            block?.hasImpulse = true
             block?.startRiding(this)
         }
     }
@@ -71,7 +70,7 @@ class PowderSnowChunk(
         super.onHitEntity(hitResult)
         val entity = hitResult.entity
         val damage = 5
-        entity.hurtServer(level() as ServerLevel, this.damageSources().thrown(this, this.getOwner()), damage.toFloat())
+        entity.hurt(this.damageSources().thrown(this, this.getOwner()), damage.toFloat())
     }
 
     override fun onHit(hitResult: HitResult) {
@@ -106,7 +105,6 @@ class PowderSnowChunk(
                 Level.ExplosionInteraction.MOB,
                 ParticleTypes.SNOWFLAKE,
                 ParticleTypes.SMOKE,
-                WeightedList.of<ExplosionParticleInfo>(),
                 PazSounds.SNOWCHUNK_HIT
             )
     }

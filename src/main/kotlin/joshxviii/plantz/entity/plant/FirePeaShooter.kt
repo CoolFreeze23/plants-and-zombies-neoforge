@@ -22,7 +22,7 @@ class FirePeaShooter(type: EntityType<out Plant>, level: Level) : Plant(type, le
             projectileFactory = { PeaFire(level(), this) },
             cooldownTime = 20,
             actionDelay = 3))
-        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target, level ->
+        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, true, false) { target ->
             target !is Plant
                     && target !is Creeper
                     && (target is Zombie

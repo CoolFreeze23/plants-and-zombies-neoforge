@@ -36,7 +36,7 @@ class FrozenMelon(
         spawnParticle(
             ItemParticleOption(
                 ParticleTypes.ITEM,
-                Items.BLUE_ICE
+                net.minecraft.world.item.ItemStack(Items.BLUE_ICE)
             ),
             amount = 45,
             speed = 0.13,

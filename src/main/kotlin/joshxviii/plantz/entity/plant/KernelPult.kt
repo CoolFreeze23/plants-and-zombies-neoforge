@@ -45,7 +45,7 @@ class KernelPult(type: EntityType<out Plant>, level: Level) : Plant(type, level)
             cooldownTime = 26,
             actionDelay = 12,
             actionStartEffect = { hasButterShot = random.nextFloat() < 0.25 }))
-        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, false, false) { target, level ->
+        this.targetSelector.addGoal(4, NearestAttackableTargetGoal(this, LivingEntity::class.java, 5, false, false) { target ->
             target !is Plant
                     && target !is Creeper
                     && (target is Zombie
