@@ -20,9 +20,7 @@
     }
   },
   "requirements": [
-    [
-      "bowl"
-    ]
+    ["bowl"]
   ],
   "sends_telemetry_event": true
 }
