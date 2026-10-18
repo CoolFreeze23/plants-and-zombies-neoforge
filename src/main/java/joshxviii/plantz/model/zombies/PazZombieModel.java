@@ -1,6 +1,5 @@
 package joshxviii.plantz.model.zombies;
 
-import joshxviii.plantz.ai.ZombieState;
 import joshxviii.plantz.animation.zombies.PazZombieAnimations;
 import joshxviii.plantz.renderer.entity.zombie.PazZombieRenderState;
 import net.minecraft.client.animation.AnimationDefinition;

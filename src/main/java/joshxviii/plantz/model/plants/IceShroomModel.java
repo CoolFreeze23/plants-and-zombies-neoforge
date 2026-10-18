@@ -2,7 +2,6 @@ package joshxviii.plantz.model.plants;
 
 import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 
-import joshxviii.plantz.animation.plants.HypnoShroomAnimation;
 import joshxviii.plantz.animation.plants.IceShroomAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
 import net.minecraft.client.model.geom.ModelLayerLocation;

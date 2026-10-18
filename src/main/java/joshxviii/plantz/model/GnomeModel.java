@@ -7,7 +7,8 @@ import joshxviii.plantz.block.GardenGnomePose;
 import joshxviii.plantz.renderer.entity.GnomeRenderState;
 import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 import joshxviii.plantz.compat.client.model.EntityModel;
-import net.minecraft.client.model.HeadedModel;
+import joshxviii.plantz.compat.client.model.ArmedModel;
+import joshxviii.plantz.compat.client.model.HeadedModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -18,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 
 import static joshxviii.plantz.UtilsKt.pazResource;
 
-public class GnomeModel<T extends GnomeRenderState> extends EntityModel<T> implements HeadedModel {
+public class GnomeModel<T extends GnomeRenderState> extends EntityModel<T> implements ArmedModel<T>, HeadedModel {
 	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(pazResource("gnome"), "main");
 	private final KeyframeAnimation waveAnimation;
 	private final KeyframeAnimation relaxAnimation;
@@ -161,6 +162,7 @@ public class GnomeModel<T extends GnomeRenderState> extends EntityModel<T> imple
 		}
 	}
 
+	@Override
 	public void translateToHand(T state, @NotNull HumanoidArm arm, @NotNull PoseStack poseStack) {
 		root.translateAndRotate(poseStack);
 		body.translateAndRotate(poseStack);
@@ -171,6 +173,7 @@ public class GnomeModel<T extends GnomeRenderState> extends EntityModel<T> imple
 		poseStack.translate(0.046875 * (arm == HumanoidArm.LEFT? 1f : -1f), -0.12, 0.078125);
 	}
 
+	@Override
 	public void translateToHead(@NotNull PoseStack poseStack) {
 		root.translateAndRotate(poseStack);
 		body.translateAndRotate(poseStack);

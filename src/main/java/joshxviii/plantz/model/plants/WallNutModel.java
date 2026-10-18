@@ -5,7 +5,6 @@ import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 import joshxviii.plantz.animation.plants.WallNutAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
 import joshxviii.plantz.renderer.entity.plant.WallNutRenderState;
-import joshxviii.plantz.renderer.entity.zombie.RoboZombieRenderState;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;

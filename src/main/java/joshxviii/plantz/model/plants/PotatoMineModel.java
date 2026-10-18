@@ -1,6 +1,5 @@
 package joshxviii.plantz.model.plants;
 
-import joshxviii.plantz.animation.plants.ChomperAnimation;
 import joshxviii.plantz.animation.plants.PotatoMineAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
 import joshxviii.plantz.compat.client.animation.KeyframeAnimation;

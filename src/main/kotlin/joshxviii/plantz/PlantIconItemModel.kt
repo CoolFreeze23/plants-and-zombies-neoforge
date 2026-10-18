@@ -36,17 +36,17 @@ import kotlin.math.abs
  *   [ItemOverrides] that pick, per stack, a composite of the base layers plus the stack's plant icon,
  *   drawn as NeoForge render passes. Each layer keeps its own display transform, like 26.1 composites.
  *
- * Mirrors `assets/plantz/items/seed_packet.json` and `items/gardening_glove.json` (26.1 item definitions):
+ * Mirrors the 26.1 item definitions `items/seed_packet.json` and `items/gardening_glove.json`:
  * - seed_packet: composite(item/seed_packet, plant_icon)
  * - gardening_glove: third person -> item/gardening_glove/thirdperson; else with entity data ->
- *   composite(grab, plant_icon, grab_overlay); else -> item/gardening_glove/open
+ *   composite(grab, plant_icon, grab_overlay); else -> item/gardening_glove/open. The glove's own model
+ *   (`models/item/gardening_glove.json`, NeoForge separate transforms) covers the open / third-person cases.
  */
 object PlantIconItemModel {
     private val SEED_PACKET = pazResource("seed_packet")
     private val GARDENING_GLOVE = pazResource("gardening_glove")
     private val GLOVE_GRAB = pazResource("item/gardening_glove/grab")
     private val GLOVE_GRAB_OVERLAY = pazResource("item/gardening_glove/grab_overlay")
-    private val GLOVE_OPEN = pazResource("item/gardening_glove/open")
     private val GLOVE_THIRDPERSON = pazResource("item/gardening_glove/thirdperson")
 
     fun plantEntityTypes(): Iterable<EntityType<*>> {
@@ -69,7 +69,7 @@ object PlantIconItemModel {
     /** `ModelEvent.RegisterAdditional`: bake the plant icons and the glove layers as standalone models. */
     fun registerAdditionalModels(event: ModelEvent.RegisterAdditional) {
         for (type in plantEntityTypes()) event.register(standalone(overlayIdFor(type)))
-        for (id in listOf(GLOVE_GRAB, GLOVE_GRAB_OVERLAY, GLOVE_OPEN, GLOVE_THIRDPERSON)) event.register(standalone(id))
+        for (id in listOf(GLOVE_GRAB, GLOVE_GRAB_OVERLAY, GLOVE_THIRDPERSON)) event.register(standalone(id))
     }
 
     /** `ModelEvent.ModifyBakingResult`: wrap the seed packet and gardening glove item models. */
@@ -80,20 +80,18 @@ object PlantIconItemModel {
 
         val seedKey = ModelResourceLocation.inventory(SEED_PACKET)
         models[seedKey]?.let { base ->
-            models[seedKey] = IconHolderModel(base, icons, layers = { resolvedBase, icon -> listOf(resolvedBase, icon) })
+            models[seedKey] = IconHolderModel(base, icons, layers = { icon -> listOf(base, icon) })
         }
 
         val gloveKey = ModelResourceLocation.inventory(GARDENING_GLOVE)
         val gloveBase = models[gloveKey]
         val grab = models[standalone(GLOVE_GRAB)]
         val grabOverlay = models[standalone(GLOVE_GRAB_OVERLAY)]
-        val open = models[standalone(GLOVE_OPEN)]
         val thirdPerson = models[standalone(GLOVE_THIRDPERSON)]
-        if (gloveBase != null && grab != null && grabOverlay != null && open != null && thirdPerson != null) {
+        if (gloveBase != null && grab != null && grabOverlay != null && thirdPerson != null) {
             models[gloveKey] = IconHolderModel(
                 gloveBase, icons,
-                emptyModel = ThirdPersonSwapModel(open, thirdPerson),
-                layers = { _, icon -> listOf(grab, icon, grabOverlay) },
+                layers = { icon -> listOf(grab, icon, grabOverlay) },
                 thirdPerson = thirdPerson,
                 iconlessLayers = listOf(grab, grabOverlay),
             )
@@ -107,14 +105,13 @@ object PlantIconItemModel {
     }
 
     /**
-     * The item's top-level model. Without a plant in the stack it renders [emptyModel] (or the original
-     * model); with one, a [CompositeModel] of [layers].
+     * The item's top-level model. Without a plant in the stack it renders the original model; with one,
+     * a [CompositeModel] of [layers].
      */
     private class IconHolderModel(
         base: BakedModel,
         private val icons: Map<EntityType<*>, BakedModel>,
-        private val emptyModel: BakedModel? = null,
-        private val layers: (resolvedBase: BakedModel, icon: BakedModel) -> List<BakedModel>,
+        private val layers: (icon: BakedModel) -> List<BakedModel>,
         private val thirdPerson: BakedModel? = null,
         iconlessLayers: List<BakedModel>? = null,
     ) : BakedModelWrapper<BakedModel>(base) {
@@ -125,27 +122,16 @@ object PlantIconItemModel {
             override fun resolve(model: BakedModel, stack: ItemStack, level: ClientLevel?, entity: LivingEntity?, seed: Int): BakedModel? {
                 val type = plantTypeOf(stack)
                 val icon = if (type != null) icons[type] else null
-                if (icon == null) {
+                if (type == null || icon == null) {
                     // 26.1 glove: has_component(entity_data) picks the grab layers even without a known icon
                     if (stack.has(DataComponents.ENTITY_DATA) && iconless != null) return iconless
-                    val fallback = emptyModel ?: originalModel
-                    return fallback.overrides.resolve(fallback, stack, level, entity, seed) ?: fallback
+                    return originalModel
                 }
-                return composites.computeIfAbsent(type!!) {
-                    val resolvedBase = originalModel.overrides.resolve(originalModel, stack, level, entity, seed) ?: originalModel
-                    CompositeModel(layers(resolvedBase, icon), thirdPerson)
-                }
+                return composites.computeIfAbsent(type) { CompositeModel(layers(icon), thirdPerson) }
             }
         }
 
         override fun getOverrides(): ItemOverrides = overrides
-    }
-
-    /** Uses [thirdPerson] for third-person contexts (26.1 display_context select). */
-    private class ThirdPersonSwapModel(base: BakedModel, private val thirdPerson: BakedModel) : BakedModelWrapper<BakedModel>(base) {
-        override fun applyTransform(cameraTransformType: ItemDisplayContext, poseStack: PoseStack, applyLeftHandTransform: Boolean): BakedModel =
-            if (isThirdPerson(cameraTransformType)) thirdPerson.applyTransform(cameraTransformType, poseStack, applyLeftHandTransform)
-            else super.applyTransform(cameraTransformType, poseStack, applyLeftHandTransform)
     }
 
     private fun isThirdPerson(context: ItemDisplayContext) =
@@ -191,7 +177,7 @@ object PlantIconItemModel {
 
     private fun displayMatrix(model: BakedModel, context: ItemDisplayContext, leftHand: Boolean): Matrix4f {
         val poseStack = PoseStack()
-        model.transforms.getTransform(context).apply(leftHand, poseStack)
+        model.applyTransform(context, poseStack, leftHand)
         return Matrix4f(poseStack.last().pose())
     }
 
@@ -214,7 +200,7 @@ object PlantIconItemModel {
             cache.computeIfAbsent(side ?: NO_SIDE) { transformer.process(quads()) }
 
         override fun getQuads(state: BlockState?, side: Direction?, rand: RandomSource): List<BakedQuad> =
-            if (state != null) super.getQuads(state, side, rand) else transformed(side) { originalModel.getQuads(null, side, rand) }
+            if (state != null) super.getQuads(state, side, rand) else transformed(side) { originalModel.getQuads(null, side, rand, ModelData.EMPTY, null) }
 
         override fun getQuads(state: BlockState?, side: Direction?, rand: RandomSource, extraData: ModelData, renderType: RenderType?): List<BakedQuad> =
             if (state != null || renderType != null) super.getQuads(state, side, rand, extraData, renderType)

@@ -1,10 +1,14 @@
 package joshxviii.plantz.compat.client.model;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import joshxviii.plantz.compat.client.state.HumanoidRenderState;
 import net.minecraft.client.model.AnimationUtils;
 import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
@@ -12,13 +16,14 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 
+import java.util.Set;
 import java.util.function.Function;
 
 /**
- * Backport of the 1.21.2+ state-driven humanoid model (hat is a child of head, as in 26.1).
- * Babies use 1.21.1's ageable scaling (big head, half-size body) instead of a separate baby mesh.
+ * Backport of the 26.1 state-driven humanoid model (hat is a child of head). Like 26.1, babies use their own
+ * meshes (see {@link BabyZombieModel}) instead of 1.21.1's ageable scaling.
  */
-public class HumanoidModel<T extends HumanoidRenderState> extends EntityModel<T> {
+public class HumanoidModel<T extends HumanoidRenderState> extends EntityModel<T> implements ArmedModel<T>, HeadedModel {
     public final ModelPart head;
     public final ModelPart hat;
     public final ModelPart body;
@@ -26,7 +31,6 @@ public class HumanoidModel<T extends HumanoidRenderState> extends EntityModel<T>
     public final ModelPart leftArm;
     public final ModelPart rightLeg;
     public final ModelPart leftLeg;
-    public boolean young;
 
     public HumanoidModel(ModelPart root) {
         this(root, RenderType::entityCutout);
@@ -44,32 +48,8 @@ public class HumanoidModel<T extends HumanoidRenderState> extends EntityModel<T>
     }
 
     @Override
-    public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int lightCoords, int overlayCoords, int color) {
-        if (!this.young || !this.root.visible) {
-            super.renderToBuffer(poseStack, buffer, lightCoords, overlayCoords, color);
-            return;
-        }
-        // 1.21.1 AgeableListModel layout: head scaled 0.75, body halved and moved down
-        poseStack.pushPose();
-        poseStack.scale(0.75F, 0.75F, 0.75F);
-        poseStack.translate(0.0F, 1.0F, 0.0F);
-        this.root.translateAndRotate(poseStack);
-        this.head.render(poseStack, buffer, lightCoords, overlayCoords, color);
-        poseStack.popPose();
-        poseStack.pushPose();
-        poseStack.scale(0.5F, 0.5F, 0.5F);
-        poseStack.translate(0.0F, 1.5F, 0.0F);
-        this.root.translateAndRotate(poseStack);
-        for (ModelPart child : this.root.children.values()) {
-            if (child != this.head) child.render(poseStack, buffer, lightCoords, overlayCoords, color);
-        }
-        poseStack.popPose();
-    }
-
-    @Override
     public void setupAnim(T state) {
         super.setupAnim(state);
-        this.young = state.isBaby;
         net.minecraft.client.model.HumanoidModel.ArmPose leftArmPose = state.leftArmPose;
         net.minecraft.client.model.HumanoidModel.ArmPose rightArmPose = state.rightArmPose;
         float swimAmount = state.swimAmount;
@@ -291,7 +271,8 @@ public class HumanoidModel<T extends HumanoidRenderState> extends EntityModel<T>
         return -65.0F * x + x * x;
     }
 
-    public void translateToHand(HumanoidRenderState state, HumanoidArm arm, PoseStack poseStack) {
+    @Override
+    public void translateToHand(T state, HumanoidArm arm, PoseStack poseStack) {
         this.root.translateAndRotate(poseStack);
         this.getArm(arm).translateAndRotate(poseStack);
     }
@@ -300,7 +281,123 @@ public class HumanoidModel<T extends HumanoidRenderState> extends EntityModel<T>
         return arm == HumanoidArm.LEFT ? this.leftArm : this.rightArm;
     }
 
+    @Override
     public ModelPart getHead() {
         return this.head;
+    }
+
+    /** 26.1 {@code HumanoidModel.createMesh}: the hat is a child of the head. */
+    public static MeshDefinition createMesh(CubeDeformation g, float yOffset) {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
+        PartDefinition head = root.addOrReplaceChild("head",
+            CubeListBuilder.create().texOffs(0, 0).addBox(-4.0F, -8.0F, -4.0F, 8.0F, 8.0F, 8.0F, g), PartPose.offset(0.0F, yOffset, 0.0F));
+        head.addOrReplaceChild("hat",
+            CubeListBuilder.create().texOffs(32, 0).addBox(-4.0F, -8.0F, -4.0F, 8.0F, 8.0F, 8.0F, g.extend(0.5F)), PartPose.ZERO);
+        root.addOrReplaceChild("body",
+            CubeListBuilder.create().texOffs(16, 16).addBox(-4.0F, 0.0F, -2.0F, 8.0F, 12.0F, 4.0F, g), PartPose.offset(0.0F, yOffset, 0.0F));
+        root.addOrReplaceChild("right_arm",
+            CubeListBuilder.create().texOffs(40, 16).addBox(-3.0F, -2.0F, -2.0F, 4.0F, 12.0F, 4.0F, g), PartPose.offset(-5.0F, 2.0F + yOffset, 0.0F));
+        root.addOrReplaceChild("left_arm",
+            CubeListBuilder.create().texOffs(40, 16).mirror().addBox(-1.0F, -2.0F, -2.0F, 4.0F, 12.0F, 4.0F, g), PartPose.offset(5.0F, 2.0F + yOffset, 0.0F));
+        root.addOrReplaceChild("right_leg",
+            CubeListBuilder.create().texOffs(0, 16).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 12.0F, 4.0F, g), PartPose.offset(-1.9F, 12.0F + yOffset, 0.0F));
+        root.addOrReplaceChild("left_leg",
+            CubeListBuilder.create().texOffs(0, 16).mirror().addBox(-2.0F, 0.0F, -2.0F, 4.0F, 12.0F, 4.0F, g), PartPose.offset(1.9F, 12.0F + yOffset, 0.0F));
+        return mesh;
+    }
+
+    /**
+     * 26.1 {@code createArmorMeshSet}: one humanoid mesh per slot holding only that slot's cubes (inner deformation for the
+     * leggings), so an armor model is a full humanoid model that animates like the wearer's model.
+     */
+    public static ArmorModelSet<MeshDefinition> createArmorMeshSet(float innerDeformation, float outerDeformation) {
+        return new ArmorModelSet<>(
+            createArmorMesh(outerDeformation, Set.of("head", "hat")),
+            createArmorMesh(outerDeformation, Set.of("body", "left_arm", "right_arm")),
+            createArmorMesh(innerDeformation, Set.of("left_leg", "right_leg", "body")),
+            createArmorMesh(outerDeformation, Set.of("left_leg", "right_leg"))
+        );
+    }
+
+    /** 26.1 {@code createBaseArmorMesh} keeping only the cubes of {@code parts}. */
+    private static MeshDefinition createArmorMesh(float deformation, Set<String> parts) {
+        CubeDeformation g = new CubeDeformation(deformation);
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
+        PartDefinition head = root.addOrReplaceChild("head",
+            cubes(parts, "head", CubeListBuilder.create().texOffs(0, 0).addBox(-4.0F, -8.0F, -4.0F, 8.0F, 8.0F, 8.0F, g)), PartPose.ZERO);
+        head.addOrReplaceChild("hat",
+            cubes(parts, "hat", CubeListBuilder.create().texOffs(32, 0).addBox(-4.0F, -8.0F, -4.0F, 8.0F, 8.0F, 8.0F, g.extend(0.5F))), PartPose.ZERO);
+        root.addOrReplaceChild("body",
+            cubes(parts, "body", CubeListBuilder.create().texOffs(16, 16).addBox(-4.0F, 0.0F, -2.0F, 8.0F, 12.0F, 4.0F, g)), PartPose.ZERO);
+        root.addOrReplaceChild("right_arm",
+            cubes(parts, "right_arm", CubeListBuilder.create().texOffs(40, 16).addBox(-3.0F, -2.0F, -2.0F, 4.0F, 12.0F, 4.0F, g)), PartPose.offset(-5.0F, 2.0F, 0.0F));
+        root.addOrReplaceChild("left_arm",
+            cubes(parts, "left_arm", CubeListBuilder.create().texOffs(40, 16).mirror().addBox(-1.0F, -2.0F, -2.0F, 4.0F, 12.0F, 4.0F, g)), PartPose.offset(5.0F, 2.0F, 0.0F));
+        root.addOrReplaceChild("right_leg",
+            cubes(parts, "right_leg", CubeListBuilder.create().texOffs(0, 16).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 12.0F, 4.0F, g.extend(-0.1F))), PartPose.offset(-1.9F, 12.0F, 0.0F));
+        root.addOrReplaceChild("left_leg",
+            cubes(parts, "left_leg", CubeListBuilder.create().texOffs(0, 16).mirror().addBox(-2.0F, 0.0F, -2.0F, 4.0F, 12.0F, 4.0F, g.extend(-0.1F))), PartPose.offset(1.9F, 12.0F, 0.0F));
+        return mesh;
+    }
+
+    /**
+     * 26.1 {@code createBabyArmorMeshSet} geometry, which fits {@link BabyZombieModel}. 26.1 maps it onto baby armor
+     * textures that 1.21.1 does not have, so each box samples the matching region of the adult armor textures instead
+     * (see {@link #stretchedBox}). Deformations are per axis like 26.1's baby armor deformations; no trims, like 26.1.
+     */
+    public static ArmorModelSet<MeshDefinition> createBabyArmorMeshSet(float[] innerDeformation, float[] outerDeformation) {
+        return new ArmorModelSet<>(
+            createBabyArmorMesh(outerDeformation, Set.of("head")),
+            createBabyArmorMesh(outerDeformation, Set.of("body", "left_arm", "right_arm")),
+            createBabyArmorMesh(innerDeformation, Set.of("left_leg", "right_leg", "waist")),
+            createBabyArmorMesh(outerDeformation, Set.of("left_foot", "right_foot"))
+        );
+    }
+
+    private static MeshDefinition createBabyArmorMesh(float[] g, Set<String> parts) {
+        float[] legG = {g[0] - 0.1F, g[1] - 0.1F, g[2] - 0.1F};
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
+        PartDefinition head = root.addOrReplaceChild("head",
+            stretchedBox(parts, "head", 0, 0, false, -4.5F, -7.0F, -4.5F, 9.0F, 8.0F, 8.0F, 8, 8, 8, g), PartPose.offset(0.0F, 15.0F, 0.0F));
+        head.addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.ZERO);
+        root.addOrReplaceChild("body",
+            stretchedBox(parts, "body", 16, 16, false, -3.0F, -3.0F, -1.5F, 6.0F, 5.0F, 3.0F, 8, 12, 4, g), PartPose.offset(0.0F, 18.0F, 0.0F));
+        // leggings belt: the top rows of the adult body region
+        root.addOrReplaceChild("waist",
+            stretchedBox(parts, "waist", 16, 16, false, -3.0F, -1.2F, -1.49F, 5.9F, 2.0F, 2.9F, 8, 4, 4, legG), PartPose.offset(0.0F, 19.0F, 0.0F));
+        root.addOrReplaceChild("right_arm",
+            stretchedBox(parts, "right_arm", 40, 16, false, -1.0F, 0.0F, -1.53F, 2.0F, 5.0F, 3.0F, 4, 12, 4, g), PartPose.offset(-3.5F, 15.5F, 0.0F));
+        root.addOrReplaceChild("left_arm",
+            stretchedBox(parts, "left_arm", 40, 16, true, -1.0F, 0.0F, -1.53F, 2.0F, 5.0F, 3.0F, 4, 12, 4, g), PartPose.offset(3.5F, 15.5F, 0.0F));
+        // leggings: the upper rows of the adult leg region; boots: its bottom rows
+        PartDefinition rightLeg = root.addOrReplaceChild("right_leg",
+            stretchedBox(parts, "right_leg", 0, 16, false, -1.0F, -0.2F, -2.0F, 3.0F, 4.0F, 3.0F, 4, 6, 4, legG), PartPose.offset(-1.5F, 20.0F, 0.5F));
+        PartDefinition leftLeg = root.addOrReplaceChild("left_leg",
+            stretchedBox(parts, "left_leg", 0, 16, true, -2.0F, -0.2F, -2.0F, 3.0F, 4.0F, 3.0F, 4, 6, 4, legG), PartPose.offset(1.5F, 20.0F, 0.5F));
+        rightLeg.addOrReplaceChild("right_foot",
+            stretchedBox(parts, "right_foot", 0, 24, false, -1.0F, 2.9F, -2.0F, 3.0F, 1.0F, 3.0F, 4, 4, 4, g), PartPose.ZERO);
+        leftLeg.addOrReplaceChild("left_foot",
+            stretchedBox(parts, "left_foot", 0, 24, true, -2.0F, 2.9F, -2.0F, 3.0F, 1.0F, 3.0F, 4, 4, 4, g), PartPose.ZERO);
+        return mesh;
+    }
+
+    /** {@code cubes} when {@code part} is one of {@code parts}, else no cubes (26.1 retained only the slot's parts). */
+    private static CubeListBuilder cubes(Set<String> parts, String part, CubeListBuilder cubes) {
+        return parts.contains(part) ? cubes : CubeListBuilder.create();
+    }
+
+    /**
+     * A box spanning {@code (x, y, z)} to {@code (x, y, z) + (w, h, d)}, grown by {@code g}, whose faces sample the texture
+     * layout of a {@code uvW x uvH x uvD} box at {@code (u, v)}. 1.21.1 cubes take their UV from the box size and grow the
+     * geometry by the deformation, so the size difference goes into the deformation.
+     */
+    private static CubeListBuilder stretchedBox(Set<String> parts, String part, int u, int v, boolean mirror,
+                                                float x, float y, float z, float w, float h, float d, int uvW, int uvH, int uvD, float[] g) {
+        float dx = (w - uvW) / 2.0F, dy = (h - uvH) / 2.0F, dz = (d - uvD) / 2.0F;
+        return cubes(parts, part, CubeListBuilder.create().texOffs(u, v).mirror(mirror)
+            .addBox(x + dx, y + dy, z + dz, uvW, uvH, uvD, new CubeDeformation(g[0] + dx, g[1] + dy, g[2] + dz)));
     }
 }

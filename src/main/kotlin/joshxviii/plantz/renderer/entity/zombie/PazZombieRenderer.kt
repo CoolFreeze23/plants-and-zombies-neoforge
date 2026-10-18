@@ -8,7 +8,10 @@ import joshxviii.plantz.model.zombies.PazZombieModel
 import joshxviii.plantz.renderer.getEmissiveTextureLocation
 import joshxviii.plantz.renderer.getTextureLocation
 import joshxviii.plantz.renderer.isMagicName
+import joshxviii.plantz.compat.client.model.ArmorModelSet
+import joshxviii.plantz.compat.client.model.CompatModelLayers
 import joshxviii.plantz.compat.client.model.EntityModel
+import net.minecraft.client.model.geom.ModelLayerLocation
 import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector
 import joshxviii.plantz.compat.client.renderer.AbstractZombieRenderer
 import net.minecraft.client.renderer.entity.EntityRendererProvider
@@ -20,20 +23,21 @@ import joshxviii.plantz.compat.client.CameraRenderState
 import net.minecraft.client.renderer.texture.OverlayTexture
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
-import net.minecraft.util.Mth
 import joshxviii.plantz.compat.AnimationState
 import net.minecraft.world.phys.Vec3
 
 open class PazZombieRenderer(
     context: EntityRendererProvider.Context,
     val defaultModel: PazZombieModel<PazZombieRenderState> = PazZombieModel(null, context.bakeLayer(PazZombieModel.LAYER_LOCATION)),
-    // 1.21.1 has no baby zombie mesh (ModelLayers.ZOMBIE_BABY); the compat HumanoidModel scales babies itself
-    val babyModel: PazZombieModel<PazZombieRenderState> = PazZombieModel(null, context.bakeLayer(PazZombieModel.LAYER_LOCATION)),
+    val babyModel: PazZombieModel<PazZombieRenderState> = PazZombieModel(null, context.bakeLayer(CompatModelLayers.ZOMBIE_BABY)),
+    armorSet: ArmorModelSet<ModelLayerLocation> = CompatModelLayers.ZOMBIE_ARMOR,
+    babyArmorSet: ArmorModelSet<ModelLayerLocation> = CompatModelLayers.ZOMBIE_BABY_ARMOR
 ) : AbstractZombieRenderer<PazZombie, PazZombieRenderState, PazZombieModel<PazZombieRenderState>>(
     context,
     defaultModel,
-    babyModel
-    // armor: vanilla zombie inner/outer armor layers via compat VanillaHumanoidLayers (26.1 ArmorModelSet + forArmor dropped)
+    babyModel,
+    ArmorModelSet.bake(armorSet, context.modelSet) { defaultModel.forArmor(it) },
+    ArmorModelSet.bake(babyArmorSet, context.modelSet) { babyModel.forArmor(it) }
 ) {
 
     init {

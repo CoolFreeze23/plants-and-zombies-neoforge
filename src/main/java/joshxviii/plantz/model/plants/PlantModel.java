@@ -7,7 +7,6 @@ import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 import joshxviii.plantz.compat.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelPart;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * @author Josh
