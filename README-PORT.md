@@ -20,18 +20,24 @@ Optional, detected automatically:
   treasure has copper nuggets again, the relocation advancement shows a copper shovel (built-in data pack,
   auto-enabled), and mailboxes, the collection box and garden gnome posing use the copper chest and copper golem
   statue sounds. Copper golems are immune to electric plants. Tested with Copper Age Backport 0.1.5 (0.1.4 crashes on startup on current NeoForge 21.1, a bug fixed in 0.1.5); works alongside Vanilla Backport.
+- **Backported Spears**: brings back the 26.1 spears. Gnomes spawn with spears again (a copper spear with Copper Age
+  Backport installed too, since Backported Spears only adds copper spears then; otherwise a stone spear), gnomes and
+  plant zombies charge with spears again (the port's copy of 26.1's `SpearUseGoal`), and they hold spears in 26.1's
+  spear arm pose. Tested with Backported Spears 1.8.0. Its own spear goal for vanilla zombies stops after the first
+  charge (the zombie then stands still while it has a target); the port replaces it on plant zombies, but vanilla
+  zombies with spears keep the mod's behaviour.
 
 ## Build / test
 ```
 ./gradlew build                 # jar in build/libs
 ./gradlew runGameTestServer     # all GameTests (dev only, not packaged)
 ./gradlew runClient             # dev client;  runServer / runClientMp for multiplayer
-./gradlew runClient -PwithIris -PwithVanillaBackport -PwithCopperAgeBackport   # dev runs with the optional mods
+./gradlew runClient -PwithIris -PwithVanillaBackport -PwithCopperAgeBackport -PwithSpears   # dev runs with the optional mods
 ```
 
 ## What was verified
 - Every upstream source and resource file was compared against the port; differences are restored or listed below.
-- **All 129 required GameTests pass** (repeated runs): every plant's behaviour, all special zombies and blueprint machines, ownership, a full zombie
+- **All 132 required GameTests pass** (repeated runs): every plant's behaviour, all special zombies and blueprint machines, ownership, a full zombie
   raid (waves, victory, rewards), mailboxes (delivery, queue, full/discard), collection box, sun battery, time machine,
   flags, gravestones, garden gnomes, pots, watering can, gardening glove, seed packets and cooldowns, wearables
   (incl. the bucket), dispensers, blueprints, every upstream recipe, loot tables, advancements, tags, worldgen
@@ -39,10 +45,12 @@ Optional, detected automatically:
 - Dedicated server + client over the network: config sync, a zombie raid with its HUD, boss bar and head markers.
 - Dev client: every entity and block entity renderer, item icons, screens (mailbox, collection box, time machine),
   raid overlay, particles, graveyard ambience; with Iris + a shader pack; with Vanilla Backport.
-- GameTests also pass with Vanilla Backport + Copper Age Backport installed (the data tests check the backport content).
+- GameTests also pass with Backported Spears, Backported Spears + Copper Age Backport, and all three backports
+  installed (the data tests check the backport content).
 
 ## Differences from the 26.1 original (things 1.21.1 doesn't have)
-- No spears: the spear arm pose and spear goals are gone, and gnomes that would carry a spear get a stone sword.
+- Without Backported Spears there are no spears: no spear goals, and gnomes that would carry a spear get a stone sword.
+  With it, the spear arm pose skips the charge sway (1.21.1 items have no 26.1 kinetic weapon data to drive it).
 - Without Copper Age Backport: gnomes use stone tools instead of copper ones, copper nuggets in loot become an
   equivalent chance of a copper ingot, and the relocation advancement icon is an iron shovel.
 - Sounds missing from 1.21.1 use close vanilla ones unless a backport provides them: mailbox open/close and gnome pose

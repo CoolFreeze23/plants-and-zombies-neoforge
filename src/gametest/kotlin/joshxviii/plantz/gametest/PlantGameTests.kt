@@ -23,16 +23,19 @@ import joshxviii.plantz.gametest.plants.*
 import joshxviii.plantz.item.SeedPacketItem
 import joshxviii.plantz.raid.getZombieRaids
 import net.minecraft.core.BlockPos
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.gametest.framework.BeforeBatch
 import net.minecraft.gametest.framework.GameTest
 import net.minecraft.gametest.framework.GameTestHelper
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtOps
 import net.minecraft.nbt.StringTag
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.Mob
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.item.DyeColor
@@ -830,6 +833,33 @@ object PlantGameTests {
         val plant = helper.spawn(PazEntities.SUNFLOWER, 8, 2, 7)
         plant.toughen()
         helper.succeedWhen { helper.assertHurt(plant, "gnome did not attack the plant") }
+    }
+
+    /**
+     * With Backported Spears, gnomes and zombies charge their target with a spear (26.1 SpearUseGoal: the mob uses the
+     * spear while running at the target). Whether a charge hits is the mod's kinetic weapon code, not tested here.
+     * Without the mod there are no spears to test.
+     */
+    @JvmStatic
+    @GameTest(template = PLATFORM, batch = GNOME_BATCH, timeoutTicks = 200)
+    fun gnomeChargesWithSpear(helper: GameTestHelper) = spearCharge(helper, PazEntities.GNOME)
+
+    @JvmStatic
+    @GameTest(template = PLATFORM, timeoutTicks = 200)
+    fun zombieChargesWithSpear(helper: GameTestHelper) = spearCharge(helper, PazEntities.BROWN_COAT)
+
+    private fun spearCharge(helper: GameTestHelper, type: EntityType<out Mob>) {
+        val spear = BuiltInRegistries.ITEM.getOptional(ResourceLocation.withDefaultNamespace("stone_spear"))
+        if (spear.isEmpty) return helper.succeed()
+        val mob = helper.spawn(type, 3, 2, 7)
+        mob.setItemSlot(EquipmentSlot.MAINHAND, ItemStack(spear.get()))
+        val plant = helper.spawn(PazEntities.SUNFLOWER, 11, 2, 7)
+        plant.toughen()
+        helper.succeedWhen {
+            helper.assertTrue(mob.target == plant && mob.isUsingItem && mob.useItem.`is`(spear.get()),
+                "${mob.type.description.string} never charged with its spear: ${describe(mob)} " +
+                    "goals=${mob.goalSelector.availableGoals.filter { it.isRunning }.map { it.goal.javaClass.simpleName }}")
+        }
     }
 
     @JvmStatic

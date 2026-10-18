@@ -125,8 +125,8 @@ public class HumanoidModel<T extends HumanoidRenderState> extends EntityModel<T>
         if (swimAmount > 0.0F) {
             float swimPos = animationPos % 26.0F;
             HumanoidArm attackArm = state.attackArm;
-            float rightArmSwimAmount = attackArm == HumanoidArm.RIGHT && state.attackTime > 0.0F ? 0.0F : swimAmount;
-            float leftArmSwimAmount = attackArm == HumanoidArm.LEFT && state.attackTime > 0.0F ? 0.0F : swimAmount;
+            float rightArmSwimAmount = !state.rightArmSpear && (attackArm != HumanoidArm.RIGHT || !(state.attackTime > 0.0F)) ? swimAmount : 0.0F;
+            float leftArmSwimAmount = !state.leftArmSpear && (attackArm != HumanoidArm.LEFT || !(state.attackTime > 0.0F)) ? swimAmount : 0.0F;
             if (!state.isUsingItem) {
                 if (swimPos < 14.0F) {
                     this.leftArm.xRot = Mth.rotLerp(leftArmSwimAmount, this.leftArm.xRot, 0.0F);
@@ -159,6 +159,10 @@ public class HumanoidModel<T extends HumanoidRenderState> extends EntityModel<T>
     }
 
     private void poseRightArm(T state) {
+        if (state.rightArmSpear) {
+            this.poseSpearArm(this.rightArm, true, state);
+            return;
+        }
         switch (state.rightArmPose) {
             case EMPTY -> this.rightArm.yRot = 0.0F;
             case ITEM -> {
@@ -197,6 +201,10 @@ public class HumanoidModel<T extends HumanoidRenderState> extends EntityModel<T>
     }
 
     private void poseLeftArm(T state) {
+        if (state.leftArmSpear) {
+            this.poseSpearArm(this.leftArm, false, state);
+            return;
+        }
         switch (state.leftArmPose) {
             case EMPTY -> this.leftArm.yRot = 0.0F;
             case ITEM -> {
@@ -232,6 +240,18 @@ public class HumanoidModel<T extends HumanoidRenderState> extends EntityModel<T>
             }
             default -> {}
         }
+    }
+
+    /** 26.1 ArmPose.SPEAR: SpearAnimations.thirdPersonHandUse without the kinetic-charge sway (no KineticWeapon component on 1.21.1). */
+    private void poseSpearArm(ModelPart arm, boolean right, T state) {
+        int invert = right ? 1 : -1;
+        arm.yRot = -0.1F * (float) invert + this.head.yRot;
+        arm.xRot = (float) (-Math.PI / 2) + this.head.xRot + 0.8F;
+        if (state.isFallFlying || state.swimAmount > 0.0F) {
+            arm.xRot -= 0.9599311F;
+        }
+        arm.yRot = (float) (Math.PI / 180.0) * Mth.clamp((180.0F / (float) Math.PI) * arm.yRot, -60.0F, 60.0F);
+        arm.xRot = (float) (Math.PI / 180.0) * Mth.clamp((180.0F / (float) Math.PI) * arm.xRot, -120.0F, 30.0F);
     }
 
     private void poseBlockingArm(ModelPart arm, boolean right) {

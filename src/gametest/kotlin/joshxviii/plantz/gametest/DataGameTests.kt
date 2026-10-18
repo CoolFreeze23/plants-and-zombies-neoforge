@@ -3,6 +3,7 @@ package joshxviii.plantz.gametest
 import joshxviii.plantz.PazEntities
 import joshxviii.plantz.PazRegistries
 import joshxviii.plantz.PazTags
+import joshxviii.plantz.compat.ai.SpearUseGoal
 import joshxviii.plantz.integration.PazCopperAgeBackportCompat
 import joshxviii.plantz.pazResource
 import net.minecraft.core.BlockPos
@@ -56,8 +57,8 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate
 /**
  * Data parity tests: recipes, loot tables, advancements, tags, worldgen, trades and data registries behave like the
  * upstream 26.1 data. The recipe and advancement tables are generated from the untouched upstream JSON (e92d5937).
- * They pass with and without Vanilla Backport and Copper Age Backport (`./gradlew runGameTestServer -PwithVanillaBackport
- * -PwithCopperAgeBackport`).
+ * They pass with and without Vanilla Backport, Copper Age Backport and Backported Spears (`./gradlew runGameTestServer
+ * -PwithVanillaBackport -PwithCopperAgeBackport -PwithSpears`).
  */
 @GameTestHolder("plantz")
 @PrefixGameTestTemplate(false)
@@ -65,6 +66,7 @@ object DataGameTests {
     private const val PLATFORM = CoreGameTests.PLATFORM
     private val vanillaBackport: Boolean get() = ModList.get().isLoaded("vanillabackport")
     private val copperAgeBackport: Boolean get() = ModList.get().isLoaded("copperagebackport")
+    private val spears: Boolean get() = ModList.get().isLoaded("spears")
 
     private fun rl(id: String) = ResourceLocation.parse(id)
     private fun item(id: String): Item {
@@ -385,8 +387,10 @@ object DataGameTests {
             gnome.mainHandItem.takeIf { !it.isEmpty }?.let { tools += itemId(it) }
             gnome.discard()
         }
-        val expectedTools = if (copperAgeBackport) setOf("minecraft:copper_axe", "minecraft:stone_sword", "minecraft:bow", "minecraft:copper_pickaxe")
-            else setOf("minecraft:stone_axe", "minecraft:stone_sword", "minecraft:bow", "minecraft:stone_pickaxe")
+        // Backported Spears registers its copper spear only together with Copper Age Backport
+        val spear = if (!spears) "minecraft:stone_sword" else if (copperAgeBackport) "minecraft:copper_spear" else "minecraft:stone_spear"
+        val expectedTools = if (copperAgeBackport) setOf("minecraft:copper_axe", spear, "minecraft:bow", "minecraft:copper_pickaxe")
+            else setOf("minecraft:stone_axe", spear, "minecraft:bow", "minecraft:stone_pickaxe")
         helper.assertTrue(tools == expectedTools, "gnome tools $tools, expected $expectedTools")
 
         for ((id, fallback) in listOf("block.copper_chest.open" to SoundEvents.COPPER_TRAPDOOR_OPEN, "block.copper_chest.close" to SoundEvents.COPPER_TRAPDOOR_CLOSE,
@@ -394,6 +398,27 @@ object DataGameTests {
             val sound = PazCopperAgeBackportCompat.sound(id, fallback).location
             helper.assertTrue(sound == if (copperAgeBackport) ResourceLocation.withDefaultNamespace(id) else fallback.location, "$id plays $sound")
         }
+        helper.succeed()
+    }
+
+    /**
+     * Gnomes and zombies have the compat copy of 26.1's spear goal (the plain zombies only with Backported Spears, whose
+     * mixin adds a spear goal to vanilla zombies that the port swaps for the compat one), and never the mod's own copy.
+     */
+    @JvmStatic
+    @GameTest(template = PLATFORM)
+    fun spearGoals(helper: GameTestHelper) {
+        for ((type, expected) in listOf("gnome" to 1, "browncoat" to if (spears) 1 else 0, "gargantuar" to 1)) {
+            @Suppress("UNCHECKED_CAST")
+            val mob = helper.spawn(BuiltInRegistries.ENTITY_TYPE.get(pazResource(type)) as EntityType<Mob>, 7, 2, 7)
+            val goals = mob.goalSelector.availableGoals.map { it.goal.javaClass.name }
+            val compatGoals = goals.count { it == SpearUseGoal::class.java.name }
+            helper.assertTrue(compatGoals == expected && goals.none { it.endsWith(".UseSpearGoal") },
+                "$type has $compatGoals compat spear goals, expected $expected (Backported Spears loaded: $spears): $goals")
+            mob.discard()
+        }
+        val stoneSpear = BuiltInRegistries.ITEM.containsKey(ResourceLocation.withDefaultNamespace("stone_spear"))
+        helper.assertTrue(stoneSpear == spears, "stone spear registered: $stoneSpear (Backported Spears loaded: $spears)")
         helper.succeed()
     }
 

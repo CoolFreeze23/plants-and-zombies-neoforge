@@ -12,10 +12,10 @@ the minimum changes 1.21.1 forces; the newer vanilla APIs upstream relies on are
 | `src/main/kotlin/joshxviii/plantz/**`, `src/main/java/joshxviii/plantz/{model,animation}/**` | Upstream code (main and client source sets merged into one; client classes are only touched on the client) |
 | `src/main/java/joshxviii/plantz/compat/**` | 26.1 APIs re-implemented on 1.21.1 (below) |
 | `src/main/java/joshxviii/plantz/mixin/**` | Upstream mixins retargeted to 1.21.1, plus port mixins (bucket helmet, wall-nut collision, graveyard sun burn/ambience) |
-| `src/main/kotlin/joshxviii/plantz/integration/**` | Optional Iris, Vanilla Backport and Copper Age Backport support (registry lookups with 1.21.1 fallbacks, so nothing links against the backports) |
+| `src/main/kotlin/joshxviii/plantz/integration/**` | Optional Iris, Vanilla Backport, Copper Age Backport and Backported Spears support (registry lookups with 1.21.1 fallbacks, so nothing links against the backports) |
 | `src/main/kotlin/joshxviii/plantz/client/GraveyardAmbience.kt` | The graveyard's 26.1 environment attributes (fog, clouds, sunrise, light) |
 | `src/main/resources/resourcepacks/{vanillabackport,copperagebackport}_compat` | Built-in data packs, each enabled only when its backport is installed (they override different files) |
-| `src/gametest/**` | Dev-only GameTests (not packaged), 129 tests covering plants, zombies, raids, blocks/items and data |
+| `src/gametest/**` | Dev-only GameTests (not packaged), 132 tests covering plants, zombies, raids, blocks/items and data |
 
 ## Entry points
 - `PazMain` (`@Mod`): wires NeoForge events. All `Paz*.initialize()` objects still register eagerly with
@@ -34,6 +34,8 @@ Mirrors 26.1 names and semantics, so upstream code ports with import changes:
   `val output = ValueOutput.of(tag, registryAccess())`, then run upstream's body.
 - `EntityReference`: UUID + cached lookup; synced as `OPTIONAL_UUID`.
 - `menu.ExtendedMenuType` / `ExtendedMenuProvider`: Fabric's extended menus on NeoForge's `IContainerFactory`.
+- `ai.SpearUseGoal`: 26.1's spear charge goal, driven by the `minecraft:kinetic_weapon` component a spear backport
+  provides (inert without one).
 - `client.*`: the 26.1 render-state pipeline running immediate-mode on 1.21.1:
   - `state.*` render states (26.1 fields, plus `compatEntity`/`compatPartialTick` for the frame being drawn, and
     Fabric-style `setData/getData` keyed by `RenderStateDataKey`).
@@ -45,6 +47,8 @@ Mirrors 26.1 names and semantics, so upstream code ports with import changes:
   - `renderer.layers.*`: `RenderLayer`, `EyesLayer`, and 26.1 versions of `HumanoidArmorLayer`, `CustomHeadLayer`,
     `ItemInHandLayer`, `WingsLayer`, `EquipmentLayerRenderer`.
   Vanilla 1.21.1 renderers (players, vanilla mobs) get the mod's tints and layers through `LivingEntityRendererVanillaMixin`.
+  26.1's `ArmPose.SPEAR` (1.21.1's enum has none) is `ArmedEntityRenderState.rightArmSpear/leftArmSpear`, set when the
+  arm holds an item in `#minecraft:spears`.
 
 ## Common 26.1 → 1.21.1 changes in the upstream code
 - `Identifier` → `ResourceLocation`; `EntitySpawnReason` → `MobSpawnType`; `advancements.criterion` → `advancements.critereon`.

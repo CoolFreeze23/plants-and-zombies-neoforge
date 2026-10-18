@@ -4,7 +4,9 @@ import joshxviii.plantz.*
 import joshxviii.plantz.PazDataSerializers.DATA_ZOMBIE_STATE
 import joshxviii.plantz.ai.ZombieState
 import joshxviii.plantz.ai.goal.FlyingPathfindingGoal
+import joshxviii.plantz.compat.ai.SpearUseGoal
 import joshxviii.plantz.entity.Balloon
+import joshxviii.plantz.integration.PazSpearsCompat
 import joshxviii.plantz.item.BalloonItem
 import joshxviii.plantz.raid.ZombieRaid.Companion.SPAWN_DISTANCE
 import joshxviii.plantz.raid.getZombieRaids
@@ -324,11 +326,12 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
 
     override fun registerGoals() {
         super.registerGoals()
+        PazSpearsCompat.replaceModSpearGoal(this, this.goalSelector)
         this.goalSelector.addGoal(7, FlyingPathfindingGoal(this, hoverGroundHeight = 1.5))
     }
 
     fun addBehaviourGoalsNoMelee() {
-        // no SpearUseGoal: spears do not exist in 1.21.1
+        this.goalSelector.addGoal(2, SpearUseGoal<Zombie>(this, 1.0, 1.0, 10.0f, 2.0f)) // spears need a backport mod
         this.goalSelector.addGoal(6, MoveThroughVillageGoal(this, 1.0, true, 4) { this.canBreakDoors() })
         this.goalSelector.addGoal(7, WaterAvoidingRandomStrollGoal(this, 1.0))
         this.targetSelector.addGoal(1, HurtByTargetGoal(this).setAlertOthers(ZombifiedPiglin::class.java))

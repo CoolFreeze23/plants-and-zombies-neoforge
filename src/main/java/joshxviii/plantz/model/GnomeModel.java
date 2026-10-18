@@ -137,7 +137,7 @@ public class GnomeModel<T extends GnomeRenderState> extends EntityModel<T> imple
 			this.leg_L.zRot = 0f;
 		}
 
-		switch (state.rightArmPose) {
+		if (!state.rightArmSpear) switch (state.rightArmPose) {
 			case EMPTY:
 				this.arm_R.yRot = 0.0F;
 				break;
@@ -149,7 +149,7 @@ public class GnomeModel<T extends GnomeRenderState> extends EntityModel<T> imple
 				break;
 		}
 
-		switch (state.leftArmPose) {
+		if (!state.leftArmSpear) switch (state.leftArmPose) {
 			case EMPTY:
 				this.arm_L.yRot = 0.0F;
 				break;
@@ -159,6 +159,16 @@ public class GnomeModel<T extends GnomeRenderState> extends EntityModel<T> imple
 				this.arm_L.xRot = (float) (-Math.PI / 2) + this.head.xRot;
 				this.arm_R.xRot = (float) (-Math.PI / 2) + this.head.xRot;
 				break;
+		}
+
+		// 26.1 ArmPose.SPEAR cases, in place of the switches above (1.21.1's ArmPose has no SPEAR; spears come from a backport mod)
+		if (state.rightArmSpear) {
+			this.arm_R.yRot = (float) (Math.PI / 180.0) * Math.clamp((180.0F / (float)Math.PI) * arm_R.yRot, -60.0F, 60.0F);
+			this.arm_R.xRot = (float) (Math.PI / 180.0) * Math.clamp((180.0F / (float)Math.PI) * arm_R.xRot, -120.0F, 30.0F);
+		}
+		if (state.leftArmSpear) {
+			this.arm_L.yRot = (float) (Math.PI / 180.0) * Math.clamp((180.0F / (float)Math.PI) * arm_L.yRot, -60.0F, 60.0F);
+			this.arm_L.xRot = (float) (Math.PI / 180.0) * Math.clamp((180.0F / (float)Math.PI) * arm_L.xRot, -120.0F, 30.0F);
 		}
 	}
 

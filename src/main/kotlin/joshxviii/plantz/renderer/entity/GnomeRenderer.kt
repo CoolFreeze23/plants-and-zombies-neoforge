@@ -65,7 +65,7 @@ class GnomeRenderer(
 
     fun getArmPose(mob: Gnome, arm: HumanoidArm): ArmPose {
         val itemHeldByArm: ItemStack = ArmedEntityRenderState.itemHeldByArm(mob, arm)
-        // no spears (26.1 ArmPose.SPEAR) on 1.21.1
+        // 26.1 ArmPose.SPEAR is the render state's rightArmSpear/leftArmSpear (1.21.1's ArmPose has no SPEAR)
         return if (itemHeldByArm.`is`(Items.BOW) && mob.isAggressive) ArmPose.BOW_AND_ARROW else ArmPose.EMPTY
     }
 

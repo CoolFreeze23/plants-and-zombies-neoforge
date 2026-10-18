@@ -7,6 +7,7 @@ import joshxviii.plantz.PazTags
 import joshxviii.plantz.ai.goal.ProjectileAttackGoal
 import joshxviii.plantz.compat.ValueInput
 import joshxviii.plantz.compat.ValueOutput
+import joshxviii.plantz.compat.ai.SpearUseGoal
 import joshxviii.plantz.entity.plant.Plant
 import joshxviii.plantz.integration.PazCopperAgeBackportCompat
 import net.minecraft.core.BlockPos
@@ -97,7 +98,7 @@ class Gnome(type: EntityType<out Gnome>, level: Level) :Monster(type, level) {
     }
 
     override fun registerGoals() {
-        // 26.1 SpearUseGoal(this, 1.0, 1.0, 10.0f, 2.0f): spears do not exist in 1.21.1
+        this.goalSelector.addGoal(1, SpearUseGoal(this, 1.0, 1.0, 10.0f, 2.0f)) // spears need a backport mod (Backported Spears)
         this.goalSelector.addGoal(2, RandomLookAroundGoal(this))
         this.goalSelector.addGoal(2, LookAtPlayerGoal(this, Player::class.java, 8.0f))
         this.goalSelector.addGoal(3, WaterAvoidingRandomStrollGoal(this, 0.6))
@@ -206,9 +207,10 @@ class Gnome(type: EntityType<out Gnome>, level: Level) :Monster(type, level) {
         if (random.nextFloat() < (if (this.level().difficulty == Difficulty.HARD) 0.5f else 0.33f)) {
             val rand = random.nextInt(5)
             when (rand) {
-                // copper tools come from Copper Age Backport (stone without it); 1.21.1 has no spears: stone sword
+                // copper tools come from Copper Age Backport, spears from Backported Spears (its copper spear needs both);
+                // stone versions without them, and a stone sword without any spear
                 0 -> this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack(PazCopperAgeBackportCompat.item("copper_axe", Items.STONE_AXE)))
-                1 -> this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack(Items.STONE_SWORD))
+                1 -> this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack(PazCopperAgeBackportCompat.item("copper_spear", PazCopperAgeBackportCompat.item("stone_spear", Items.STONE_SWORD))))
                 2 -> this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack(Items.BOW))
                 else -> this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack(PazCopperAgeBackportCompat.item("copper_pickaxe", Items.STONE_PICKAXE)))
             }

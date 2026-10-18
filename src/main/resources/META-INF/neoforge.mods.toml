@@ -58,3 +58,10 @@ type="optional"
 versionRange="${copperagebackport_version_range}"
 ordering="AFTER"
 side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="spears"
+type="optional"
+versionRange="${spears_version_range}"
+ordering="AFTER"
+side="BOTH"
