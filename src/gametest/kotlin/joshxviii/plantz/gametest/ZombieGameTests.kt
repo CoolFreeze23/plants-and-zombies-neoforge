@@ -214,6 +214,8 @@ object ZombieGameTests {
         val imp = helper.spawn(PazEntities.IMP, 7, 1, 5).targeting(villager)
         imp.variant = ImpVariant.PIRATE
         imp.hasBarrel = true
+        // keep it on its victim: mobs from neighbouring test areas can otherwise steal its target
+        helper.onEachTick { if (imp.hasBarrel) imp.target = villager }
         helper.succeedWhenThenClean {
             helper.assertFalse(imp.hasBarrel, "barrel did not explode")
             helper.assertTrue(villager.wasHurt(), "explosion did not hurt the target")
