@@ -9,11 +9,14 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.util.datafix.DataFixTypes
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.saveddata.SavedData
-import net.minecraft.world.level.saveddata.SavedDataType
+import net.minecraft.core.HolderLookup
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.nbt.NbtOps
+import net.minecraft.resources.RegistryOps
 import java.util.function.Function
 
 fun ServerLevel.getMailboxMailQueue(): MailboxMailQueue {
-    return dataStorage.computeIfAbsent(MailboxMailQueue.TYPE)
+    return dataStorage.computeIfAbsent(MailboxMailQueue.TYPE, MailboxMailQueue.FILE_ID)
 }
 
 class MailboxMailQueue private constructor(
@@ -22,6 +25,13 @@ class MailboxMailQueue private constructor(
 
     init {
         setDirty()
+    }
+
+    override fun save(tag: CompoundTag, registries: HolderLookup.Provider): CompoundTag {
+        CODEC.encodeStart(RegistryOps.create(NbtOps.INSTANCE, registries), this).result().ifPresent { encoded ->
+            if (encoded is CompoundTag) tag.merge(encoded)
+        }
+        return tag
     }
 
     fun queue(targetPos: BlockPos, stack: ItemStack) {
@@ -60,7 +70,8 @@ class MailboxMailQueue private constructor(
     }
 
     companion object {
-        private val MAIL_QUEUE_FILE_ID = pazResource("mailbox_mail_queue")
+        /** 26.1 SavedDataType id plantz:mailbox_mail_queue; 1.21.1 data files are flat names */
+        const val FILE_ID = "plantz_mailbox_mail_queue"
 
         private val QUEUED_MAIL_CODEC: Codec<QueuedMail> = RecordCodecBuilder.create<QueuedMail>(
             Function { instance ->
@@ -82,8 +93,11 @@ class MailboxMailQueue private constructor(
             }
         )
 
-        val TYPE: SavedDataType<MailboxMailQueue> =
-            SavedDataType<MailboxMailQueue>(MAIL_QUEUE_FILE_ID, ::MailboxMailQueue, CODEC, DataFixTypes.LEVEL)
+        private fun load(tag: CompoundTag, registries: HolderLookup.Provider): MailboxMailQueue =
+            CODEC.parse(RegistryOps.create(NbtOps.INSTANCE, registries), tag).result().orElseGet { MailboxMailQueue() }
+
+        @JvmField
+        val TYPE: Factory<MailboxMailQueue> = Factory({ MailboxMailQueue() }, ::load, null) // no datafixer for mod data (26.1 passed DataFixTypes.LEVEL)
 
         fun tryInsertIntoMailbox(target: MailboxBlockEntity, stack: ItemStack): Boolean {
             if (stack.isEmpty) return false

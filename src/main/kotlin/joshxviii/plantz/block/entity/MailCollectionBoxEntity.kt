@@ -22,7 +22,6 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.SimpleContainer
-import net.minecraft.world.entity.ContainerUser
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.inventory.AbstractContainerMenu
@@ -53,11 +52,11 @@ class MailCollectionBoxEntity(
     private val openersCounter: ContainerOpenersCounter = object : ContainerOpenersCounter() {
         override fun onOpen(level: Level, pos: BlockPos, blockState: BlockState) {
             updateCollectionBoxState(CollectionBoxState.OPEN)
-            playSound(SoundEvents.COPPER_CHEST_OPEN, 0.3f, 1.2f)
+            playSound(SoundEvents.COPPER_TRAPDOOR_OPEN /* 26.1 COPPER_CHEST_OPEN */, 0.3f, 1.2f)
         }
         override fun onClose(level: Level, pos: BlockPos, blockState: BlockState) {
             updateCollectionBoxState(CollectionBoxState.CLOSED)
-            playSound(SoundEvents.COPPER_CHEST_CLOSE, 0.3f, 1.2f)
+            playSound(SoundEvents.COPPER_TRAPDOOR_CLOSE /* 26.1 COPPER_CHEST_CLOSE */, 0.3f, 1.2f)
         }
         override fun openerCountChanged(level: Level, pos: BlockPos, blockState: BlockState, previous: Int, current: Int) {}
         override fun isOwnContainer(player: Player): Boolean {
@@ -66,18 +65,15 @@ class MailCollectionBoxEntity(
     }
 
     override fun getContainerSize(): Int = INVENTORY_SIZE
-    override fun startOpen(containerUser: ContainerUser) {
-        if (!remove && !containerUser.livingEntity.isSpectator) {
-            openersCounter.incrementOpeners(containerUser.livingEntity, getLevel()!!, blockPos, blockState, containerUser.containerInteractionRange)
+    override fun startOpen(player: Player) {
+        if (!remove && !player.isSpectator) {
+            openersCounter.incrementOpeners(player, getLevel()!!, blockPos, blockState)
         }
     }
-    override fun stopOpen(containerUser: ContainerUser) {
-        if (!remove && !containerUser.livingEntity.isSpectator) {
-            openersCounter.decrementOpeners(containerUser.livingEntity, getLevel()!!, blockPos, blockState)
+    override fun stopOpen(player: Player) {
+        if (!remove && !player.isSpectator) {
+            openersCounter.decrementOpeners(player, getLevel()!!, blockPos, blockState)
         }
-    }
-    override fun getEntitiesWithContainerOpen(): MutableList<ContainerUser> {
-        return openersCounter.getEntitiesWithContainerOpen(getLevel()!!, blockPos)
     }
 
     override fun getUpdatePacket(): ClientboundBlockEntityDataPacket {
@@ -129,16 +125,18 @@ class MailCollectionBoxEntity(
         level!!.setBlock(blockPos, blockState.setValue(STATE, newState), 3)
     }
 
-    override fun saveAdditional(output: ValueOutput) {
-        super.saveAdditional(output)
+    override fun saveAdditional(tag: CompoundTag, registries: HolderLookup.Provider) {
+        super.saveAdditional(tag, registries)
+        val output = ValueOutput.of(tag, registries)
         output.storeNullable("SelectedMailbox", BlockPos.CODEC, selectedMailbox)
-        ContainerHelper.saveAllItems(output, inventory.items)
+        ContainerHelper.saveAllItems(tag, inventory.items, registries)
     }
 
-    override fun loadAdditional(input: ValueInput) {
-        super.loadAdditional(input)
+    override fun loadAdditional(tag: CompoundTag, registries: HolderLookup.Provider) {
+        super.loadAdditional(tag, registries)
+        val input = ValueInput.of(tag, registries)
         selectedMailbox = input.read("SelectedMailbox", BlockPos.CODEC).getOrNull()
-        ContainerHelper.loadAllItems(input, inventory.items)
+        ContainerHelper.loadAllItems(tag, inventory.items, registries)
     }
 
     override fun getDefaultName(): Component = PazBlocks.MAIL_COLLECTION_BOX.name
@@ -147,7 +145,7 @@ class MailCollectionBoxEntity(
     override fun setItems(items: NonNullList<ItemStack>) {}
 
     override fun createMenu(containerId: Int, inventory: Inventory): AbstractContainerMenu = MailCollectionBoxMenu(containerId, inventory, MailCollectionBoxData(blockPos, name, selectedMailbox), this)
-    override fun getScreenOpeningData(player: ServerPlayer): MailCollectionBoxData = MailCollectionBoxData(blockPos, name, selectedMailbox)
+    override fun getScreenOpeningData(player: ServerPlayer?): MailCollectionBoxData = MailCollectionBoxData(blockPos, name, selectedMailbox)
 
     fun playSound(event: SoundEvent, volume: Float = 0.5f, pitch: Float = 0.9f) {
         val x = worldPosition.x + 0.5

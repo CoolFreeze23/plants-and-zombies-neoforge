@@ -95,14 +95,16 @@ class FlagBlockEntity(
 
     private fun healthToDestroyProgress(): Int = floor((1f - (health / MAX_HEALTH)) * 10f).toInt()
 
-    override fun saveAdditional(output: ValueOutput) {
-        super.saveAdditional(output)
+    override fun saveAdditional(tag: CompoundTag, registries: HolderLookup.Provider) {
+        super.saveAdditional(tag, registries)
+        val output = ValueOutput.of(tag, registries)
         output.putFloat("Health", health)
         output.putInt("ResetTime", resetTime)
     }
 
-    override fun loadAdditional(input: ValueInput) {
-        super.loadAdditional(input)
+    override fun loadAdditional(tag: CompoundTag, registries: HolderLookup.Provider) {
+        super.loadAdditional(tag, registries)
+        val input = ValueInput.of(tag, registries)
         health = input.getFloatOr("Health", MAX_HEALTH)
         resetTime = input.getIntOr("ResetTime", 0)
     }

@@ -6,8 +6,9 @@ import joshxviii.plantz.PazItems
 import joshxviii.plantz.block.SunBatteryBlock
 import joshxviii.plantz.item.component.StoredSun
 import net.minecraft.core.BlockPos
+import net.minecraft.core.HolderLookup
+import net.minecraft.nbt.CompoundTag
 import net.minecraft.core.Direction
-import net.minecraft.core.component.DataComponentGetter
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.Container
@@ -77,24 +78,24 @@ class SunBatteryBlockEntity(
         return false
     }
 
-    override fun applyImplicitComponents(components: DataComponentGetter) {
+    override fun applyImplicitComponents(components: DataComponentInput) {
         super.applyImplicitComponents(components)
         batteryItem.set(PazComponents.STORED_SUN, components.get(PazComponents.STORED_SUN) ?: StoredSun())
     }
 
     override fun getContainerBlockEntity(): BlockEntity = this
 
-    override fun preRemoveSideEffects(pos: BlockPos, state: BlockState) {
-        super.preRemoveSideEffects(pos, state)// drops items
-    }
+    // 26.1 preRemoveSideEffects dropped the battery item: done by SunBatteryBlock.onRemove on 1.21.1
 
-    override fun saveAdditional(output: ValueOutput) {
-        super.saveAdditional(output)
+    override fun saveAdditional(tag: CompoundTag, registries: HolderLookup.Provider) {
+        super.saveAdditional(tag, registries)
+        val output = ValueOutput.of(tag, registries)
         if (!batteryItem.isEmpty) output.store("BatteryItem", ItemStack.CODEC, batteryItem)
     }
 
-    override fun loadAdditional(input: ValueInput) {
-        super.loadAdditional(input)
+    override fun loadAdditional(tag: CompoundTag, registries: HolderLookup.Provider) {
+        super.loadAdditional(tag, registries)
+        val input = ValueInput.of(tag, registries)
         batteryItem = input.read("BatteryItem", ItemStack.CODEC).orElse(ItemStack.EMPTY)?: ItemStack.EMPTY
     }
 

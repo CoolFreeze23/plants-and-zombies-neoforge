@@ -14,6 +14,8 @@ import joshxviii.plantz.entity.zombie.PazZombie.Companion.SPAWN_TABLE_WEIGHTS
 import joshxviii.plantz.entity.zombie.PazZombie.Companion.findSpawnPosition
 import joshxviii.plantz.entity.zombie.PazZombie.Companion.rollZombieType
 import net.minecraft.core.BlockPos
+import net.minecraft.core.HolderLookup
+import net.minecraft.nbt.CompoundTag
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.sounds.SoundSource
 import net.minecraft.util.Mth
@@ -49,7 +51,7 @@ class GravestoneBlockEntity(
     private var ticksSinceLastSpawn = 0
 
     private fun isDarkEnough(level: ServerLevel): Boolean {
-        return !(level.isBrightOutside && level.getBrightness(LightLayer.SKY, blockPos) >= 7)
+        return !(level.isDay && level.getBrightness(LightLayer.SKY, blockPos) >= 7)
     }
 
     private fun canSpawn(level: ServerLevel, pos: BlockPos): Boolean {

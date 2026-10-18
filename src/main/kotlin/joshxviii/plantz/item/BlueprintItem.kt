@@ -25,7 +25,6 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.component.TypedEntityData
 import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.gameevent.GameEvent
@@ -37,8 +36,8 @@ class BlueprintItem(
 ) : Item(properties) {
 
     override fun getName(itemStack: ItemStack): Component {
-        val entityData = itemStack.get(DataComponents.ENTITY_DATA) ?: return super.getName(itemStack)
-        val entityId = BuiltInRegistries.ENTITY_TYPE.getKey(entityData.type())
+        val entityType = itemStack.entityDataType() ?: return super.getName(itemStack)
+        val entityId = BuiltInRegistries.ENTITY_TYPE.getKey(entityType)
 
         val entityName = Component.translatable("entity.${entityId.namespace}.${entityId.path}")
         return Component.translatable("item.plantz.blueprint.entity", entityName)
@@ -63,8 +62,7 @@ class BlueprintItem(
     ): InteractionResult {
         if (level !is ServerLevel || player == null) return InteractionResult.PASS
 
-        val component = itemStack.get(DataComponents.ENTITY_DATA)
-        val entityType = component?.type()
+        val entityType = itemStack.entityDataType()
 
         val spawnPos = if (level.getBlockState(pos).getCollisionShape(level, pos).isEmpty) pos
         else pos.relative(face)
@@ -117,6 +115,8 @@ class BlueprintItem(
             return InteractionResult.FAIL
         }
 
+        // 26.1 BREAK_SOUND component (wolf armor break) has no 1.21.1 equivalent: play it alongside the vanilla break sound
+        if (itemStack.nextDamageWillBreak() && !player.hasInfiniteMaterials()) level.playSound(null, player.x, player.y, player.z, SoundEvents.WOLF_ARMOR_BREAK, player.soundSource, 1.0f, 1.0f)
         itemStack.hurtAndBreak(1, player, hand)
         if (!player.hasInfiniteMaterials()) {
             player.removeItemFromInventory(PazItems.BRAINZ_ALLOY, alloyCost)
@@ -136,14 +136,13 @@ class BlueprintItem(
     companion object {
         fun stackFor(type: EntityType<*>): ItemStack {
             val stack = ItemStack(PazItems.BLUEPRINT)
-            stack.set(DataComponents.ENTITY_DATA, TypedEntityData.of(type, CompoundTag()))
+            stack.set(DataComponents.ENTITY_DATA, entityDataOf(type, CompoundTag()))
 
             return stack
         }
 
         fun typeFromStack(itemStack: ItemStack): EntityType<*>? {
-            val type = itemStack.get(DataComponents.ENTITY_DATA)?.type()?: return null
-            return type
+            return itemStack.entityDataType()
         }
     }
 

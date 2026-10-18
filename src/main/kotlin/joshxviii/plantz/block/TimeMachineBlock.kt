@@ -12,18 +12,21 @@ import net.minecraft.util.RandomSource
 import net.minecraft.Util
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
+import net.minecraft.world.ItemInteractionResult
+import net.minecraft.world.Containers
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.context.BlockPlaceContext
 import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.LevelReader
-import net.minecraft.world.level.ScheduledTickAccess
+import net.minecraft.world.level.LevelAccessor
 import net.minecraft.world.level.block.*
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.RenderShape
 import net.minecraft.world.level.block.state.StateDefinition
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.level.block.state.properties.BooleanProperty
@@ -32,7 +35,6 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty
 import net.minecraft.world.level.material.FluidState
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.level.pathfinder.PathComputationType
-import net.minecraft.world.level.redstone.Orientation
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.phys.shapes.Shapes
@@ -40,6 +42,9 @@ import net.minecraft.world.phys.shapes.VoxelShape
 import java.util.function.ToIntFunction
 
 class TimeMachineBlock(properties: Properties) : BaseEntityBlock(properties), SimpleWaterloggedBlock  {
+    // 1.21.1 BaseEntityBlock defaults to INVISIBLE; 26.1 renders the block model
+    override fun getRenderShape(state: BlockState): RenderShape = RenderShape.MODEL
+
     companion object {
         val CODEC: MapCodec<TimeMachineBlock> = simpleCodec(::TimeMachineBlock)
         val SHAPE: VoxelShape = Util.make {
@@ -51,8 +56,8 @@ class TimeMachineBlock(properties: Properties) : BaseEntityBlock(properties), Si
                 column(8.0, 0.0, 11.0).move(0.0, 0.125, -0.25),
             )
         }
-        var SHAPES: MutableMap<Direction, VoxelShape> = Shapes.rotateHorizontal(SHAPE)
-        var BATTERY_SHAPES: MutableMap<Direction, VoxelShape> = Shapes.rotateHorizontal(BATTERY_SHAPE)
+        var SHAPES: MutableMap<Direction, VoxelShape> = PazShapes.rotateHorizontal(SHAPE)
+        var BATTERY_SHAPES: MutableMap<Direction, VoxelShape> = PazShapes.rotateHorizontal(BATTERY_SHAPE)
 
         val FACING: EnumProperty<Direction> = HorizontalDirectionalBlock.FACING
         val WATERLOGGED: BooleanProperty = BlockStateProperties.WATERLOGGED
@@ -102,7 +107,7 @@ class TimeMachineBlock(properties: Properties) : BaseEntityBlock(properties), Si
         player: Player,
         hand: InteractionHand,
         hitResult: BlockHitResult
-    ): InteractionResult {
+    ): ItemInteractionResult {
         return super.useItemOn(itemStack, state, level, pos, player, hand, hitResult)
     }
 
@@ -119,10 +124,16 @@ class TimeMachineBlock(properties: Properties) : BaseEntityBlock(properties), Si
         level: Level,
         pos: BlockPos,
         block: Block,
-        orientation: Orientation?,
+        fromPos: BlockPos,
         movedByPiston: Boolean
     ) {
 
+    }
+
+    // 26.1 BlockEntity.preRemoveSideEffects dropped container contents (the battery); 1.21.1 does it from the block
+    override fun onRemove(state: BlockState, level: Level, pos: BlockPos, newState: BlockState, movedByPiston: Boolean) {
+        Containers.dropContentsOnDestroy(state, newState, level, pos)
+        super.onRemove(state, level, pos, newState, movedByPiston)
     }
 
     override fun rotate(state: BlockState, rotation: Rotation): BlockState {
@@ -153,18 +164,17 @@ class TimeMachineBlock(properties: Properties) : BaseEntityBlock(properties), Si
 
     override fun updateShape(
         state: BlockState,
-        level: LevelReader,
-        ticks: ScheduledTickAccess,
-        pos: BlockPos,
         directionToNeighbour: Direction,
-        neighbourPos: BlockPos,
         neighbourState: BlockState,
-        random: RandomSource
+        level: LevelAccessor,
+        pos: BlockPos,
+        neighbourPos: BlockPos
     ): BlockState {
+        val ticks = level
         if (state.getValue(WATERLOGGED)) {
             ticks.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level))
         }
-        return super.updateShape(state, level, ticks, pos, directionToNeighbour, neighbourPos, neighbourState, random)
+        return super.updateShape(state, directionToNeighbour, neighbourState, level, pos, neighbourPos)
     }
 
     override fun canSurvive(state: BlockState, level: LevelReader, pos: BlockPos): Boolean {

@@ -13,12 +13,10 @@ import joshxviii.plantz.compat.menu.ExtendedMenuProvider
 import net.minecraft.core.BlockPos
 import net.minecraft.core.HolderLookup
 import net.minecraft.core.NonNullList
-import net.minecraft.core.component.DataComponentGetter
 import net.minecraft.core.component.DataComponentMap
 import net.minecraft.core.component.DataComponents
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.ComponentSerialization
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket
 import net.minecraft.resources.ResourceKey
 import net.minecraft.server.level.ServerLevel
@@ -31,7 +29,6 @@ import net.minecraft.util.RandomSource
 import net.minecraft.world.Container
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.SimpleContainer
-import net.minecraft.world.entity.ContainerUser
 import net.minecraft.world.entity.item.ItemEntity
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.entity.player.Player
@@ -115,11 +112,11 @@ class MailboxBlockEntity(
     private val inventory = SimpleContainer(INVENTORY_SIZE)
     private val openersCounter: ContainerOpenersCounter = object : ContainerOpenersCounter() {
         override fun onOpen(level: Level, pos: BlockPos, blockState: BlockState) {
-            playSound(SoundEvents.COPPER_CHEST_OPEN, 0.3f, 1.5f)
+            playSound(SoundEvents.COPPER_TRAPDOOR_OPEN /* 26.1 COPPER_CHEST_OPEN */, 0.3f, 1.5f)
             updateMailboxState(MailboxState.EJECTING)
         }
         override fun onClose(level: Level, pos: BlockPos, blockState: BlockState) {
-            playSound(SoundEvents.COPPER_CHEST_CLOSE, 0.3f, 1.5f)
+            playSound(SoundEvents.COPPER_TRAPDOOR_CLOSE /* 26.1 COPPER_CHEST_CLOSE */, 0.3f, 1.5f)
             if (ejectTimer <= 0 && inventory.isEmpty) updateMailboxState(MailboxState.INACTIVE)
         }
         override fun openerCountChanged(level: Level, pos: BlockPos, blockState: BlockState, previous: Int, current: Int) {}
@@ -129,22 +126,19 @@ class MailboxBlockEntity(
     }
 
     override fun getContainerSize(): Int = INVENTORY_SIZE
-    override fun startOpen(containerUser: ContainerUser) {
-        if (!remove && !containerUser.livingEntity.isSpectator) {
-            openersCounter.incrementOpeners(containerUser.livingEntity, getLevel()!!, blockPos, blockState, containerUser.containerInteractionRange)
+    override fun startOpen(player: Player) {
+        if (!remove && !player.isSpectator) {
+            openersCounter.incrementOpeners(player, getLevel()!!, blockPos, blockState)
         }
     }
-    override fun stopOpen(containerUser: ContainerUser) {
-        if (!remove && !containerUser.livingEntity.isSpectator) {
-            openersCounter.decrementOpeners(containerUser.livingEntity, getLevel()!!, blockPos, blockState)
+    override fun stopOpen(player: Player) {
+        if (!remove && !player.isSpectator) {
+            openersCounter.decrementOpeners(player, getLevel()!!, blockPos, blockState)
         }
-    }
-    override fun getEntitiesWithContainerOpen(): MutableList<ContainerUser> {
-        return openersCounter.getEntitiesWithContainerOpen(getLevel()!!, blockPos)
     }
 
     override fun createMenu(containerId: Int, inventory: Inventory): AbstractContainerMenu = MailboxMenu(containerId, inventory, asMailBoxData(), this)
-    override fun getScreenOpeningData(player: ServerPlayer): MailboxData = asMailBoxData()
+    override fun getScreenOpeningData(player: ServerPlayer?): MailboxData = asMailBoxData()
 
     fun tryToGetMail(player: Player): Boolean {
         val currentState = blockState.getValue(STATE)
@@ -183,12 +177,12 @@ class MailboxBlockEntity(
         return items
     }
 
-    private fun getDropPos(): Vec3 = blockState.getValue(FACING).unitVec3.scale(0.6).add(blockPos.center)
+    private fun getDropPos(): Vec3 = Vec3.atLowerCornerOf(blockState.getValue(FACING).normal).scale(0.6).add(blockPos.center)
     private fun ejectItem(item: ItemStack, glow: Boolean = false) {
         val level = level as? ServerLevel ?: return
         val random = level.getRandom()
         val dropPos = getDropPos()
-        val direction = blockState.getValue(FACING).unitVec3.scale(0.1)
+        val direction = Vec3.atLowerCornerOf(blockState.getValue(FACING).normal).scale(0.1)
 
         while (!item.isEmpty) {
             val entity = ItemEntity(level, dropPos.x, dropPos.y, dropPos.z, item.split(random.nextInt(21) + 10))
@@ -207,7 +201,7 @@ class MailboxBlockEntity(
         val level = level as? ServerLevel?: return
         val s = 0.2
         val pos = getDropPos()
-        val v = blockState.getValue(FACING).unitVec3
+        val v = Vec3.atLowerCornerOf(blockState.getValue(FACING).normal)
 
         repeat(amount) {
             level.sendParticles(
@@ -230,19 +224,21 @@ class MailboxBlockEntity(
         if (canUpdate) level!!.setBlock(blockPos, blockState.setValue(STATE, newState), 3)
     }
 
-    override fun saveAdditional(output: ValueOutput) {
-        super.saveAdditional(output)
+    override fun saveAdditional(tag: CompoundTag, registries: HolderLookup.Provider) {
+        super.saveAdditional(tag, registries)
+        val output = ValueOutput.of(tag, registries)
         output.store("Color", DyeColor.CODEC, color)
-        output.storeNullable<Component>("CustomName", ComponentSerialization.CODEC, this.name)
+        this.name?.let { tag.putString("CustomName", Component.Serializer.toJson(it, registries)) }
         output.store("EjectTimer", Codec.INT, ejectTimer)
-        ContainerHelper.saveAllItems(output, inventory.items)
+        ContainerHelper.saveAllItems(tag, inventory.items, registries)
     }
-    override fun loadAdditional(input: ValueInput) {
-        super.loadAdditional(input)
+    override fun loadAdditional(tag: CompoundTag, registries: HolderLookup.Provider) {
+        super.loadAdditional(tag, registries)
+        val input = ValueInput.of(tag, registries)
         color = input.read("Color", DyeColor.CODEC).getOrDefault(DyeColor.WHITE)
-        this.name = parseCustomNameSafe(input, "CustomName")
-        ejectTimer = input.getInt("EjectTimer").get()
-        ContainerHelper.loadAllItems(input, inventory.items)
+        this.name = if (tag.contains("CustomName", 8)) parseCustomNameSafe(tag.getString("CustomName"), registries) else null
+        ejectTimer = input.getInt("EjectTimer").orElse(0)
+        ContainerHelper.loadAllItems(tag, inventory.items, registries)
     }
 
     override fun getName(): Component = this.name?: blockState.block.name
@@ -274,7 +270,7 @@ class MailboxBlockEntity(
     override fun getUpdateTag(registries: HolderLookup.Provider): CompoundTag {
         return this.saveWithoutMetadata(registries)
     }
-    override fun applyImplicitComponents(components: DataComponentGetter) {
+    override fun applyImplicitComponents(components: DataComponentInput) {
         super.applyImplicitComponents(components)
         this.name = components.get<Component>(DataComponents.CUSTOM_NAME)
     }
@@ -282,11 +278,11 @@ class MailboxBlockEntity(
         super.collectImplicitComponents(components)
         components.set<Component>(DataComponents.CUSTOM_NAME, this.name)
     }
-    override fun removeComponentsFromTag(output: ValueOutput) {
-        output.discard("CustomName")
+    override fun removeComponentsFromTag(tag: CompoundTag) {
+        tag.remove("CustomName")
     }
     fun playSound(event: SoundEvent, volume: Float = 0.5f, pitch: Float = 0.9f) {
-        val direction = blockState.getValue(FACING).unitVec3i
+        val direction = blockState.getValue(FACING).normal
         val x = worldPosition.x + 0.5 + direction.x / 2.0
         val y = worldPosition.y + 0.5 + direction.y / 2.0
         val z = worldPosition.z + 0.5 + direction.z / 2.0

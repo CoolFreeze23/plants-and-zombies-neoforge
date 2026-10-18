@@ -11,12 +11,13 @@ import net.minecraft.world.item.context.BlockPlaceContext
 import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.LevelReader
-import net.minecraft.world.level.ScheduledTickAccess
+import net.minecraft.world.level.LevelAccessor
 import net.minecraft.world.level.block.*
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.RenderShape
 import net.minecraft.world.level.block.state.StateDefinition
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.level.block.state.properties.BooleanProperty
@@ -29,6 +30,9 @@ import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
 
 class GravestoneBlock(properties: Properties) : BaseEntityBlock(properties), SimpleWaterloggedBlock {
+    // 1.21.1 BaseEntityBlock defaults to INVISIBLE; 26.1 renders the block model
+    override fun getRenderShape(state: BlockState): RenderShape = RenderShape.MODEL
+
     companion object {
         val CODEC: MapCodec<GravestoneBlock> = simpleCodec(::GravestoneBlock)
         val SHAPE: VoxelShape = Util.make {
@@ -37,7 +41,7 @@ class GravestoneBlock(properties: Properties) : BaseEntityBlock(properties), Sim
                 column(12.0, 4.0, 2.0, 16.0),
             )
         }
-        val SHAPES: MutableMap<Direction.Axis, VoxelShape> = Shapes.rotateHorizontalAxis(SHAPE)
+        val SHAPES: MutableMap<Direction.Axis, VoxelShape> = PazShapes.rotateHorizontalAxis(SHAPE)
         val FACING: EnumProperty<Direction> = HorizontalDirectionalBlock.FACING
         val WATERLOGGED: BooleanProperty = BlockStateProperties.WATERLOGGED
     }
@@ -92,16 +96,15 @@ class GravestoneBlock(properties: Properties) : BaseEntityBlock(properties), Sim
 
     override fun updateShape(
         state: BlockState,
-        level: LevelReader,
-        ticks: ScheduledTickAccess,
-        pos: BlockPos,
         directionToNeighbour: Direction,
-        neighbourPos: BlockPos,
         neighbourState: BlockState,
-        random: RandomSource
+        level: LevelAccessor,
+        pos: BlockPos,
+        neighbourPos: BlockPos
     ): BlockState {
+        val ticks = level
         if (state.getValue(WATERLOGGED)) ticks.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level))
-        return super.updateShape(state, level, ticks, pos, directionToNeighbour, neighbourPos, neighbourState, random)
+        return super.updateShape(state, directionToNeighbour, neighbourState, level, pos, neighbourPos)
     }
 
     override fun codec(): MapCodec<out GravestoneBlock> { return CODEC }

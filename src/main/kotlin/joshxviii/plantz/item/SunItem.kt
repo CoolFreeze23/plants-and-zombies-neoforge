@@ -3,10 +3,15 @@ package joshxviii.plantz.item
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.item.BoneMealItem
 import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.crafting.RecipeType
 import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.gameevent.GameEvent
 
 class SunItem(properties: Properties) : Item(properties) {
+
+    // Fabric FuelValueEvents: builder.add(SUN, baseSmeltTime * 0.5)
+    override fun getBurnTime(itemStack: ItemStack, recipeType: RecipeType<*>?): Int = 100
 
     // bone meal like behavior
     override fun useOn(context: UseOnContext): InteractionResult {

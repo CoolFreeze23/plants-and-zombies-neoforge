@@ -37,7 +37,7 @@ class SunBatteryItem(properties: Properties) : BlockItem(PazBlocks.SUN_BATTERY_B
                 if (!it.item.isEmpty) return InteractionResult.FAIL
                 it.item = context.itemInHand.copy()
                 context.itemInHand.shrink(1)
-                return InteractionResult.SUCCESS_SERVER
+                return InteractionResult.sidedSuccess(context.level.isClientSide)
             }
         }
         if (player?.isShiftKeyDown==true) return super.useOn(context)

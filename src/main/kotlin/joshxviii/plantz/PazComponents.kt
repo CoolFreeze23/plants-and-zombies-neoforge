@@ -9,7 +9,11 @@ import net.minecraft.core.Registry
 import net.minecraft.core.component.DataComponentType
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.registries.Registries
+import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceKey
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.TooltipFlag
 import java.util.function.UnaryOperator
 
 object PazComponents {
@@ -61,6 +65,21 @@ object PazComponents {
             key,
             builder.apply(DataComponentType.builder()).build()
         )
+    }
+
+    /**
+     * Replaces Fabric's `ItemComponentTooltipProviderRegistry.addLast(...)` for our components: appends their tooltip
+     * lines (in upstream order) to [lines]. Call from NeoForge's `ItemTooltipEvent`:
+     * `PazComponents.addComponentTooltips(event.itemStack, event.context, event.toolTip, event.flags)`.
+     */
+    @JvmStatic
+    fun addComponentTooltips(stack: ItemStack, context: Item.TooltipContext, lines: MutableList<Component>, flag: TooltipFlag) {
+        val consumer = java.util.function.Consumer<Component> { lines.add(it) }
+        stack.get(STORED_WATER)?.addToTooltip(context, consumer, flag, stack)
+        stack.get(STORED_SUN)?.addToTooltip(context, consumer, flag, stack)
+        stack.get(SUN_COST)?.addToTooltip(context, consumer, flag, stack)
+        stack.get(BRAINZ_ALLOY_COST)?.addToTooltip(context, consumer, flag, stack)
+        stack.get(BLOCKS_PROJECTILE_DAMAGE)?.addToTooltip(context, consumer, flag, stack)
     }
 
     fun initialize() {}

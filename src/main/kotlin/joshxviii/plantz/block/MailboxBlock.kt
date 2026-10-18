@@ -7,7 +7,7 @@ import joshxviii.plantz.block.entity.MailboxBlockEntity
 import joshxviii.plantz.block.entity.MailboxManager
 import joshxviii.plantz.inventory.MailboxMenu
 import joshxviii.plantz.networking.MailboxListResponsePayload
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
+import net.neoforged.neoforge.network.PacketDistributor
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.server.level.ServerLevel
@@ -15,8 +15,10 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.util.RandomSource
 import net.minecraft.world.Container
+import net.minecraft.world.Containers
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
+import net.minecraft.world.ItemInteractionResult
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ChestMenu
@@ -27,6 +29,7 @@ import net.minecraft.world.level.*
 import net.minecraft.world.level.block.*
 import net.minecraft.world.level.block.entity.*
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.RenderShape
 import net.minecraft.world.level.block.state.StateDefinition
 import net.minecraft.world.level.block.state.properties.AttachFace
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
@@ -44,6 +47,9 @@ class MailboxBlock(
     properties: Properties,
     val color: DyeColor = DyeColor.WHITE
 ) : BaseEntityBlock(properties) {
+    // 1.21.1 BaseEntityBlock defaults to INVISIBLE; 26.1 renders the block model
+    override fun getRenderShape(state: BlockState): RenderShape = RenderShape.MODEL
+
     companion object {
         val CODEC: MapCodec<MailboxBlock> = RecordCodecBuilder.mapCodec { it.group(DyeColor.CODEC.fieldOf("color").forGetter { b -> b.color }, propertiesCodec()).apply(it) { color, properties -> MailboxBlock(properties, color) } }
 
@@ -53,8 +59,8 @@ class MailboxBlock(
         val WATERLOGGED: BooleanProperty = BlockStateProperties.WATERLOGGED
 
         val SHAPE: VoxelShape = column(8.0, 12.0, 0.0, 8.0)
-        var SHAPES: MutableMap<Direction.Axis, VoxelShape> = Shapes.rotateHorizontalAxis(SHAPE)
-        var SHAPES_WALL: MutableMap<Direction, VoxelShape> = Shapes.rotateHorizontal(SHAPE.move(0.0,0.25,0.125))
+        var SHAPES: MutableMap<Direction.Axis, VoxelShape> = PazShapes.rotateHorizontalAxis(SHAPE)
+        var SHAPES_WALL: MutableMap<Direction, VoxelShape> = PazShapes.rotateHorizontal(SHAPE.move(0.0,0.25,0.125))
     }
     override fun codec(): MapCodec<out MailboxBlock> { return CODEC }
 
@@ -74,11 +80,11 @@ class MailboxBlock(
         player: Player,
         hand: InteractionHand,
         hitResult: BlockHitResult
-    ): InteractionResult {
+    ): ItemInteractionResult {
         val mailbox = getMailboxEntity(level, pos)?: return super.useItemOn(itemStack, state, level, pos, player, hand, hitResult)
         val success = mailbox.tryToGetMail(player)
-        return if (success) InteractionResult.SUCCESS
-        else InteractionResult.TRY_WITH_EMPTY_HAND
+        return if (success) ItemInteractionResult.SUCCESS
+        else ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
     }
 
     fun getMailboxEntity(level : Level, pos: BlockPos): MailboxBlockEntity? {
@@ -108,13 +114,19 @@ class MailboxBlock(
                     .sortedBy { it.blockPos.distSqr(pos) }
                 player.openMenu(currentMailbox)
                 (player.containerMenu as? MailboxMenu)?.availableMailboxes = mailboxes
-                ServerPlayNetworking.send(player as ServerPlayer, MailboxListResponsePayload(level.dimension(), mailboxes))
+                PacketDistributor.sendToPlayer(player as ServerPlayer, MailboxListResponsePayload(level.dimension(), mailboxes))
             }
         }
         return InteractionResult.SUCCESS
     }
 
 
+
+    // 26.1 BlockEntity.preRemoveSideEffects dropped container contents; 1.21.1 does it from the block
+    override fun onRemove(state: BlockState, level: Level, pos: BlockPos, newState: BlockState, movedByPiston: Boolean) {
+        Containers.dropContentsOnDestroy(state, newState, level, pos)
+        super.onRemove(state, level, pos, newState, movedByPiston)
+    }
 
     override fun destroy(level: LevelAccessor, pos: BlockPos, state: BlockState) {
         super.destroy(level, pos, state)
@@ -162,19 +174,18 @@ class MailboxBlock(
 
     override fun updateShape(
         state: BlockState,
-        level: LevelReader,
-        ticks: ScheduledTickAccess,
-        pos: BlockPos,
         directionToNeighbour: Direction,
-        neighbourPos: BlockPos,
         neighbourState: BlockState,
-        random: RandomSource
+        level: LevelAccessor,
+        pos: BlockPos,
+        neighbourPos: BlockPos
     ): BlockState {
+        val ticks = level
         if (state.getValue(WATERLOGGED)) ticks.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level))
         return if (getConnectedDirection(state).opposite == directionToNeighbour && !state.canSurvive(level, pos))
             Blocks.AIR.defaultBlockState()
         else
-            super.updateShape(state, level, ticks, pos, directionToNeighbour, neighbourPos, neighbourState, random)
+            super.updateShape(state, directionToNeighbour, neighbourState, level, pos, neighbourPos)
     }
 
     override fun canSurvive(state: BlockState, level: LevelReader, pos: BlockPos): Boolean {
@@ -197,12 +208,12 @@ class MailboxBlock(
 
 
     override fun hasAnalogOutputSignal(state: BlockState): Boolean = state.getValue(STATE) == MailboxState.HAS_MAIL
-    override fun getAnalogOutputSignal(state: BlockState, level: Level, pos: BlockPos, direction: Direction): Int {
+    override fun getAnalogOutputSignal(state: BlockState, level: Level, pos: BlockPos): Int {
         return AbstractContainerMenu.getRedstoneSignalFromBlockEntity(level.getBlockEntity(pos))
     }
 
-    override fun getCloneItemStack(level: LevelReader, pos: BlockPos, state: BlockState, includeData: Boolean): ItemStack {
+    override fun getCloneItemStack(level: LevelReader, pos: BlockPos, state: BlockState): ItemStack {
         return PazBlocks.mailboxByColor[color]?.asItem()?.defaultInstance?:
-        super.getCloneItemStack(level, pos, state, includeData)
+        super.getCloneItemStack(level, pos, state)
     }
 }

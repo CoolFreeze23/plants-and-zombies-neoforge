@@ -60,7 +60,7 @@ class BalloonItem(
             return LeadItem.bindPlayerMobs(player, level, pos)
         }
 
-        return InteractionResult.SUCCESS_SERVER
+        return InteractionResult.SUCCESS
     }
 
     companion object {
