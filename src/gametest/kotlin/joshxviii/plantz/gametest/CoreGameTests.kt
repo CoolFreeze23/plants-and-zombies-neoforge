@@ -8,7 +8,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate
 
 /**
  * Dev-only GameTests (source set `gametest`, not packaged). Every test uses the 15x6x15 grass platform
- * `plantz:platform` (floor at y=0, air above). Run all with `./gradlew runGameTestServer`.
+ * `plantz:platform` (grass floor at relative y=1, air above; spawn mobs at y=2). Run all with `./gradlew runGameTestServer`.
  * Area test files live next to this one (one object per area, all with the same two annotations).
  */
 @GameTestHolder("plantz")
@@ -20,8 +20,8 @@ object CoreGameTests {
     @JvmStatic
     @GameTest(template = PLATFORM, timeoutTicks = 200)
     fun peashooterDamagesZombie(helper: GameTestHelper) {
-        val plant = helper.spawn(PazEntities.PEA_SHOOTER, 3, 1, 7)
-        val zombie = helper.spawnWithNoFreeWill(PazEntities.BROWN_COAT, 11, 1, 7)
+        val plant = helper.spawn(PazEntities.PEA_SHOOTER, 3, 2, 7)
+        val zombie = helper.spawnWithNoFreeWill(PazEntities.BROWN_COAT, 11, 2, 7)
         val startHealth = zombie.health
         helper.succeedWhen {
             helper.assertTrue(plant.isAlive, "peashooter died")

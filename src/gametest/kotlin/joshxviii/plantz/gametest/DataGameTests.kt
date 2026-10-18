@@ -79,7 +79,6 @@ object DataGameTests {
     private class R(val id: String, val shaped: Boolean, val w: Int, val h: Int, val cells: List<String>, val result: String, val count: Int)
 
     // generated from upstream data/plantz/recipe/**.json; mailbox transmutes start from a differently dyed mailbox.
-    // Upstream's lime_mailbox recipe really yields a red mailbox.
     private val RECIPES = listOf(
         R("balloon/balloon", true, 3, 3, listOf("", "minecraft:phantom_membrane", "", "", "minecraft:wind_charge", "", "", "minecraft:string", ""), "plantz:white_balloon", 8),
         R("balloon/black_balloon", false, 9, 1, listOf("#plantz:balloons", "#plantz:balloons", "#plantz:balloons", "#plantz:balloons", "minecraft:black_dye", "#plantz:balloons", "#plantz:balloons", "#plantz:balloons", "#plantz:balloons"), "plantz:black_balloon", 8),
@@ -113,7 +112,7 @@ object DataGameTests {
         R("mailbox/green_mailbox", false, 2, 1, listOf("plantz:black_mailbox", "minecraft:green_dye"), "plantz:green_mailbox", 1),
         R("mailbox/light_blue_mailbox", false, 2, 1, listOf("plantz:black_mailbox", "minecraft:light_blue_dye"), "plantz:light_blue_mailbox", 1),
         R("mailbox/light_gray_mailbox", false, 2, 1, listOf("plantz:black_mailbox", "minecraft:light_gray_dye"), "plantz:light_gray_mailbox", 1),
-        R("mailbox/lime_mailbox", false, 2, 1, listOf("plantz:black_mailbox", "minecraft:lime_dye"), "plantz:red_mailbox", 1),
+        R("mailbox/lime_mailbox", false, 2, 1, listOf("plantz:black_mailbox", "minecraft:lime_dye"), "plantz:lime_mailbox", 1),
         R("mailbox/magenta_mailbox", false, 2, 1, listOf("plantz:black_mailbox", "minecraft:magenta_dye"), "plantz:magenta_mailbox", 1),
         R("mailbox/mailbox", true, 3, 2, listOf("minecraft:iron_ingot", "minecraft:iron_ingot", "minecraft:iron_ingot", "minecraft:iron_ingot", "plantz:newspaper", "minecraft:iron_trapdoor"), "plantz:mailbox", 1),
         R("mailbox/orange_mailbox", false, 2, 1, listOf("plantz:black_mailbox", "minecraft:orange_dye"), "plantz:orange_mailbox", 1),
