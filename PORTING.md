@@ -72,3 +72,23 @@ Use these instead of rewriting code to 1.21.1 idioms. They mirror 26.1 names and
 - `WeightedList` → `SimpleWeightedRandomList`; `Util` → `net.minecraft.Util`; `Profiler.get()` → `level.profiler`.
 - Saved data: `SavedDataType` → `SavedData.Factory` + `DimensionDataStorage.computeIfAbsent(factory, name)`.
 - Networking: Fabric `ServerPlayNetworking.send(player, payload)` → `PacketDistributor.sendToPlayer(player, payload)`; client send → `PacketDistributor.sendToServer(payload)`.
+- Menus: `compat.menu.ExtendedMenuType` / `compat.menu.ExtendedMenuProvider` (Fabric names). `player.openMenu(blockEntity)` works as-is;
+  `getScreenOpeningData(player: ServerPlayer?)` receives null (NeoForge does not pass the player), so make the parameter nullable.
+
+## Area ownership (one agent per area, each in its own worktree/branch)
+| area | files |
+|---|---|
+| core (lead, master) | top-level `kotlin/joshxviii/plantz/*.kt` except the ones listed below, `networking/*`, `inventory/*`, `compat/*`, `META-INF/*`, `plantz.mixins.json` |
+| zombies | `entity/zombie/**`, `entity/blueprint_machines/**`, `raid/**`, `ai/ZombieState.kt`, `java/PazOwnableZombie.java` |
+| plants | `entity/plant/**`, `entity/projectile/**`, `ai/**` (not ZombieState), `api/**`, `entity/Sun.kt`, `entity/Balloon.kt`, `entity/PlantPotMinecart.kt`, `entity/gnome/**`, `effect/**`, `advancement/**`, `java/LeashableEntity.java`, `java/joshxviii/plantz/mixin/*.java` (server mixins) |
+| blocks | `block/**`, `item/**` |
+| render | `renderer/**`, `java/joshxviii/plantz/model/**`, `java/joshxviii/plantz/animation/**`, `PazModels.kt`, `PazRenderPipelines.kt`, `GnomeArmorSet.kt`, `PlantIconItemModel.kt`, `assets/plantz/shaders/**` |
+| gui | `gui/**`, `particles/**`, `PazParticles.kt`, `PazScreens.kt`, `RaidMusicManager.kt`, `java/joshxviii/plantz/mixin/client/**`, `plantz.client.mixins.json` |
+| data | `src/main/resources/**` except shaders, mixin jsons, META-INF; may add `kotlin/joshxviii/plantz/data/**` for things that moved from data to code (villager trades) |
+
+## Client wiring contract (core's `PazClient` calls these; owners implement them)
+- `PazModels.registerLayers(event: EntityRenderersEvent.RegisterLayerDefinitions)` and `PazModels.registerRenderers(event: EntityRenderersEvent.RegisterRenderers)` (render)
+- `PazRenderPipelines.registerShaders(event: RegisterShadersEvent)` (render; may be empty), plus any `RenderType`s it exposes
+- `PazParticles.registerProviders(event: RegisterParticleProvidersEvent)` (gui)
+- `PazScreens.registerScreens(event: RegisterMenuScreensEvent)` and `PazScreens.registerGuiLayers(event: RegisterGuiLayersEvent)` (gui)
+- Item model properties / custom item models: render registers them from `PazModels` (`registerItemProperties()` called in FMLClientSetupEvent.enqueueWork, `registerAdditionalModels(event: ModelEvent.RegisterAdditional)`, `modifyBakingResult(event: ModelEvent.ModifyBakingResult)`) as needed

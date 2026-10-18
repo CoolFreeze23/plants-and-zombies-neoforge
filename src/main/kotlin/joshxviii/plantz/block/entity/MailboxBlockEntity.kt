@@ -9,7 +9,7 @@ import joshxviii.plantz.block.MailboxState
 import joshxviii.plantz.inventory.MailCollectionBoxMenu
 import joshxviii.plantz.inventory.MailboxMenu
 import joshxviii.plantz.raid.ZombieRaid.Companion.BONUS_REWARD_INTERVAL
-import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
+import joshxviii.plantz.compat.menu.ExtendedMenuProvider
 import net.minecraft.core.BlockPos
 import net.minecraft.core.HolderLookup
 import net.minecraft.core.NonNullList

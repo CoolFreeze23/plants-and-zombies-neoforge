@@ -7,7 +7,7 @@ import joshxviii.plantz.block.TimeMachineBlock
 import joshxviii.plantz.block.TimeMachineBlock.Companion.STATE
 import joshxviii.plantz.block.TimeMachineState
 import joshxviii.plantz.inventory.TimeMachineMenu
-import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider
+import joshxviii.plantz.compat.menu.ExtendedMenuProvider
 import net.minecraft.core.BlockPos
 import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerPlayer

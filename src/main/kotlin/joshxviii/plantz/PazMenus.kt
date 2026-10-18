@@ -3,7 +3,7 @@ package joshxviii.plantz
 import joshxviii.plantz.inventory.MailCollectionBoxMenu
 import joshxviii.plantz.inventory.MailboxMenu
 import joshxviii.plantz.inventory.TimeMachineMenu
-import net.fabricmc.fabric.api.menu.v1.ExtendedMenuType
+import joshxviii.plantz.compat.menu.ExtendedMenuType
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Registry
 import net.minecraft.core.registries.BuiltInRegistries
