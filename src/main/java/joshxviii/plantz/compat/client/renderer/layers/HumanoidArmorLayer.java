@@ -9,20 +9,29 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.Nullable;
 
 /** 26.1 {@code HumanoidArmorLayer}: per-slot armor models (any {@link HumanoidModel}), posed by the wearer's render state. */
 public class HumanoidArmorLayer<S extends HumanoidRenderState, M extends HumanoidModel<S>, A extends HumanoidModel<S>> extends RenderLayer<S, M> {
     private final ArmorModelSet<A> modelSet;
     private final ArmorModelSet<A> babyModelSet;
+    @Nullable
+    private final ArmorModelSet<A> modernBabyModelSet;
 
     public HumanoidArmorLayer(RenderLayerParent<S, M> renderer, ArmorModelSet<A> modelSet) {
         this(renderer, modelSet, modelSet);
     }
 
     public HumanoidArmorLayer(RenderLayerParent<S, M> renderer, ArmorModelSet<A> modelSet, ArmorModelSet<A> babyModelSet) {
+        this(renderer, modelSet, babyModelSet, null);
+    }
+
+    /** {@code modernBabyModelSet}: 26.1's baby armor UVs, used with 26.1's baby armor textures when they are available. */
+    public HumanoidArmorLayer(RenderLayerParent<S, M> renderer, ArmorModelSet<A> modelSet, ArmorModelSet<A> babyModelSet, @Nullable ArmorModelSet<A> modernBabyModelSet) {
         super(renderer);
         this.modelSet = modelSet;
         this.babyModelSet = babyModelSet;
+        this.modernBabyModelSet = modernBabyModelSet;
     }
 
     /** 26.1: the stack is equippable in {@code slot} with an equipment asset; 1.21.1: an {@link ArmorItem} for that slot. */
@@ -44,7 +53,8 @@ public class HumanoidArmorLayer<S extends HumanoidRenderState, M extends Humanoi
         EquipmentLayerRenderer.LayerType layerType = state.isBaby && state.entityType != EntityType.ARMOR_STAND
             ? EquipmentLayerRenderer.LayerType.HUMANOID_BABY
             : (this.usesInnerModel(slot) ? EquipmentLayerRenderer.LayerType.HUMANOID_LEGGINGS : EquipmentLayerRenderer.LayerType.HUMANOID);
-        EquipmentLayerRenderer.renderLayers(layerType, model, state, itemStack, poseStack, submitNodeCollector, lightCoords, state.outlineColor);
+        A modernBabyModel = layerType == EquipmentLayerRenderer.LayerType.HUMANOID_BABY && this.modernBabyModelSet != null ? this.modernBabyModelSet.get(slot) : null;
+        EquipmentLayerRenderer.renderLayers(layerType, model, modernBabyModel, state, itemStack, poseStack, submitNodeCollector, lightCoords, state.outlineColor);
     }
 
     private A getArmorModel(S state, EquipmentSlot slot) {

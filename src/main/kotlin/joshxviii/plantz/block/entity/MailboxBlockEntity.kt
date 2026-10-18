@@ -2,10 +2,10 @@ package joshxviii.plantz.block.entity
 
 import com.mojang.serialization.Codec
 import joshxviii.plantz.*
+import joshxviii.plantz.PazCompatSounds
 import joshxviii.plantz.block.MailboxBlock.Companion.FACING
 import joshxviii.plantz.block.MailboxBlock.Companion.STATE
 import joshxviii.plantz.block.MailboxState
-import joshxviii.plantz.integration.PazCopperAgeBackportCompat
 import joshxviii.plantz.inventory.MailboxMenu
 import joshxviii.plantz.raid.ZombieRaid.Companion.BONUS_REWARD_INTERVAL
 import joshxviii.plantz.compat.menu.ExtendedMenuProvider
@@ -111,11 +111,11 @@ class MailboxBlockEntity(
     private val inventory = SimpleContainer(INVENTORY_SIZE)
     private val openersCounter: ContainerOpenersCounter = object : ContainerOpenersCounter() {
         override fun onOpen(level: Level, pos: BlockPos, blockState: BlockState) {
-            playSound(PazCopperAgeBackportCompat.sound("block.copper_chest.open", SoundEvents.COPPER_TRAPDOOR_OPEN), 0.3f, 1.5f)
+            playSound(PazCompatSounds.COPPER_CHEST_OPEN.get(), 0.3f, 1.5f)
             updateMailboxState(MailboxState.EJECTING)
         }
         override fun onClose(level: Level, pos: BlockPos, blockState: BlockState) {
-            playSound(PazCopperAgeBackportCompat.sound("block.copper_chest.close", SoundEvents.COPPER_TRAPDOOR_CLOSE), 0.3f, 1.5f)
+            playSound(PazCompatSounds.COPPER_CHEST_CLOSE.get(), 0.3f, 1.5f)
             if (ejectTimer <= 0 && inventory.isEmpty) updateMailboxState(MailboxState.INACTIVE)
         }
         override fun openerCountChanged(level: Level, pos: BlockPos, blockState: BlockState, previous: Int, current: Int) {}

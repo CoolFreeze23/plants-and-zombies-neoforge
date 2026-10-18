@@ -16,9 +16,7 @@ import net.minecraft.resources.ResourceLocation
 import net.minecraft.resources.ResourceKey
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
-import net.minecraft.sounds.SoundEvents
 import joshxviii.plantz.compat.ARGB
-import joshxviii.plantz.integration.PazVanillaBackportCompat
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.damagesource.DamageSource
@@ -91,8 +89,8 @@ interface PlantHeadAttachment {
 
                 plant.detachFromEntity()
                 plant.setPos(placePos.x.toDouble(), placePos.y.toDouble(), placePos.z.toDouble())
-                // TODO custom sounds. 26.1 HARNESS_UNEQUIP (entity.happy_ghast.unequip) comes from Vanilla Backport when installed
-                plant.playSound(PazVanillaBackportCompat.sound("entity.happy_ghast.unequip", SoundEvents.ARMOR_EQUIP_GENERIC.value()))
+                // TODO custom sounds.
+                plant.playSound(PazCompatSounds.HAPPY_GHAST_UNEQUIP.get())
                 return InteractionResult.SUCCESS
             }
             return InteractionResult.PASS

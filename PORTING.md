@@ -38,8 +38,14 @@ Mirrors 26.1 names and semantics, so upstream code ports with import changes:
   `minecraft:swing_animation` components a spear backport registers (reflectively; inert without one); `Ease`: 26.1 easings.
 - `client.model.CuboidRotation` + `mixin.client.model.*`: 26.1 model element rotations (any angle, x/y/z) on 1.21.1's
   block model loader. `client.model.SpearAnimations`: 26.1 third-person spear hold/charge/stab animations.
-- `client/NowPlayingToast.kt`: 26.1's music toast as a GUI layer; `networking/UiSoundPayload` + `SoundOptionsScreenMixin`:
-  26.1's UI sound category as a port volume option.
+- `client/NowPlayingToast.kt` + `ToastComponentMixin`: 26.1's music toast, drawn with the toasts; `networking/UiSoundPayload`
+  + `SoundOptionsScreenMixin`: 26.1's UI sound category as a port volume option.
+- `PazCompatSounds`: `plantz:compat.<26.1 id>` stand-ins for 26.1 sounds (a backport's own event wins), defined in
+  sounds.json as the 1.21.1 substitute; `client/ModernAssets.kt`: a built-in client pack serving 26.1's baby armor
+  textures and those sounds from a local 26.1+ game install (vanilla launcher / Prism), never shipped in the jar.
+  The baby armor uses `CompatModelLayers.ZOMBIE_BABY_ARMOR_26_1` (26.1 UVs) when its texture is there.
+- `client.OnShelfDisplay` + `META-INF/enumextensions.json` + `CopperShelfRendererMixin` (optional, `require = 0`): 26.1's
+  `on_shelf` display context, used by Copper Age Backport's shelves.
 - `client.*`: the 26.1 render-state pipeline running immediate-mode on 1.21.1:
   - `state.*` render states (26.1 fields, plus `compatEntity`/`compatPartialTick` for the frame being drawn, and
     Fabric-style `setData/getData` keyed by `RenderStateDataKey`).

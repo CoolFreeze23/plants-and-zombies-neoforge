@@ -1,6 +1,7 @@
 package joshxviii.plantz.entity.plant
 
 import joshxviii.plantz.*
+import joshxviii.plantz.PazCompatSounds
 import joshxviii.plantz.compat.ValueOutput
 import joshxviii.plantz.item.SeedPacketItem
 import net.minecraft.ChatFormatting
@@ -48,7 +49,7 @@ fun Plant.processSunItem(player: Player, item: ItemStack, hand: InteractionHand,
     }
     else if (growNeeds == PlantGrowNeeds.SUN && verifyOwner(player)) {// grow seeds
         playSound(
-            SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, 1.0f,// 26.1 ui.hud.bubble_pop is not in 1.21.1 or Vanilla Backport
+            PazCompatSounds.UI_HUD_BUBBLE_POP.get(), 1.0f,
             receivedSun.toFloat()/sunRequiredForSeeds() + 0.9f
         )
         if (receivedSun++ >= sunRequiredForSeeds()) awardSeedPacket(player)

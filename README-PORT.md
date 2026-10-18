@@ -10,16 +10,22 @@ Put `build/libs/plants-and-zombies-neoforge-1.5-neoforge.1.jar` in `mods/` toget
 - TerraBlender for NeoForge 1.21.1 (4.1.0.x)
 
 Optional, detected automatically:
+- **A 26.1 or newer Minecraft install** (vanilla launcher or Prism Launcher, on the same computer): 26.1's baby armor
+  textures and the 26.1 sounds the mod uses (copper chest, copper golem statue, creaking, happy ghast harness, HUD
+  bubble, lead snap) are game assets 1.21.1 doesn't have, and the mod doesn't redistribute Mojang's files. When it finds
+  a 26.1+ game (the version's client jar, and its asset index for the sounds), a built-in resource pack serves those
+  files from it; the log says "Using 26.1 assets from Minecraft <version>". Without one the 1.21.1 substitutes play
+  (with 26.1's subtitles) and baby armor maps the adult textures. Installing 26.1 from the launcher once is enough.
 - **Iris** (+ Sodium): with a shader pack active, the paint overlay renders through Iris' entity program, like the
   26.1 original's Iris hook. Tested with Iris 1.8.12 + Sodium 0.6.13 and Complementary Reimagined.
 - **Vanilla Backport** (+ Platform): brings back the 26.1 content that needs newer vanilla blocks and sounds. A built-in
   data pack (auto-enabled) adds pale moss, leaf litter and firefly bushes to the graveyard, pale oak dead trees with
   pale moss and leaf litter, gravestones on pale moss, and leaf-litter tint; tags pick up pale moss carpet and the pale
-  garden; the tangle kelp's creaking sound and the plant pot's harness sound return. Tested with Vanilla Backport 1.1.7.10 + Platform 1.3.3.
+  garden; its creaking and happy ghast sounds are used for the tangle kelp and the plant pot. Tested with Vanilla Backport 1.1.7.10 + Platform 1.3.3.
 - **Copper Age Backport**: brings back the 26.1 copper content. Gnomes spawn with copper axes and pickaxes, gravestone
   treasure has copper nuggets again, the relocation advancement shows a copper shovel (built-in data pack,
-  auto-enabled), and mailboxes, the collection box and garden gnome posing use the copper chest and copper golem
-  statue sounds. Copper golems are immune to electric plants. Tested with Copper Age Backport 0.1.5 (0.1.4 crashes on startup on current NeoForge 21.1, a bug fixed in 0.1.5); works alongside Vanilla Backport.
+  auto-enabled), its copper chest and copper golem statue sounds are used for the mailboxes and garden gnomes, and
+  Plants & Zombies items on its shelves use their 26.1 `on_shelf` transforms. Copper golems are immune to electric plants. Tested with Copper Age Backport 0.1.5 (0.1.4 crashes on startup on current NeoForge 21.1, a bug fixed in 0.1.5); works alongside Vanilla Backport.
 - **Backported Spears**: brings back the 26.1 spears. Gnomes spawn with spears again (a copper spear with Copper Age
   Backport installed too, since Backported Spears only adds copper spears then; otherwise a stone spear), gnomes and
   plant zombies charge with spears again (the port's copy of 26.1's `SpearUseGoal`), and they hold spears in 26.1's
@@ -54,23 +60,22 @@ Optional, detected automatically:
 - Without Backported Spears there are no spears, and gnomes that would carry a spear get a stone sword.
 - Without Copper Age Backport: gnomes use stone tools instead of copper ones, copper nuggets in loot become an
   equivalent chance of a copper ingot, and the relocation advancement icon is an iron shovel.
-- Sounds missing from 1.21.1 use close vanilla ones unless a backport provides them: mailbox open/close and gnome pose
-  (Copper Age Backport restores them), bubble pop and lead break (no backport has them).
+- 26.1 sounds and baby armor textures need a local 26.1+ game install (see Install); without one, close 1.21.1 sounds
+  play and baby armor maps the adult armor textures onto the 26.1 baby shapes.
 - 26.1's UI sound category is a "UI" slider the port adds to Music & Sounds (1.21.1's sound categories can't be
   extended); it scales the raid announcement sounds, which play on top of Master like 26.1's UI sounds.
 - The raid music "Now playing" toast is drawn with 1.21.1's toast background and a note glyph (26.1's
   `toast/now_playing` and music-note sprites don't exist in 1.21.1).
-- Baby zombies' armor maps the adult armor textures onto the 26.1 baby armor shapes (26.1's baby armor textures don't
-  exist in 1.21.1).
 - Graveyard: without Vanilla Backport it has no pale moss, leaf litter or firefly bushes and dead trees use stripped
   birch. Its sky/fog/cloud/sunrise/light colours (26.1 environment attributes) are applied client-side and blend in at
   biome borders. Undead don't burn in daylight there.
 - Block models: 26.1 element rotations (any angle, x/y/z rotations) load through a port mixin, so the upstream models are
-  unchanged. Their `on_shelf` display transforms are dropped (1.21.1 has no shelves; Copper Age Backport's shelves show
-  items with the `fixed` transform).
+  unchanged. 26.1's `on_shelf` display context is `plantz:on_shelf` (NeoForge requires a namespaced name), falling
+  back to `fixed`; 1.21.1 only has shelves through Copper Age Backport.
 
-Upstream quirk kept: the raid's "vanish" wither sound is played with `playLocalSound` on the server level, which plays
-nothing (in 26.1 too).
+Upstream quirks kept: the raid's "vanish" wither sound is played with `playLocalSound` on the server level, which plays
+nothing (in 26.1 too); the gnome voice jump sounds and the snowchunk hit sound are registered without a sound
+definition, so they are silent (in 26.1 too).
 
 ## Upstream bugs fixed along the way
 Paint vanished on chunk reload (paint colours were saved in a form NBT can't store); zombies breaking a flag never

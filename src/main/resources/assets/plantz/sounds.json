@@ -368,5 +368,27 @@
   },
   "music.raid.zomboss": {
     "sounds": [{ "name": "plantz:music/raid/loon_griefers_high", "volume": 1.0, "pitch": 1.0 }], "subtitle": "plantz.subtitles.music.raid.zomboss"
+  },
+
+  "compat.block.copper_chest.open": {
+    "sounds": [ { "name": "minecraft:block.copper_trapdoor.open", "type": "event" } ], "subtitle": "subtitles.block.copper_chest.open"
+  },
+  "compat.block.copper_chest.close": {
+    "sounds": [ { "name": "minecraft:block.copper_trapdoor.close", "type": "event" } ], "subtitle": "subtitles.block.copper_chest.close"
+  },
+  "compat.entity.copper_golem_become_statue": {
+    "sounds": [ { "name": "minecraft:block.decorated_pot.insert", "type": "event" } ], "subtitle": "subtitles.entity.copper_golem_become_statue"
+  },
+  "compat.entity.creaking.activate": {
+    "sounds": [ { "name": "minecraft:block.hanging_roots.break", "type": "event" } ], "subtitle": "subtitles.entity.creaking.activate"
+  },
+  "compat.entity.happy_ghast.unequip": {
+    "sounds": [ { "name": "minecraft:item.armor.equip_generic", "type": "event" } ], "subtitle": "subtitles.entity.happy_ghast.unequip"
+  },
+  "compat.ui.hud.bubble_pop": {
+    "sounds": [ { "name": "minecraft:block.bubble_column.bubble_pop", "type": "event" } ], "subtitle": "subtitles.ui.hud.bubble_pop"
+  },
+  "compat.item.lead.break": {
+    "sounds": [ { "name": "minecraft:entity.leash_knot.break", "type": "event" } ], "subtitle": "subtitles.item.lead.break"
   }
 }

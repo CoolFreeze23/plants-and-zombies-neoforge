@@ -10,6 +10,8 @@ displayName="${mod_name}"
 logoFile="assets/plantz/icon.png"
 authors="${mod_authors}"
 description='''${mod_description}'''
+# 26.1's on_shelf item display context (see CopperShelfRendererMixin)
+enumExtensions="META-INF/enumextensions.json"
 
 [[mixins]]
 config="plantz.mixins.json"

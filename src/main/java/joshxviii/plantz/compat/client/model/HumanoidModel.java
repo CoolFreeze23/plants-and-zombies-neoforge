@@ -396,6 +396,47 @@ public class HumanoidModel<T extends HumanoidRenderState> extends EntityModel<T>
         return mesh;
     }
 
+    /**
+     * 26.1 {@code createBabyArmorMeshSet} with its own UVs, for 26.1's 64x64 baby armor textures (served from a local
+     * 26.1 game install by ModernAssets; {@link #createBabyArmorMeshSet} maps the adult textures when they aren't there).
+     */
+    public static ArmorModelSet<MeshDefinition> createModernBabyArmorMeshSet(float[] innerDeformation, float[] outerDeformation) {
+        return new ArmorModelSet<>(
+            createModernBabyArmorMesh(outerDeformation, Set.of("head")),
+            createModernBabyArmorMesh(outerDeformation, Set.of("body", "left_arm", "right_arm")),
+            createModernBabyArmorMesh(innerDeformation, Set.of("left_leg", "right_leg", "waist")),
+            createModernBabyArmorMesh(outerDeformation, Set.of("left_foot", "right_foot"))
+        );
+    }
+
+    // 26.1 HumanoidModel.createBabyArmorMesh, including its leg naming ("left_leg" sits at +x and carries "right_foot")
+    private static MeshDefinition createModernBabyArmorMesh(float[] d, Set<String> parts) {
+        CubeDeformation g = new CubeDeformation(d[0], d[1], d[2]);
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
+        PartDefinition head = root.addOrReplaceChild("head",
+            cubes(parts, "head", CubeListBuilder.create().texOffs(0, 0).addBox(-4.5F, -7.0F, -4.5F, 9.0F, 8.0F, 8.0F, g)), PartPose.offset(0.0F, 15.0F, 0.0F));
+        root.addOrReplaceChild("body",
+            cubes(parts, "body", CubeListBuilder.create().texOffs(0, 17).addBox(-3.0F, -3.0F, -1.5F, 6.0F, 5.0F, 3.0F, g)), PartPose.offset(0.0F, 18.0F, 0.0F));
+        root.addOrReplaceChild("waist",
+            cubes(parts, "waist", CubeListBuilder.create().texOffs(0, 36).addBox(-3.0F, -1.2F, -1.49F, 5.9F, 2.0F, 2.9F, g.extend(-0.1F))), PartPose.offset(0.0F, 19.0F, 0.0F));
+        root.addOrReplaceChild("right_arm",
+            cubes(parts, "right_arm", CubeListBuilder.create().texOffs(30, 25).addBox(-1.0F, 0.0F, -1.53F, 2.0F, 5.0F, 3.0F, g)), PartPose.offset(-3.5F, 15.5F, 0.0F));
+        root.addOrReplaceChild("left_arm",
+            cubes(parts, "left_arm", CubeListBuilder.create().texOffs(30, 17).addBox(-1.0F, 0.0F, -1.53F, 2.0F, 5.0F, 3.0F, g)), PartPose.offset(3.5F, 15.5F, 0.0F));
+        root.addOrReplaceChild("inner_body", CubeListBuilder.create(), PartPose.offset(0.0F, 18.0F, 0.0F));
+        PartDefinition plusXLeg = root.addOrReplaceChild("left_leg",
+            cubes(parts, "left_leg", CubeListBuilder.create().texOffs(18, 24).addBox(-2.0F, -0.2F, -2.0F, 3.0F, 4.0F, 3.0F, g.extend(-0.1F))), PartPose.offset(1.5F, 20.0F, 0.5F));
+        PartDefinition minusXLeg = root.addOrReplaceChild("right_leg",
+            cubes(parts, "right_leg", CubeListBuilder.create().texOffs(18, 17).addBox(-1.0F, -0.2F, -2.0F, 3.0F, 4.0F, 3.0F, g.extend(-0.1F))), PartPose.offset(-1.5F, 20.0F, 0.5F));
+        plusXLeg.addOrReplaceChild("right_foot",
+            cubes(parts, "right_foot", CubeListBuilder.create().texOffs(0, 25).addBox(-2.0F, 2.9F, -2.0F, 3.0F, 1.0F, 3.0F, g)), PartPose.ZERO);
+        minusXLeg.addOrReplaceChild("left_foot",
+            cubes(parts, "left_foot", CubeListBuilder.create().texOffs(0, 29).mirror().addBox(-1.0F, 2.9F, -2.0F, 3.0F, 1.0F, 3.0F, g).mirror(false)), PartPose.ZERO);
+        head.addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.ZERO);
+        return mesh;
+    }
+
     /** {@code cubes} when {@code part} is one of {@code parts}, else no cubes (26.1 retained only the slot's parts). */
     private static CubeListBuilder cubes(Set<String> parts, String part, CubeListBuilder cubes) {
         return parts.contains(part) ? cubes : CubeListBuilder.create();

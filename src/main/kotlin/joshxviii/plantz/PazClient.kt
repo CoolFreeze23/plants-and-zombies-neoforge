@@ -4,6 +4,8 @@ import joshxviii.plantz.PazItems.DYE_BLASTER
 import joshxviii.plantz.PazItems.FOOTBALL_HELMET
 import joshxviii.plantz.PazItems.GARDENING_GLOVE
 import joshxviii.plantz.PazItems.PLANT_POT_HELMET
+import joshxviii.plantz.client.ModernAssets
+import joshxviii.plantz.compat.client.renderer.layers.EquipmentLayerRenderer
 import joshxviii.plantz.item.DyeBlasterItem
 import joshxviii.plantz.item.FootballHelmetItem
 import joshxviii.plantz.item.GardeningGloveItem
@@ -12,6 +14,8 @@ import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
 import joshxviii.plantz.client.GraveyardAmbience
 import joshxviii.plantz.item.SeedPacketCooldowns
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener
+import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent
 import net.neoforged.neoforge.client.event.ViewportEvent
 import joshxviii.plantz.item.SeedPacketItem
 import net.minecraft.client.renderer.RenderType
@@ -30,6 +34,7 @@ import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent
 import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent
 import net.neoforged.neoforge.client.event.RegisterShadersEvent
 import net.neoforged.neoforge.common.NeoForge
+import net.neoforged.neoforge.event.AddPackFindersEvent
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent
 
 object PazClient {
@@ -40,6 +45,11 @@ object PazClient {
 		modBus.addListener { event: RegisterParticleProvidersEvent -> PazParticles.registerProviders(event) }
 		modBus.addListener { event: RegisterMenuScreensEvent -> PazScreens.registerScreens(event) }
 		modBus.addListener { event: RegisterGuiLayersEvent -> PazScreens.registerGuiLayers(event) }
+		// 26.1 baby armor textures and sounds from a local 26.1+ game install, when there is one
+		modBus.addListener { event: AddPackFindersEvent -> ModernAssets.addPackFinders(event) }
+		modBus.addListener { event: RegisterClientReloadListenersEvent ->
+			event.registerReloadListener(ResourceManagerReloadListener { EquipmentLayerRenderer.clearCaches() })
+		}
 		modBus.addListener { event: RegisterShadersEvent -> PazRenderPipelines.registerShaders(event) }
 		modBus.addListener { event: ModelEvent.RegisterAdditional -> PazModels.registerAdditionalModels(event) }
 		modBus.addListener { event: ModelEvent.ModifyBakingResult -> PazModels.modifyBakingResult(event) }

@@ -2,10 +2,10 @@ package joshxviii.plantz.block.entity
 
 import joshxviii.plantz.MailCollectionBoxData
 import joshxviii.plantz.PazBlocks
+import joshxviii.plantz.PazCompatSounds
 import joshxviii.plantz.block.CollectionBoxState
 import joshxviii.plantz.block.MailCollectionBoxBlock.Companion.STATE
 import joshxviii.plantz.block.MailboxState
-import joshxviii.plantz.integration.PazCopperAgeBackportCompat
 import joshxviii.plantz.inventory.MailCollectionBoxMenu
 import joshxviii.plantz.networking.MailboxSendResult
 import joshxviii.plantz.networking.SendMailRequestPayload.Companion.trySendStack
@@ -53,11 +53,11 @@ class MailCollectionBoxEntity(
     private val openersCounter: ContainerOpenersCounter = object : ContainerOpenersCounter() {
         override fun onOpen(level: Level, pos: BlockPos, blockState: BlockState) {
             updateCollectionBoxState(CollectionBoxState.OPEN)
-            playSound(PazCopperAgeBackportCompat.sound("block.copper_chest.open", SoundEvents.COPPER_TRAPDOOR_OPEN), 0.3f, 1.2f)
+            playSound(PazCompatSounds.COPPER_CHEST_OPEN.get(), 0.3f, 1.2f)
         }
         override fun onClose(level: Level, pos: BlockPos, blockState: BlockState) {
             updateCollectionBoxState(CollectionBoxState.CLOSED)
-            playSound(PazCopperAgeBackportCompat.sound("block.copper_chest.close", SoundEvents.COPPER_TRAPDOOR_CLOSE), 0.3f, 1.2f)
+            playSound(PazCompatSounds.COPPER_CHEST_CLOSE.get(), 0.3f, 1.2f)
         }
         override fun openerCountChanged(level: Level, pos: BlockPos, blockState: BlockState, previous: Int, current: Int) {}
         override fun isOwnContainer(player: Player): Boolean {

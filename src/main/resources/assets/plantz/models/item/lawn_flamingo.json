@@ -20,6 +20,12 @@
         "layer0": "plantz:item/lawn_flamingo"
       }
     },
+    "plantz:on_shelf": {
+      "parent": "minecraft:item/generated",
+      "textures": {
+        "layer0": "plantz:item/lawn_flamingo"
+      }
+    },
     "ground": {
       "parent": "minecraft:item/generated",
       "textures": {

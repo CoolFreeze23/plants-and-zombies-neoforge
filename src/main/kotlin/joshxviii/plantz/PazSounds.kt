@@ -113,6 +113,6 @@ object PazSounds {
     }
 
     fun initialize() {
-
+        PazCompatSounds.initialize()
     }
 }

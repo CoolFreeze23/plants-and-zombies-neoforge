@@ -1,10 +1,10 @@
 package joshxviii.plantz.gametest
 
+import joshxviii.plantz.PazCompatSounds
 import joshxviii.plantz.PazEntities
 import joshxviii.plantz.PazRegistries
 import joshxviii.plantz.PazTags
 import joshxviii.plantz.compat.ai.SpearUseGoal
-import joshxviii.plantz.integration.PazCopperAgeBackportCompat
 import joshxviii.plantz.pazResource
 import net.minecraft.core.BlockPos
 import net.minecraft.core.component.DataComponents
@@ -15,7 +15,6 @@ import net.minecraft.gametest.framework.GameTestHelper
 import net.minecraft.locale.Language
 import net.minecraft.resources.ResourceKey
 import net.minecraft.resources.ResourceLocation
-import net.minecraft.sounds.SoundEvents
 import net.minecraft.tags.BlockTags
 import net.minecraft.tags.DamageTypeTags
 import net.minecraft.tags.EntityTypeTags
@@ -393,10 +392,12 @@ object DataGameTests {
             else setOf("minecraft:stone_axe", spear, "minecraft:bow", "minecraft:stone_pickaxe")
         helper.assertTrue(tools == expectedTools, "gnome tools $tools, expected $expectedTools")
 
-        for ((id, fallback) in listOf("block.copper_chest.open" to SoundEvents.COPPER_TRAPDOOR_OPEN, "block.copper_chest.close" to SoundEvents.COPPER_TRAPDOOR_CLOSE,
-                "entity.copper_golem.become_statue" to SoundEvents.DECORATED_POT_INSERT)) {
-            val sound = PazCopperAgeBackportCompat.sound(id, fallback).location
-            helper.assertTrue(sound == if (copperAgeBackport) ResourceLocation.withDefaultNamespace(id) else fallback.location, "$id plays $sound")
+        // the copper sounds come from Copper Age Backport when installed (its ids), else the port's stand-ins
+        for ((sound, cabId) in listOf(PazCompatSounds.COPPER_CHEST_OPEN to "block.copper_chest.open", PazCompatSounds.COPPER_CHEST_CLOSE to "block.copper_chest.close",
+                PazCompatSounds.COPPER_GOLEM_BECOME_STATUE to "entity.copper_golem.become_statue")) {
+            val played = BuiltInRegistries.SOUND_EVENT.getKey(sound.get())
+            val expected = if (copperAgeBackport) ResourceLocation.withDefaultNamespace(cabId) else pazResource("compat." + sound.id)
+            helper.assertTrue(played == expected, "${sound.id} plays $played, expected $expected")
         }
         helper.succeed()
     }

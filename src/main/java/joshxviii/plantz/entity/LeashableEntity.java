@@ -1,9 +1,9 @@
 package joshxviii.plantz.entity;
 
+import joshxviii.plantz.PazCompatSounds;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -114,8 +114,7 @@ public abstract class LeashableEntity extends Entity implements Leashable {
         if (leashData == null) return false;
         double distanceTo = this.leashDistanceTo(leashHolder);
         if (distanceTo > this.leashSnapDistance()) {
-            // 26.1 LEAD_BREAK (item.lead.break) is not in 1.21.1 or Vanilla Backport
-            level.playSound(null, leashHolder.getX(), leashHolder.getY(), leashHolder.getZ(), SoundEvents.LEASH_KNOT_BREAK, SoundSource.NEUTRAL, 1.0F, 1.0F);
+            level.playSound(null, leashHolder.getX(), leashHolder.getY(), leashHolder.getZ(), PazCompatSounds.LEAD_BREAK.get(), SoundSource.NEUTRAL, 1.0F, 1.0F);
             this.leashTooFarBehaviour();
         } else if (distanceTo > this.leashElasticDistance() - (double) leashHolder.getBbWidth() - (double) this.getBbWidth()
             && this.checkElasticInteractions(leashHolder)) {

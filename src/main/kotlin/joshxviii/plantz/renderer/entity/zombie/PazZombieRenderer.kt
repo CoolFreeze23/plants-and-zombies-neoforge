@@ -37,7 +37,8 @@ open class PazZombieRenderer(
     defaultModel,
     babyModel,
     ArmorModelSet.bake(armorSet, context.modelSet) { defaultModel.forArmor(it) },
-    ArmorModelSet.bake(babyArmorSet, context.modelSet) { babyModel.forArmor(it) }
+    ArmorModelSet.bake(babyArmorSet, context.modelSet) { babyModel.forArmor(it) },
+    ArmorModelSet.bake(CompatModelLayers.ZOMBIE_BABY_ARMOR_26_1, context.modelSet) { babyModel.forArmor(it) }
 ) {
 
     init {

@@ -1208,6 +1208,13 @@
         0.8,
         0.8
       ]
+    },
+    "plantz:on_shelf": {
+      "rotation": [
+        0,
+        90,
+        0
+      ]
     }
   },
   "groups": [

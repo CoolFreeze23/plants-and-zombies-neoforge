@@ -7,7 +7,6 @@ import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.packs.PackType
 import net.minecraft.server.packs.repository.Pack
 import net.minecraft.server.packs.repository.PackSource
-import net.minecraft.sounds.SoundEvent
 import net.minecraft.world.item.Item
 import net.neoforged.fml.ModList
 import net.neoforged.neoforge.event.AddPackFindersEvent
@@ -15,8 +14,8 @@ import net.neoforged.neoforge.event.AddPackFindersEvent
 /**
  * Optional Copper Age Backport support. It adds 1.21.9's copper tools, copper nuggets, copper chests and copper golem
  * under the `minecraft` namespace, so with it installed the 26.1 copper content comes back: gnomes carry copper tools,
- * gravestone treasure has copper nuggets, the relocation advancement shows a copper shovel and the mailboxes / garden
- * gnome use their original sounds.
+ * gravestone treasure has copper nuggets and the relocation advancement shows a copper shovel; its copper chest and
+ * statue sound events are preferred by [joshxviii.plantz.PazCompatSounds].
  */
 object PazCopperAgeBackportCompat {
     const val MOD_ID = "copperagebackport"
@@ -37,9 +36,4 @@ object PazCopperAgeBackportCompat {
     @JvmStatic
     fun item(id: String, fallback: Item): Item =
         BuiltInRegistries.ITEM.getOptional(ResourceLocation.withDefaultNamespace(id)).orElse(fallback)
-
-    /** The `minecraft:` sound [id] when a backport registers it, else [fallback]. */
-    @JvmStatic
-    fun sound(id: String, fallback: SoundEvent): SoundEvent =
-        BuiltInRegistries.SOUND_EVENT.getOptional(ResourceLocation.withDefaultNamespace(id)).orElse(fallback)
 }

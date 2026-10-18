@@ -461,5 +461,12 @@
   "plantz.subtitles.music_disc.grassy_groove": "Music disc plays",
   "plantz.subtitles.projectile.electric_zap": "Electricity zaps",
 
-  "soundCategory.ui": "UI"
+  "soundCategory.ui": "UI",
+  "subtitles.block.copper_chest.open": "Chest opens",
+  "subtitles.block.copper_chest.close": "Chest closes",
+  "subtitles.entity.copper_golem_become_statue": "Copper Golem is petrified",
+  "subtitles.entity.creaking.activate": "Creaking watches",
+  "subtitles.entity.happy_ghast.unequip": "Harness unequips",
+  "subtitles.ui.hud.bubble_pop": "Breath meter dropping",
+  "subtitles.item.lead.break": "Lead snaps"
 }

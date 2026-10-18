@@ -1003,6 +1003,18 @@
         1.66,
         1.66
       ]
+    },
+    "plantz:on_shelf": {
+      "rotation": [
+        -180,
+        90,
+        -180
+      ],
+      "translation": [
+        0,
+        0,
+        0.25
+      ]
     }
   },
   "groups": [

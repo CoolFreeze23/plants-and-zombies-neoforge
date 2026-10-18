@@ -1,8 +1,8 @@
 package joshxviii.plantz.entity.plant
 
 import joshxviii.plantz.*
+import joshxviii.plantz.PazCompatSounds
 import joshxviii.plantz.ai.goal.MeleeAttackActionGoal
-import joshxviii.plantz.integration.PazVanillaBackportCompat
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.network.syncher.EntityDataAccessor
@@ -10,7 +10,6 @@ import net.minecraft.network.syncher.EntityDataSerializers
 import net.minecraft.network.syncher.SynchedEntityData
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
-import net.minecraft.sounds.SoundEvents
 import net.minecraft.tags.FluidTags
 import net.minecraft.util.Mth
 import net.minecraft.util.RandomSource
@@ -159,8 +158,7 @@ class TangleKelp(type: EntityType<out Plant>, level: Level) : Plant(type, level)
         override fun doAction() : Boolean {
             val success = super.doAction()
             if (success) {
-                // CREAKING_ACTIVATE comes from Vanilla Backport on 1.21.1, hanging roots without it
-                tangleKelp.playSound(PazVanillaBackportCompat.sound("entity.creaking.activate", SoundEvents.HANGING_ROOTS_BREAK), 1f, 1f)
+                tangleKelp.playSound(PazCompatSounds.CREAKING_ACTIVATE.get(), 1f, 1f)
                 tangleKelp.tangleTime = TANGLE_TIME + tangleKelp.random.nextInt(-10,20)
                 tangleKelp.target?.addEffect(MobEffectInstance(PazEffects.TANGLED, 80, 0), tangleKelp)
             }

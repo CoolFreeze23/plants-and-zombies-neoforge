@@ -116,5 +116,14 @@
     "head": {
       "parent": "plantz:block/dye_vat"
     }
+  },
+  "display": {
+    "plantz:on_shelf": {
+      "rotation": [
+        0,
+        -180,
+        0
+      ]
+    }
   }
 }

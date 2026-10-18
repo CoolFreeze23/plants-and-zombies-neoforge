@@ -22,6 +22,10 @@ import net.neoforged.neoforge.client.ClientHooks;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * 26.1 {@code EquipmentLayerRenderer.renderLayers} for armor, on 1.21.1 armor materials: each material layer texture
@@ -42,6 +46,17 @@ public final class EquipmentLayerRenderer {
         LayerType layerType, Model<? super S> model, S state, ItemStack itemStack, PoseStack poseStack,
         SubmitNodeCollector submitNodeCollector, int lightCoords, int outlineColor
     ) {
+        renderLayers(layerType, model, null, state, itemStack, poseStack, submitNodeCollector, lightCoords, outlineColor);
+    }
+
+    /**
+     * {@code modernBabyModel}: for {@link LayerType#HUMANOID_BABY}, the 26.1-UV model used with a layer's 26.1 baby
+     * armor texture when a resource pack provides it (ModernAssets, from a local 26.1 game).
+     */
+    public static <S extends EntityRenderState> void renderLayers(
+        LayerType layerType, Model<? super S> model, @Nullable Model<? super S> modernBabyModel, S state, ItemStack itemStack, PoseStack poseStack,
+        SubmitNodeCollector submitNodeCollector, int lightCoords, int outlineColor
+    ) {
         if (!(itemStack.getItem() instanceof ArmorItem armorItem) || !(state.compatEntity instanceof LivingEntity entity)) return;
         EquipmentSlot slot = armorItem.getEquipmentSlot();
         boolean innerTexture = slot == EquipmentSlot.LEGS;
@@ -55,7 +70,13 @@ public final class EquipmentLayerRenderer {
             int color = extensions.getArmorLayerTintColor(itemStack, entity, layer, layerIdx, fallbackColor);
             if (color != 0) {
                 ResourceLocation texture = ClientHooks.getArmorTexture(entity, itemStack, layer, innerTexture, slot);
-                submitNodeCollector.submitModel(model, state, poseStack, RenderType.armorCutoutNoCull(texture), lightCoords,
+                Model<? super S> layerModel = model;
+                ResourceLocation babyTexture = layerType == LayerType.HUMANOID_BABY && modernBabyModel != null ? modernBabyTexture(layer) : null;
+                if (babyTexture != null) {
+                    texture = babyTexture;
+                    layerModel = modernBabyModel;
+                }
+                submitNodeCollector.submitModel(layerModel, state, poseStack, RenderType.armorCutoutNoCull(texture), lightCoords,
                     OverlayTexture.NO_OVERLAY, color, null, outlineColor, null);
             }
         }
@@ -69,8 +90,34 @@ public final class EquipmentLayerRenderer {
         }
 
         if (itemStack.hasFoil()) {
+            if (layerType == LayerType.HUMANOID_BABY && modernBabyModel != null && !layers.isEmpty() && modernBabyTexture(layers.get(0)) != null) model = modernBabyModel;
             submitNodeCollector.submitModel(model, state, poseStack, RenderType.armorEntityGlint(), lightCoords,
                 OverlayTexture.NO_OVERLAY, -1, null, outlineColor, null);
         }
+    }
+
+    private static final Map<ResourceLocation, Optional<ResourceLocation>> MODERN_BABY_TEXTURES = new ConcurrentHashMap<>();
+
+    /** Forgets the texture lookups (called on resource reload). */
+    public static void clearCaches() {
+        MODERN_BABY_TEXTURES.clear();
+    }
+
+    /**
+     * The 26.1 baby armor texture of a 1.21.1 armor layer, {@code <ns>:textures/entity/equipment/humanoid_baby/<asset><suffix>.png}
+     * (1.21.1's {@code turtle} asset is 26.1's {@code turtle_scute}), when a resource pack provides it.
+     */
+    @Nullable
+    private static ResourceLocation modernBabyTexture(ArmorMaterial.Layer layer) {
+        return MODERN_BABY_TEXTURES.computeIfAbsent(layer.texture(false), texture -> {
+            String file = texture.getPath().substring(texture.getPath().lastIndexOf('/') + 1);
+            int layerIndex = file.indexOf("_layer_1");
+            if (layerIndex < 0 || !file.endsWith(".png")) return Optional.empty();
+            String asset = file.substring(0, layerIndex);
+            String suffix = file.substring(layerIndex + "_layer_1".length(), file.length() - ".png".length());
+            if (asset.equals("turtle")) asset = "turtle_scute";
+            ResourceLocation baby = ResourceLocation.fromNamespaceAndPath(texture.getNamespace(), "textures/entity/equipment/humanoid_baby/" + asset + suffix + ".png");
+            return Minecraft.getInstance().getResourceManager().getResource(baby).map(resource -> baby);
+        }).orElse(null);
     }
 }
