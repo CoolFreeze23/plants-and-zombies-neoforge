@@ -3,7 +3,7 @@ package joshxviii.plantz.renderer
 import com.mojang.blaze3d.vertex.PoseStack
 import joshxviii.plantz.entity.PlantPotMinecart
 import net.minecraft.client.model.geom.ModelLayerLocation
-import net.minecraft.client.renderer.SubmitNodeCollector
+import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector
 import net.minecraft.client.renderer.block.BlockModelRenderState
 import net.minecraft.client.renderer.entity.AbstractMinecartRenderer
 import net.minecraft.client.renderer.entity.EntityRendererProvider

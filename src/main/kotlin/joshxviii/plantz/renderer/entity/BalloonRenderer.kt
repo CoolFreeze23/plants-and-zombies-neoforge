@@ -6,13 +6,13 @@ import joshxviii.plantz.entity.Balloon
 import joshxviii.plantz.model.BalloonModel
 import joshxviii.plantz.pazResource
 import net.minecraft.client.Minecraft
-import net.minecraft.client.renderer.SubmitNodeCollector
-import net.minecraft.client.renderer.entity.EntityRenderer
+import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector
+import joshxviii.plantz.compat.client.renderer.EntityRenderer
 import net.minecraft.client.renderer.entity.EntityRendererProvider
-import net.minecraft.client.renderer.entity.state.EntityRenderState
-import net.minecraft.client.renderer.state.level.CameraRenderState
+import joshxviii.plantz.compat.client.state.EntityRenderState
+import joshxviii.plantz.compat.client.CameraRenderState
 import net.minecraft.client.renderer.texture.OverlayTexture
-import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.util.Mth
 import net.minecraft.world.item.DyeColor
 
@@ -86,7 +86,7 @@ class BalloonRenderer(
         entity.clientTiltZ = Mth.lerp(0.9f, targetTiltZ, entity.clientTiltZ)
     }
 
-    fun getTextureLocation(state: BalloonRenderState): Identifier {
+    fun getTextureLocation(state: BalloonRenderState): ResourceLocation {
         return pazResource("textures/entity/balloon/${state.color.name.lowercase()}.png")
     }
 }

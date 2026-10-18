@@ -8,14 +8,14 @@ import joshxviii.plantz.block.GardenGnomePose
 import joshxviii.plantz.block.entity.GardenGnomeBlockEntity
 import joshxviii.plantz.model.GnomeModel
 import joshxviii.plantz.renderer.entity.GnomeRenderState
-import net.minecraft.client.renderer.SubmitNodeCollector
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
-import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState
-import net.minecraft.client.renderer.feature.ModelFeatureRenderer
-import net.minecraft.client.renderer.state.level.CameraRenderState
+import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector
+import joshxviii.plantz.compat.client.renderer.blockentity.BlockEntityRenderer
+import joshxviii.plantz.compat.client.state.BlockEntityRenderState
+import joshxviii.plantz.compat.client.renderer.ModelFeatureRenderer
+import joshxviii.plantz.compat.client.CameraRenderState
 import net.minecraft.client.renderer.texture.OverlayTexture
 import net.minecraft.core.Direction
-import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.phys.Vec3
 
 class GardenGnomeBlockRenderer(
@@ -25,7 +25,7 @@ class GardenGnomeBlockRenderer(
         return GardenGnomeBlockRenderState()
     }
 
-    fun getTextureLocation(state: GardenGnomeBlockRenderState): Identifier {
+    fun getTextureLocation(state: GardenGnomeBlockRenderState): ResourceLocation {
         val texture = state.getTextureLocation(GardenGnomeBlockRenderState.TEXTURE_PATH + "/" + state.color.serializedName)
         return texture
     }

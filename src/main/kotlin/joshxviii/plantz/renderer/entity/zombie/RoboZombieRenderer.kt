@@ -5,10 +5,10 @@ import joshxviii.plantz.entity.zombie.PazZombie
 import joshxviii.plantz.entity.zombie.RoboZombie
 import joshxviii.plantz.model.zombies.PazZombieModel
 import joshxviii.plantz.model.zombies.RoboZombieModel
-import net.minecraft.client.renderer.SubmitNodeCollector
+import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector
 import net.minecraft.client.renderer.entity.EntityRendererProvider
-import net.minecraft.client.renderer.state.level.CameraRenderState
-import net.minecraft.world.entity.AnimationState
+import joshxviii.plantz.compat.client.CameraRenderState
+import joshxviii.plantz.compat.AnimationState
 
 class RoboZombieRenderer(
     context: EntityRendererProvider.Context,

@@ -13,16 +13,16 @@ import net.minecraft.client.model.HumanoidModel
 import net.minecraft.client.renderer.item.ItemStackRenderState
 import net.minecraft.client.renderer.state.gui.GuiElementRenderState
 import net.minecraft.client.renderer.texture.OverlayTexture
-import net.minecraft.resources.Identifier
-import net.minecraft.util.LightCoordsUtil
-import net.minecraft.world.entity.monster.zombie.Zombie
+import net.minecraft.resources.ResourceLocation
+import joshxviii.plantz.compat.LightCoordsUtil
+import net.minecraft.world.entity.monster.Zombie
 import net.minecraft.world.item.ItemDisplayContext
 import net.minecraft.world.item.ItemStack
 
 class HeadHudMarker(
     val zombie: Zombie,
     val model: HumanoidModel<*>,
-    val texture: Identifier,
+    val texture: ResourceLocation,
     val itemStack: ItemStack,
     val cx: Double,
     val cy: Double,

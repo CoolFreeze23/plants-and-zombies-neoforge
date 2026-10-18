@@ -2,7 +2,7 @@ package joshxviii.plantz.model.zombies;
 
 import joshxviii.plantz.animation.zombies.PirateCaptainAnimation;
 import joshxviii.plantz.renderer.entity.zombie.PazZombieRenderState;
-import net.minecraft.client.animation.KeyframeAnimation;
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 import net.minecraft.client.model.AnimationUtils;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
@@ -18,7 +18,7 @@ public class PirateCaptainModel<S extends PazZombieRenderState> extends PazZombi
 
     public PirateCaptainModel(final ModelPart root) {
         super(null, root);
-        this.walkAnimation = PirateCaptainAnimation.walk.bake(root);
+        this.walkAnimation = KeyframeAnimation.bake(PirateCaptainAnimation.walk, root);
     }
 
     @Override

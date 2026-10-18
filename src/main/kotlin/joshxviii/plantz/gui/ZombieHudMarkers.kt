@@ -25,15 +25,15 @@ import net.minecraft.client.renderer.item.ItemStackRenderState
 import net.minecraft.client.renderer.state.gui.GuiElementRenderState
 import net.minecraft.client.renderer.state.gui.pip.GuiEntityRenderState
 import net.minecraft.client.renderer.texture.OverlayTexture
-import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.packs.resources.ResourceManager
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener
-import net.minecraft.util.LightCoordsUtil
+import joshxviii.plantz.compat.LightCoordsUtil
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.entity.monster.zombie.Zombie
+import net.minecraft.world.entity.monster.Zombie
 import net.minecraft.world.item.ItemDisplayContext
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.ClipContext
@@ -133,7 +133,7 @@ object ZombieHudMarkers {
         graphics: GuiGraphicsExtractor,
         zombie: Zombie,
         model: HumanoidModel<*>,
-        texture: Identifier,
+        texture: ResourceLocation,
         itemStack: ItemStack,
         cx: Double,
         cy: Double,

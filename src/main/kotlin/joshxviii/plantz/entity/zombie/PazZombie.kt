@@ -14,7 +14,7 @@ import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.EntityDataSerializers
 import net.minecraft.network.syncher.SynchedEntityData
-import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
@@ -38,12 +38,12 @@ import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal
 import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation
 import net.minecraft.world.entity.ai.navigation.PathNavigation
-import net.minecraft.world.entity.animal.golem.IronGolem
-import net.minecraft.world.entity.animal.turtle.Turtle
+import net.minecraft.world.entity.animal.IronGolem
+import net.minecraft.world.entity.animal.Turtle
 import net.minecraft.world.entity.item.ItemEntity
-import net.minecraft.world.entity.monster.zombie.Zombie
-import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin
-import net.minecraft.world.entity.npc.villager.AbstractVillager
+import net.minecraft.world.entity.monster.Zombie
+import net.minecraft.world.entity.monster.ZombifiedPiglin
+import net.minecraft.world.entity.npc.AbstractVillager
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.item.ItemStack
@@ -51,8 +51,8 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.LevelReader
 import net.minecraft.world.level.ServerLevelAccessor
 import net.minecraft.world.level.material.Fluids
-import net.minecraft.world.level.storage.ValueInput
-import net.minecraft.world.level.storage.ValueOutput
+import joshxviii.plantz.compat.ValueInput
+import joshxviii.plantz.compat.ValueOutput
 import net.minecraft.world.phys.Vec3
 import java.util.*
 import kotlin.jvm.optionals.getOrElse
@@ -70,7 +70,7 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
         fun checkPazZombieSpawnRules(
             type: EntityType<out Mob>,
             level: ServerLevelAccessor,
-            spawnReason: EntitySpawnReason,
+            spawnReason: MobSpawnType,
             pos: BlockPos,
             random: RandomSource
         ): Boolean {
@@ -81,14 +81,14 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
             val inWater = level.getFluidState(pos).`is`(FluidTags.WATER)
 
             // light / day requirements
-            val canSpawn = (inWater && isRaining) || EntitySpawnReason.ignoresLightRequirements(spawnReason) || biome.`is`(PazTags.Biomes.DAY_SPAWNS) || isDarkEnoughToSpawn(level, pos, random)
+            val canSpawn = (inWater && isRaining) || MobSpawnType.ignoresLightRequirements(spawnReason) || biome.`is`(PazTags.Biomes.DAY_SPAWNS) || isDarkEnoughToSpawn(level, pos, random)
             if (!canSpawn) return false
 
             // water spawning
             if (inWater) {
                 val rainBonus = if (isRaining) 2.75f else 1.25f
                 val spawnChance = if (biome.`is`(PazTags.Biomes.WATER_SPAWNS)) 0.085f else 0.015f
-                return EntitySpawnReason.isSpawner(spawnReason) ||
+                return MobSpawnType.isSpawner(spawnReason) ||
                         (random.nextFloat() < (spawnChance * rainBonus) && pos.y > level.seaLevel - 3)
             }
 
@@ -112,7 +112,7 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
                     level,
                     null,
                     spawnPos,
-                    EntitySpawnReason.REINFORCEMENT,
+                    MobSpawnType.REINFORCEMENT,
                     true,
                     false
                 ) ?: return
@@ -150,7 +150,7 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
         }
 
         fun isBornLeader(zombie: Zombie): Boolean {
-            return Objects.requireNonNull<AttributeInstance>(zombie.getAttribute(Attributes.MAX_HEALTH)).hasModifier(Identifier.withDefaultNamespace(LEADER_MODIFIER_ID))
+            return Objects.requireNonNull<AttributeInstance>(zombie.getAttribute(Attributes.MAX_HEALTH)).hasModifier(ResourceLocation.withDefaultNamespace(LEADER_MODIFIER_ID))
         }
 
         // for group spawning and gravestone spawning
@@ -403,7 +403,7 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
     fun spawnBalloons(count: Int, color: List<DyeColor>) {
         val level = level() as? ServerLevel ?: return
         for (i in 0 until count) {
-            val balloon = PazEntities.BALLOON.create(level, EntitySpawnReason.TRIGGERED) ?: return
+            val balloon = PazEntities.BALLOON.create(level, MobSpawnType.TRIGGERED) ?: return
             balloon.dyeColor = color.random()
             val randomX = (random.nextDouble() - 0.5) * 2 + x
             val randomZ = (random.nextDouble() - 0.5) * 2 + z
@@ -505,7 +505,7 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
     override fun finalizeSpawn(
         level: ServerLevelAccessor,
         difficulty: DifficultyInstance,
-        spawnReason: EntitySpawnReason,
+        spawnReason: MobSpawnType,
         groupData: SpawnGroupData?
     ): SpawnGroupData? {
         val newData = PazZombieGroupData(
@@ -520,11 +520,11 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
 
         val data = super.finalizeSpawn(level, difficulty, spawnReason, newData)
 
-        if (spawnReason == EntitySpawnReason.REINFORCEMENT || spawnReason == EntitySpawnReason.EVENT) state = ZombieState.EMERGING
+        if (spawnReason == MobSpawnType.REINFORCEMENT || spawnReason == MobSpawnType.EVENT) state = ZombieState.EMERGING
 
         if (canEquipDuckyInWater() && level.getBlockState(blockPosition()).fluidState.type == Fluids.WATER) {
             setItemSlot(EquipmentSlot.LEGS, PazItems.DUCKY_TUBE.defaultInstance)
-            if (spawnReason != EntitySpawnReason.NATURAL) setDropChance(EquipmentSlot.LEGS, 0.0f)
+            if (spawnReason != MobSpawnType.NATURAL) setDropChance(EquipmentSlot.LEGS, 0.0f)
             else setDropChance(EquipmentSlot.LEGS, 0.15f)
         }
         

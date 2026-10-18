@@ -8,24 +8,24 @@ import joshxviii.plantz.entity.gnome.Gnome
 import joshxviii.plantz.entity.gnome.GnomeVariant
 import joshxviii.plantz.model.GnomeArmorModel
 import joshxviii.plantz.model.GnomeModel
-import net.minecraft.client.model.EntityModel
+import joshxviii.plantz.compat.client.model.EntityModel
 import net.minecraft.client.model.HumanoidModel.ArmPose
-import net.minecraft.client.renderer.SubmitNodeCollector
+import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector
 import net.minecraft.client.renderer.entity.EntityRendererProvider
-import net.minecraft.client.renderer.entity.MobRenderer
-import net.minecraft.client.renderer.entity.RenderLayerParent
+import joshxviii.plantz.compat.client.renderer.MobRenderer
+import joshxviii.plantz.compat.client.renderer.layers.RenderLayerParent
 import net.minecraft.client.renderer.entity.layers.CustomHeadLayer
 import net.minecraft.client.renderer.entity.layers.EquipmentLayerRenderer
 import net.minecraft.client.renderer.entity.layers.ItemInHandLayer
-import net.minecraft.client.renderer.entity.layers.RenderLayer
-import net.minecraft.client.renderer.entity.state.ArmedEntityRenderState
-import net.minecraft.client.renderer.entity.state.EntityRenderState
-import net.minecraft.client.renderer.state.level.CameraRenderState
+import joshxviii.plantz.compat.client.renderer.layers.RenderLayer
+import joshxviii.plantz.compat.client.state.ArmedEntityRenderState
+import joshxviii.plantz.compat.client.state.EntityRenderState
+import joshxviii.plantz.compat.client.CameraRenderState
 import net.minecraft.client.resources.model.EquipmentClientInfo.LayerType
 import net.minecraft.core.component.DataComponents
-import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.tags.ItemTags
-import net.minecraft.world.entity.AnimationState
+import joshxviii.plantz.compat.AnimationState
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.HumanoidArm
 import net.minecraft.world.entity.LivingEntity
@@ -62,7 +62,7 @@ class GnomeRenderer(
         super.submit(state, poseStack, submitNodeCollector, camera)
     }
 
-    override fun getTextureLocation(state: GnomeRenderState): Identifier = state.variant.getTexture()
+    override fun getTextureLocation(state: GnomeRenderState): ResourceLocation = state.variant.getTexture()
 
     override fun createRenderState(): GnomeRenderState {
         return GnomeRenderState()

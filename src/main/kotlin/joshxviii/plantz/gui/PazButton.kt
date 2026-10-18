@@ -6,7 +6,7 @@ import net.minecraft.client.gui.components.Button
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceLocation
 
 open class PazButton(
     var buttonX: Int,
@@ -14,9 +14,9 @@ open class PazButton(
     val buttonWidth: Int,
     val buttonHeight: Int,
     val clickAction: OnPress,
-    val texture: Identifier,
-    val hoverTexture: Identifier = texture,
-    val disabledTexture: Identifier = texture,
+    val texture: ResourceLocation,
+    val hoverTexture: ResourceLocation = texture,
+    val disabledTexture: ResourceLocation = texture,
     val enabledRequirement: ((button: PazButton) -> Boolean) = { true },
     val clickRequirement: ((button: PazButton) -> Boolean) = enabledRequirement,
     val text: Component = Component.empty(),

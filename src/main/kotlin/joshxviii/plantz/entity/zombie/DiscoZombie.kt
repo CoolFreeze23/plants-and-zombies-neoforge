@@ -93,11 +93,11 @@ class DiscoZombie(type: EntityType<out DiscoZombie>, level: Level) : PazZombie(t
     override fun finalizeSpawn(
         level: ServerLevelAccessor,
         difficulty: DifficultyInstance,
-        spawnReason: EntitySpawnReason,
+        spawnReason: MobSpawnType,
         groupData: SpawnGroupData?
     ): SpawnGroupData? {
         val data = super.finalizeSpawn(level, difficulty, spawnReason, groupData)
-        if (spawnReason != EntitySpawnReason.CONVERSION) setCanBreakDoors(true)
+        if (spawnReason != MobSpawnType.CONVERSION) setCanBreakDoors(true)
         return data
     }
 
@@ -176,10 +176,10 @@ class DiscoZombie(type: EntityType<out DiscoZombie>, level: Level) : PazZombie(t
             } while (pos.y >= Mth.floor(minY) - 1)
 
             if (success) {
-                val backup = PazEntities.BACKUP_DANCER.create(level, EntitySpawnReason.MOB_SUMMONED)?: return
+                val backup = PazEntities.BACKUP_DANCER.create(level, MobSpawnType.MOB_SUMMONED)?: return
                 // apply hypnotize-effect if present
                 backup.snapTo(BlockPos(Vec3i(x.toInt(),(pos.y+topOffset).toInt(),z.toInt())), angle * (180.0f / Math.PI.toFloat()), 0.0f)
-                backup.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), EntitySpawnReason.REINFORCEMENT, PazZombieGroupData(isRaider = summoner.isRaider()))
+                backup.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.REINFORCEMENT, PazZombieGroupData(isRaider = summoner.isRaider()))
                 val effect = summoner.activeEffects.find { it.effect.`is`(PazEffects.HYPNOTIZE.unwrapKey().get()) }
                 if (effect!=null) backup.addEffect(effect)
                 level.addFreshEntity(backup)

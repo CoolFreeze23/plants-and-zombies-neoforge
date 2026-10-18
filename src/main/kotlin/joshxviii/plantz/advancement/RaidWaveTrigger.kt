@@ -4,8 +4,8 @@ import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import joshxviii.plantz.PazCriteria
 import net.minecraft.advancements.Criterion
-import net.minecraft.advancements.criterion.*
-import net.minecraft.advancements.criterion.SimpleCriterionTrigger
+import net.minecraft.advancements.critereon.*
+import net.minecraft.advancements.critereon.SimpleCriterionTrigger
 import net.minecraft.server.level.ServerPlayer
 import java.util.*
 

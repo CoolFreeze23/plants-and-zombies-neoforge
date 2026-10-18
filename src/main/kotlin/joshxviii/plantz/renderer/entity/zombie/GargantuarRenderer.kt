@@ -5,7 +5,7 @@ import joshxviii.plantz.entity.zombie.PazZombie
 import joshxviii.plantz.model.zombies.GargantuarModel
 import joshxviii.plantz.model.zombies.PazZombieModel
 import net.minecraft.client.renderer.entity.EntityRendererProvider
-import net.minecraft.world.entity.AnimationState
+import joshxviii.plantz.compat.AnimationState
 
 class GargantuarRenderer(
     context: EntityRendererProvider.Context,

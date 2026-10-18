@@ -1,4 +1,6 @@
 package joshxviii.plantz.model.plants;// Made with Blockbench 5.0.7
+
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 // Exported for Minecraft version 1.17 or later with Mojang mappings
 // Paste this class into your mod and generate all required imports
 
@@ -31,10 +33,10 @@ public class GraveBusterModel extends PlantModel{
 	public GraveBusterModel(ModelPart root) {
 		super(root);
 
-		initAnimation = GraveBusterAnimation.init.bake(root);
-		idleAnimation = GraveBusterAnimation.idle.bake(root);
-		actionAnimation = GraveBusterAnimation.action.bake(root);
-		sleepAnimation = GraveBusterAnimation.sleep.bake(root);
+		initAnimation = KeyframeAnimation.bake(GraveBusterAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(GraveBusterAnimation.idle, root);
+		actionAnimation = KeyframeAnimation.bake(GraveBusterAnimation.action, root);
+		sleepAnimation = KeyframeAnimation.bake(GraveBusterAnimation.sleep, root);
 
 		this.body = root.getChild("body");
 		this.bodyStartY = this.body.y;

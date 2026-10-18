@@ -5,20 +5,19 @@ import com.mojang.math.Axis
 import joshxviii.plantz.entity.projectile.LaserBullet
 import joshxviii.plantz.entity.projectile.PaintBall
 import joshxviii.plantz.renderer.getProjectileTextureLocation
-import net.minecraft.client.model.EntityModel
-import net.minecraft.client.renderer.SubmitNodeCollector
-import net.minecraft.client.renderer.entity.EntityRenderer
+import joshxviii.plantz.compat.client.model.EntityModel
+import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector
+import joshxviii.plantz.compat.client.renderer.EntityRenderer
 import net.minecraft.client.renderer.entity.EntityRendererProvider
-import net.minecraft.client.renderer.entity.RenderLayerParent
-import net.minecraft.client.renderer.entity.layers.EyesLayer
-import net.minecraft.client.renderer.entity.layers.RenderLayer
-import net.minecraft.client.renderer.entity.state.EntityRenderState
-import net.minecraft.client.renderer.rendertype.RenderType
-import net.minecraft.client.renderer.rendertype.RenderTypes
-import net.minecraft.client.renderer.state.level.CameraRenderState
+import joshxviii.plantz.compat.client.renderer.layers.RenderLayerParent
+import joshxviii.plantz.compat.client.renderer.layers.EyesLayer
+import joshxviii.plantz.compat.client.renderer.layers.RenderLayer
+import joshxviii.plantz.compat.client.state.EntityRenderState
+import net.minecraft.client.renderer.RenderType
+import joshxviii.plantz.compat.client.CameraRenderState
 import net.minecraft.client.renderer.texture.OverlayTexture
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.util.ARGB
+import joshxviii.plantz.compat.ARGB
 import net.minecraft.world.entity.projectile.Projectile
 
 class ProjectileRenderer<M: EntityModel<ProjectileRenderState>>(
@@ -97,7 +96,7 @@ class EmissiveProjectileLayer<M : EntityModel<ProjectileRenderState>>(
         xRot: Float
     ) {
         val textureLocation = state.getProjectileTextureLocation(emissive = true) ?: return
-        val renderType = RenderTypes.eyes(textureLocation)
+        val renderType = RenderType.eyes(textureLocation)
         val tint = state.color?.let {ARGB.opaque(it) }?: -1
         submitNodeCollector.order(1).submitModel(
             this.parentModel,
@@ -113,7 +112,7 @@ class EmissiveProjectileLayer<M : EntityModel<ProjectileRenderState>>(
         );
     }
 
-    override fun renderType(): RenderType = RenderTypes.lines()
+    override fun renderType(): RenderType = RenderType.lines()
 }
 
 class ProjectileRenderState : EntityRenderState() {

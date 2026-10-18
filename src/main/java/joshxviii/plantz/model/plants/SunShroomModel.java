@@ -5,7 +5,7 @@ package joshxviii.plantz.model.plants;// Made with Blockbench 5.0.7
 
 import joshxviii.plantz.animation.plants.SunShroomAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
-import net.minecraft.client.animation.KeyframeAnimation;
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -23,10 +23,10 @@ public class SunShroomModel extends PlantModel {
 	public SunShroomModel(ModelPart root) {
 		super(root);
 
-		initAnimation = SunShroomAnimation.init.bake(root);
-		idleAnimation = SunShroomAnimation.idle.bake(root);
-		actionAnimation = SunShroomAnimation.action.bake(root);
-		sleepAnimation = SunShroomAnimation.sleep.bake(root);
+		initAnimation = KeyframeAnimation.bake(SunShroomAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(SunShroomAnimation.idle, root);
+		actionAnimation = KeyframeAnimation.bake(SunShroomAnimation.action, root);
+		sleepAnimation = KeyframeAnimation.bake(SunShroomAnimation.sleep, root);
 
 		this.body = root.getChild("body");
 		this.head = this.body.getChild("head");

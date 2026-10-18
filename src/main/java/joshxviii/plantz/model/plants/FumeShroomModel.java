@@ -1,5 +1,7 @@
 package joshxviii.plantz.model.plants;
 
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
+
 import joshxviii.plantz.animation.plants.FumeShroomAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -25,10 +27,10 @@ public class FumeShroomModel extends PlantModel {
 	public FumeShroomModel(ModelPart root) {
 		super(root);
 
-		initAnimation = FumeShroomAnimation.init.bake(root);
-		idleAnimation = FumeShroomAnimation.idle.bake(root);
-		actionAnimation = FumeShroomAnimation.action.bake(root);
-		sleepAnimation = FumeShroomAnimation.sleep.bake(root);
+		initAnimation = KeyframeAnimation.bake(FumeShroomAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(FumeShroomAnimation.idle, root);
+		actionAnimation = KeyframeAnimation.bake(FumeShroomAnimation.action, root);
+		sleepAnimation = KeyframeAnimation.bake(FumeShroomAnimation.sleep, root);
 
 		this.body = root.getChild("body");
 		this.head = this.body.getChild("head");

@@ -5,10 +5,10 @@ import joshxviii.plantz.entity.plant.Plant
 import joshxviii.plantz.entity.plant.WallNut
 import joshxviii.plantz.model.plants.WallNutModel
 import net.minecraft.client.Minecraft
-import net.minecraft.client.model.EntityModel
-import net.minecraft.client.renderer.SubmitNodeCollector
+import joshxviii.plantz.compat.client.model.EntityModel
+import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector
 import net.minecraft.client.renderer.entity.EntityRendererProvider
-import net.minecraft.client.renderer.state.level.CameraRenderState
+import joshxviii.plantz.compat.client.CameraRenderState
 import net.minecraft.util.Mth
 import org.joml.Quaternionf
 import kotlin.math.sqrt

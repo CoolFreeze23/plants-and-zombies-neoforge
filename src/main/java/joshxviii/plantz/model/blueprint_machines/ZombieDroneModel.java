@@ -2,8 +2,8 @@ package joshxviii.plantz.model.blueprint_machines;
 
 import joshxviii.plantz.animation.blueprint_machines.ZombieDroneAnimation;
 import joshxviii.plantz.renderer.entity.BlueprintMachineRenderState;
-import net.minecraft.client.animation.KeyframeAnimation;
-import net.minecraft.client.model.EntityModel;
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
+import joshxviii.plantz.compat.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -31,9 +31,9 @@ public class ZombieDroneModel<T extends BlueprintMachineRenderState> extends Ent
 		this.propeller = this.body.getChild("propeller");
 		this.head = this.body.getChild("head");
 		this.jaw = this.head.getChild("jaw");
-		this.initAnimation = ZombieDroneAnimation.init.bake(root);
-		this.idleAnimation = ZombieDroneAnimation.idle.bake(root);
-		this.actionAnimation = ZombieDroneAnimation.action.bake(root);
+		this.initAnimation = KeyframeAnimation.bake(ZombieDroneAnimation.init, root);
+		this.idleAnimation = KeyframeAnimation.bake(ZombieDroneAnimation.idle, root);
+		this.actionAnimation = KeyframeAnimation.bake(ZombieDroneAnimation.action, root);
 	}
 
 	public static LayerDefinition createBodyLayer() {

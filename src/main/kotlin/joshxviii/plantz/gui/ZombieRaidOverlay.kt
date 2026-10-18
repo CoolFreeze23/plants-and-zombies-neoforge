@@ -13,7 +13,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.LerpingBossEvent
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.util.Mth
 
 object ZombieRaidOverlay {
@@ -23,13 +23,13 @@ object ZombieRaidOverlay {
         return event.name.toString().contains("zombie")
     }
 
-    val BACKGROUND: Identifier = pazResource("textures/gui/raid/background.png")
-    val BACKGROUND_CREDITS: Identifier = pazResource("textures/gui/raid/background_after_credits.png")
-    val PLANT_FLAG_SPRITE: Identifier = pazResource("textures/gui/raid/plant_flag.png")
-    val ZOMBIE_HEAD_SPRITE: Identifier = pazResource("textures/gui/raid/zombie_head.png")
-    val ZOMBIE_HEAD_CREDITS_SPRITE: Identifier = pazResource("textures/gui/raid/zombie_head_after_credits.png")
-    val HEALTH_BAR_FLAG: Identifier = pazResource("textures/gui/raid/flag_health.png")
-    val HEALTH_BAR_ZOMBIES: Identifier = pazResource("textures/gui/raid/zombie_health.png")
+    val BACKGROUND: ResourceLocation = pazResource("textures/gui/raid/background.png")
+    val BACKGROUND_CREDITS: ResourceLocation = pazResource("textures/gui/raid/background_after_credits.png")
+    val PLANT_FLAG_SPRITE: ResourceLocation = pazResource("textures/gui/raid/plant_flag.png")
+    val ZOMBIE_HEAD_SPRITE: ResourceLocation = pazResource("textures/gui/raid/zombie_head.png")
+    val ZOMBIE_HEAD_CREDITS_SPRITE: ResourceLocation = pazResource("textures/gui/raid/zombie_head_after_credits.png")
+    val HEALTH_BAR_FLAG: ResourceLocation = pazResource("textures/gui/raid/flag_health.png")
+    val HEALTH_BAR_ZOMBIES: ResourceLocation = pazResource("textures/gui/raid/zombie_health.png")
 
     fun extractRenderState(
         graphics: GuiGraphicsExtractor,

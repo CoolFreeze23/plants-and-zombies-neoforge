@@ -25,18 +25,18 @@ import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal
 import net.minecraft.world.entity.ai.targeting.TargetingConditions
 import net.minecraft.world.entity.monster.Monster
-import net.minecraft.world.entity.monster.zombie.Zombie
+import net.minecraft.world.entity.monster.Zombie
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.projectile.ProjectileUtil
-import net.minecraft.world.entity.projectile.arrow.AbstractArrow
+import net.minecraft.world.entity.projectile.AbstractArrow
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.ServerLevelAccessor
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.level.storage.ValueInput
-import net.minecraft.world.level.storage.ValueOutput
+import joshxviii.plantz.compat.ValueInput
+import joshxviii.plantz.compat.ValueOutput
 import net.minecraft.world.phys.Vec3
 import kotlin.jvm.optionals.getOrDefault
 
@@ -46,11 +46,11 @@ class Gnome(type: EntityType<out Gnome>, level: Level) :Monster(type, level) {
         fun checkGnomeSpawnRules(
             type: EntityType<out Mob>,
             level: ServerLevelAccessor,
-            spawnReason: EntitySpawnReason,
+            spawnReason: MobSpawnType,
             pos: BlockPos,
             random: RandomSource
         ): Boolean {
-            return (EntitySpawnReason.ignoresLightRequirements(spawnReason))
+            return (MobSpawnType.ignoresLightRequirements(spawnReason))
                     && checkMobSpawnRules(type, level, spawnReason, pos, random)
         }
 
@@ -148,7 +148,7 @@ class Gnome(type: EntityType<out Gnome>, level: Level) :Monster(type, level) {
     override fun finalizeSpawn(
         level: ServerLevelAccessor,
         difficulty: DifficultyInstance,
-        spawnReason: EntitySpawnReason,
+        spawnReason: MobSpawnType,
         groupData: SpawnGroupData?
     ): SpawnGroupData? {
         setCanPickUpLoot(true)

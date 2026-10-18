@@ -12,7 +12,7 @@ import net.minecraft.sounds.SoundEvent
 import net.minecraft.world.DifficultyInstance
 import net.minecraft.world.damagesource.DamageType
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.EntitySpawnReason
+import net.minecraft.world.entity.MobSpawnType
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.SpawnGroupData
 import net.minecraft.world.entity.player.Player
@@ -29,7 +29,7 @@ class PotatoMine(type: EntityType<out ExplosivePlant>, level: Level) : Explosive
     override fun finalizeSpawn(
         level: ServerLevelAccessor,
         difficulty: DifficultyInstance,
-        spawnReason: EntitySpawnReason,
+        spawnReason: MobSpawnType,
         groupData: SpawnGroupData?
     ): SpawnGroupData? {
         cooldown = 190 + random.nextInt(-20, 20)

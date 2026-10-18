@@ -7,7 +7,7 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.DifficultyInstance
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.EntitySpawnReason
+import net.minecraft.world.entity.MobSpawnType
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.SpawnGroupData
 import net.minecraft.world.level.Level
@@ -28,7 +28,7 @@ class BackupDancer(type: EntityType<out BackupDancer>, level: Level) : PazZombie
         return SoundEvents.ZOMBIE_STEP
     }
 
-    override fun handleAttributes(difficultyModifier: Float, spawnReason: EntitySpawnReason) {}
+    override fun handleAttributes(difficultyModifier: Float, spawnReason: MobSpawnType) {}
 
     override fun doHurtTarget(level: ServerLevel, target: Entity): Boolean {
         val result = super.doHurtTarget(level, target)
@@ -44,7 +44,7 @@ class BackupDancer(type: EntityType<out BackupDancer>, level: Level) : PazZombie
     override fun finalizeSpawn(
         level: ServerLevelAccessor,
         difficulty: DifficultyInstance,
-        spawnReason: EntitySpawnReason,
+        spawnReason: MobSpawnType,
         groupData: SpawnGroupData?
     ): SpawnGroupData? {
         val data = super.finalizeSpawn(level, difficulty, spawnReason, groupData)

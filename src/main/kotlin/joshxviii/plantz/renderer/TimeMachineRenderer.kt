@@ -5,11 +5,11 @@ import com.mojang.math.Axis
 import joshxviii.plantz.block.TimeMachineBlock
 import joshxviii.plantz.block.TimeMachineState
 import joshxviii.plantz.block.entity.TimeMachineBlockEntity
-import net.minecraft.client.renderer.SubmitNodeCollector
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
-import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState
-import net.minecraft.client.renderer.feature.ModelFeatureRenderer
-import net.minecraft.client.renderer.state.level.CameraRenderState
+import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector
+import joshxviii.plantz.compat.client.renderer.blockentity.BlockEntityRenderer
+import joshxviii.plantz.compat.client.state.BlockEntityRenderState
+import joshxviii.plantz.compat.client.renderer.ModelFeatureRenderer
+import joshxviii.plantz.compat.client.CameraRenderState
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3

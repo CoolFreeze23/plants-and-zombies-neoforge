@@ -2,7 +2,7 @@ package joshxviii.plantz.model.plants;
 
 import joshxviii.plantz.animation.plants.TangleKelpAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
-import net.minecraft.client.animation.KeyframeAnimation;
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -34,12 +34,12 @@ public class TangleKelpModel extends PlantModel {
 	public TangleKelpModel(ModelPart root) {
 		super(root);
 
-		initAnimation = TangleKelpAnimation.init.bake(root);
-		idleAnimation = TangleKelpAnimation.idle.bake(root);
-		sleepAnimation = TangleKelpAnimation.idle_land.bake(root);
+		initAnimation = KeyframeAnimation.bake(TangleKelpAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(TangleKelpAnimation.idle, root);
+		sleepAnimation = KeyframeAnimation.bake(TangleKelpAnimation.idle_land, root);
 
-		this.initLandAnimation = TangleKelpAnimation.init_land.bake(root);
-		this.idleLandAnimation = TangleKelpAnimation.idle_land.bake(root);
+		this.initLandAnimation = KeyframeAnimation.bake(TangleKelpAnimation.init_land, root);
+		this.idleLandAnimation = KeyframeAnimation.bake(TangleKelpAnimation.idle_land, root);
 
 		this.body = root.getChild("body");
 		this.head = this.body.getChild("head");

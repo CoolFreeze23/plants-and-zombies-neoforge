@@ -14,7 +14,7 @@ import net.minecraft.core.Direction
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.EntityDataSerializers
 import net.minecraft.network.syncher.SynchedEntityData
-import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.InteractionHand
@@ -25,13 +25,13 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.ai.attributes.AttributeModifier
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.ai.control.LookControl
-import net.minecraft.world.entity.monster.zombie.Zombie
+import net.minecraft.world.entity.monster.Zombie
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.level.storage.ValueInput
-import net.minecraft.world.level.storage.ValueOutput
+import joshxviii.plantz.compat.ValueInput
+import joshxviii.plantz.compat.ValueOutput
 import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
 
@@ -43,7 +43,7 @@ open class WallNut(type: EntityType<out Plant>, level: Level) : Plant(type, leve
         }
 
         val ROLLING: EntityDataAccessor<Boolean> = SynchedEntityData.defineId<Boolean>(WallNut::class.java, EntityDataSerializers.BOOLEAN)
-        val ROLLING_ID: Identifier = pazResource("rolling")
+        val ROLLING_ID: ResourceLocation = pazResource("rolling")
         private const val ROLL_FRICTION = 0.99
     }
 

@@ -1,5 +1,7 @@
 package joshxviii.plantz.model.plants;
 
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
+
 import joshxviii.plantz.animation.plants.IcePeaAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -32,10 +34,10 @@ public class IcePeaShooterModel extends PlantModel {
 	public IcePeaShooterModel(ModelPart root) {
 		super(root);
 
-		initAnimation = IcePeaAnimation.init.bake(root);
-		idleAnimation = IcePeaAnimation.idle.bake(root);
-		actionAnimation = IcePeaAnimation.action.bake(root);
-		sleepAnimation = IcePeaAnimation.sleep.bake(root);
+		initAnimation = KeyframeAnimation.bake(IcePeaAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(IcePeaAnimation.idle, root);
+		actionAnimation = KeyframeAnimation.bake(IcePeaAnimation.action, root);
+		sleepAnimation = KeyframeAnimation.bake(IcePeaAnimation.sleep, root);
 
 		this.body = root.getChild("body");
 		this.stem = this.body.getChild("stem");

@@ -22,8 +22,8 @@ import net.minecraft.world.level.ExplosionDamageCalculator
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.ServerLevelAccessor
 import net.minecraft.world.level.SimpleExplosionDamageCalculator
-import net.minecraft.world.level.storage.ValueInput
-import net.minecraft.world.level.storage.ValueOutput
+import joshxviii.plantz.compat.ValueInput
+import joshxviii.plantz.compat.ValueOutput
 import java.util.Optional
 import kotlin.jvm.optionals.getOrDefault
 
@@ -160,12 +160,12 @@ class Imp(type: EntityType<out Imp> = PazEntities.IMP, level: Level) : PazZombie
     override fun finalizeSpawn(
         level: ServerLevelAccessor,
         difficulty: DifficultyInstance,
-        spawnReason: EntitySpawnReason,
+        spawnReason: MobSpawnType,
         groupData: SpawnGroupData?
     ): SpawnGroupData? {
         val data = super.finalizeSpawn(level, difficulty, spawnReason, groupData)
         val random = level.random
-        if (spawnReason != EntitySpawnReason.CONVERSION) {
+        if (spawnReason != MobSpawnType.CONVERSION) {
             setCanPickUpLoot(false)
             setCanBreakDoors(true)
 
@@ -183,7 +183,7 @@ class Imp(type: EntityType<out Imp> = PazEntities.IMP, level: Level) : PazZombie
                 }
             }
 
-            val spawnBalloons = (spawnReason != EntitySpawnReason.EVENT && spawnReason != EntitySpawnReason.REINFORCEMENT && random.nextFloat() < 0.08)
+            val spawnBalloons = (spawnReason != MobSpawnType.EVENT && spawnReason != MobSpawnType.REINFORCEMENT && random.nextFloat() < 0.08)
             if (spawnBalloons) Balloon.impBallons[variant]?.let{
                 spawnBalloons(1, it)
             }

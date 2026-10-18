@@ -13,8 +13,8 @@ import net.minecraft.world.entity.*
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.ServerLevelAccessor
-import net.minecraft.world.level.storage.ValueInput
-import net.minecraft.world.level.storage.ValueOutput
+import joshxviii.plantz.compat.ValueInput
+import joshxviii.plantz.compat.ValueOutput
 
 class SoldierZombie(type: EntityType<out SoldierZombie>, level: Level) : PazZombie(type, level) {
 
@@ -71,7 +71,7 @@ class SoldierZombie(type: EntityType<out SoldierZombie>, level: Level) : PazZomb
     override fun finalizeSpawn(
         level: ServerLevelAccessor,
         difficulty: DifficultyInstance,
-        spawnReason: EntitySpawnReason,
+        spawnReason: MobSpawnType,
         groupData: SpawnGroupData?
     ): SpawnGroupData? {
         val data = super.finalizeSpawn(level, difficulty, spawnReason, groupData)
@@ -79,7 +79,7 @@ class SoldierZombie(type: EntityType<out SoldierZombie>, level: Level) : PazZomb
         setItemSlot(EquipmentSlot.MAINHAND, PazItems.DYE_BLASTER.defaultInstance)
         dyeColor = DyeColor.VALUES.filter { it != DyeColor.WHITE && it != DyeColor.BLACK }.random()
         setDropChance(EquipmentSlot.MAINHAND, 0.0f)
-        if (spawnReason != EntitySpawnReason.CONVERSION) {
+        if (spawnReason != MobSpawnType.CONVERSION) {
             setCanBreakDoors(true)
         }
 

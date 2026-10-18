@@ -15,23 +15,22 @@ import joshxviii.plantz.renderer.entity.plant.PlantRenderState.Companion.TEXTURE
 import joshxviii.plantz.renderer.getEmissiveTextureLocation
 import joshxviii.plantz.renderer.getTextureLocation
 import joshxviii.plantz.renderer.isMagicName
-import net.minecraft.client.model.EntityModel
-import net.minecraft.client.renderer.SubmitNodeCollector
+import joshxviii.plantz.compat.client.model.EntityModel
+import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector
 import net.minecraft.client.renderer.entity.EntityRendererProvider
-import net.minecraft.client.renderer.entity.MobRenderer
-import net.minecraft.client.renderer.entity.RenderLayerParent
-import net.minecraft.client.renderer.entity.layers.EyesLayer
-import net.minecraft.client.renderer.entity.state.LivingEntityRenderState
-import net.minecraft.client.renderer.rendertype.RenderType
-import net.minecraft.client.renderer.rendertype.RenderTypes
-import net.minecraft.client.renderer.state.level.CameraRenderState
+import joshxviii.plantz.compat.client.renderer.MobRenderer
+import joshxviii.plantz.compat.client.renderer.layers.RenderLayerParent
+import joshxviii.plantz.compat.client.renderer.layers.EyesLayer
+import joshxviii.plantz.compat.client.state.LivingEntityRenderState
+import net.minecraft.client.renderer.RenderType
+import joshxviii.plantz.compat.client.CameraRenderState
 import net.minecraft.client.renderer.texture.OverlayTexture
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.Identifier
-import net.minecraft.util.ARGB
-import net.minecraft.util.LightCoordsUtil
+import net.minecraft.resources.ResourceLocation
+import joshxviii.plantz.compat.ARGB
+import joshxviii.plantz.compat.LightCoordsUtil
 import net.minecraft.util.Mth
-import net.minecraft.world.entity.AnimationState
+import joshxviii.plantz.compat.AnimationState
 import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
 import kotlin.math.pow
@@ -145,7 +144,7 @@ open class PlantRenderer(
         }
     }
 
-    override fun getTextureLocation(state: PlantRenderState): Identifier = state.texture()
+    override fun getTextureLocation(state: PlantRenderState): ResourceLocation = state.texture()
 }
 
 class EmissivePlantLayer<M : EntityModel<PlantRenderState>>(
@@ -161,10 +160,10 @@ class EmissivePlantLayer<M : EntityModel<PlantRenderState>>(
         xRot: Float
     ) {
         val textureLocation = state.getEmissiveTextureLocation(TEXTURE_PATH, state.getSuffixes()) ?: return
-        submitNodeCollector.order(1).submitModel(this.parentModel, state, poseStack, RenderTypes.eyes(textureLocation), lightCoords, OverlayTexture.NO_OVERLAY, state.outlineColor, null);
+        submitNodeCollector.order(1).submitModel(this.parentModel, state, poseStack, RenderType.eyes(textureLocation), lightCoords, OverlayTexture.NO_OVERLAY, state.outlineColor, null);
     }
 
-    override fun renderType(): RenderType = RenderTypes.lines()
+    override fun renderType(): RenderType = RenderType.lines()
 }
 
 class SunGlowLayer<M : EntityModel<PlantRenderState>>(
@@ -183,9 +182,9 @@ class SunGlowLayer<M : EntityModel<PlantRenderState>>(
         val color = ARGB.color(Mth.floor(alphaPercent * 0xFF), 0xFFFFFF)
 
         val glowTexture = state.getTextureLocation(TEXTURE_PATH, state.getSuffixes().apply { add("glow") })
-        submitNodeCollector.submitModel(this.parentModel, state, poseStack, RenderTypes.eyes(glowTexture), LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, color, null, -1, null);
+        submitNodeCollector.submitModel(this.parentModel, state, poseStack, RenderType.eyes(glowTexture), LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, color, null, -1, null);
     }
-    override fun renderType(): RenderType = RenderTypes.lines()
+    override fun renderType(): RenderType = RenderType.lines()
 }
 
 open class PlantRenderState : LivingEntityRenderState() {
@@ -225,5 +224,5 @@ open class PlantRenderState : LivingEntityRenderState() {
         return suffixes
     }
 
-    fun texture(): Identifier = getTextureLocation(TEXTURE_PATH, getSuffixes())
+    fun texture(): ResourceLocation = getTextureLocation(TEXTURE_PATH, getSuffixes())
 }

@@ -109,7 +109,7 @@ class PirateCaptain(type: EntityType<out PirateCaptain>, level: Level) : PazZomb
         return getFirework()
     }
 
-    override fun handleAttributes(difficultyModifier: Float, spawnReason: EntitySpawnReason) {}
+    override fun handleAttributes(difficultyModifier: Float, spawnReason: MobSpawnType) {}
 
     override fun doHurtTarget(level: ServerLevel, target: Entity): Boolean {
         val result = super.doHurtTarget(level, target)
@@ -141,7 +141,7 @@ class PirateCaptain(type: EntityType<out PirateCaptain>, level: Level) : PazZomb
     override fun finalizeSpawn(
         level: ServerLevelAccessor,
         difficulty: DifficultyInstance,
-        spawnReason: EntitySpawnReason,
+        spawnReason: MobSpawnType,
         groupData: SpawnGroupData?
     ): SpawnGroupData? {
         val data = super.finalizeSpawn(level, difficulty, spawnReason, groupData)

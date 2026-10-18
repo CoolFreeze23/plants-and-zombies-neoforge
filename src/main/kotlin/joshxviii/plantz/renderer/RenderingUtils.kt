@@ -7,13 +7,13 @@ import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.model.geom.ModelPart
-import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState
-import net.minecraft.client.renderer.entity.state.EntityRenderState
-import net.minecraft.client.renderer.entity.state.LivingEntityRenderState
+import joshxviii.plantz.compat.client.state.BlockEntityRenderState
+import joshxviii.plantz.compat.client.state.EntityRenderState
+import joshxviii.plantz.compat.client.state.LivingEntityRenderState
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.packs.resources.ResourceManager
-import net.minecraft.util.ARGB
+import joshxviii.plantz.compat.ARGB
 import net.minecraft.util.FormattedCharSequence
 import kotlin.collections.component1
 import kotlin.collections.component2
@@ -45,7 +45,7 @@ fun List<String>.permutationsDescending(): List<String> = buildList {
     }
 }
 
-fun resolveTextureLocation(base: String, rm: ResourceManager, suffixes: List<String> = listOf()): Identifier? {
+fun resolveTextureLocation(base: String, rm: ResourceManager, suffixes: List<String> = listOf()): ResourceLocation? {
     for (suffix in suffixes.permutationsDescending()) {
         if (suffix.isEmpty()) break
         val candidate = pazResource("${base}_${suffix}.png")
@@ -62,11 +62,11 @@ fun LivingEntityRenderState.isMagicName(name: String): String {
     return ""
 }
 
-fun BlockEntityRenderState.getTextureLocation(path: String): Identifier {
+fun BlockEntityRenderState.getTextureLocation(path: String): ResourceLocation {
     return pazResource("${path}.png")
 }
 
-fun EntityRenderState.getProjectileTextureLocation(emissive: Boolean = false): Identifier? {
+fun EntityRenderState.getProjectileTextureLocation(emissive: Boolean = false): ResourceLocation? {
     val entityName = entityType.toShortString().lowercase()
     val path = "${ProjectileRenderState.TEXTURE_PATH}/${entityName}${if (emissive) "_emissive" else ""}.png"
     val texture = pazResource(path)
@@ -74,7 +74,7 @@ fun EntityRenderState.getProjectileTextureLocation(emissive: Boolean = false): I
     return if (isValid) texture else null
 }
 
-fun EntityRenderState.getTextureLocation(basePath: String, suffixes: MutableList<String> = mutableListOf()): Identifier {
+fun EntityRenderState.getTextureLocation(basePath: String, suffixes: MutableList<String> = mutableListOf()): ResourceLocation {
     val entityName = entityType.toShortString().lowercase()
     val base = "${basePath}/${entityName}/${entityName}"
     val rm = Minecraft.getInstance().resourceManager
@@ -83,7 +83,7 @@ fun EntityRenderState.getTextureLocation(basePath: String, suffixes: MutableList
     return textureLocation?: pazResource("${base}.png")
 }
 
-fun EntityRenderState.getEmissiveTextureLocation(basePath: String, suffixes: MutableList<String> = mutableListOf()): Identifier? {
+fun EntityRenderState.getEmissiveTextureLocation(basePath: String, suffixes: MutableList<String> = mutableListOf()): ResourceLocation? {
     val entityName = entityType.toShortString().lowercase()
     val base = "${basePath}/${entityName}/${entityName}"
     val rm = Minecraft.getInstance().resourceManager

@@ -18,7 +18,7 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.stats.Stats
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
-import net.minecraft.world.entity.EntitySpawnReason
+import net.minecraft.world.entity.MobSpawnType
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.TamableAnimal
@@ -158,7 +158,7 @@ class SeedPacketItem(properties: Properties) : Item(properties) {
                 level,
                 EntityType.createDefaultStackConfig(level, itemStack, player),
                 spawnPos,
-                EntitySpawnReason.SPAWN_ITEM_USE,
+                MobSpawnType.SPAWN_EGG,
                 !checkWater,
                 face == Direction.UP
             )?: return InteractionResult.FAIL
@@ -246,7 +246,7 @@ class SeedPacketItem(properties: Properties) : Item(properties) {
                 level,
                 EntityType.createDefaultStackConfig(level, itemStack, null),
                 spawnPos,
-                EntitySpawnReason.DISPENSER,
+                MobSpawnType.DISPENSER,
                 true,
                 face == Direction.UP
             ) ?: return false

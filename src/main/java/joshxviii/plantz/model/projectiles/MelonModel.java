@@ -1,7 +1,7 @@
 package joshxviii.plantz.model.projectiles;
 
 import joshxviii.plantz.renderer.entity.ProjectileRenderState;
-import net.minecraft.client.model.EntityModel;
+import joshxviii.plantz.compat.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;

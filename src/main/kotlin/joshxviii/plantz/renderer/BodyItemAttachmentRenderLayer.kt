@@ -11,22 +11,21 @@ import joshxviii.plantz.model.projectiles.ButterModel
 import joshxviii.plantz.pazResource
 import joshxviii.plantz.renderer.entity.ProjectileRenderState
 import net.minecraft.client.Minecraft
-import net.minecraft.client.model.EntityModel
+import joshxviii.plantz.compat.client.model.EntityModel
 import net.minecraft.client.model.HumanoidModel
-import net.minecraft.client.renderer.SubmitNodeCollector
-import net.minecraft.client.renderer.entity.LivingEntityRenderer
-import net.minecraft.client.renderer.entity.RenderLayerParent
-import net.minecraft.client.renderer.entity.layers.RenderLayer
-import net.minecraft.client.renderer.entity.state.HumanoidRenderState
-import net.minecraft.client.renderer.entity.state.LivingEntityRenderState
+import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector
+import joshxviii.plantz.compat.client.renderer.LivingEntityRenderer
+import joshxviii.plantz.compat.client.renderer.layers.RenderLayerParent
+import joshxviii.plantz.compat.client.renderer.layers.RenderLayer
+import joshxviii.plantz.compat.client.state.HumanoidRenderState
+import joshxviii.plantz.compat.client.state.LivingEntityRenderState
 import net.minecraft.client.renderer.item.ItemStackRenderState
 import net.minecraft.client.renderer.rendertype.LayeringTransform
 import net.minecraft.client.renderer.rendertype.RenderSetup
-import net.minecraft.client.renderer.rendertype.RenderType
-import net.minecraft.client.renderer.rendertype.RenderTypes
+import net.minecraft.client.renderer.RenderType
 import net.minecraft.client.renderer.texture.OverlayTexture
-import net.minecraft.resources.Identifier
-import net.minecraft.util.ARGB
+import net.minecraft.resources.ResourceLocation
+import joshxviii.plantz.compat.ARGB
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemDisplayContext
 import net.minecraft.world.item.ItemStack
@@ -37,7 +36,7 @@ class SpecialEffectsLayer<S : LivingEntityRenderState, M : EntityModel<in S>>(pr
 ) {
     companion object {
         private val NOISE_TEXTURE = pazResource("textures/entity/paint_overlay.png")
-        fun paintOverlay(entityTexture: Identifier, amplifier: Int = 0, color: Int = 0): RenderType {
+        fun paintOverlay(entityTexture: ResourceLocation, amplifier: Int = 0, color: Int = 0): RenderType {
             return RenderType.create(
                 "paint_overlay_${amplifier}",
                 RenderSetup.builder(PAINT_OVERLAY)
@@ -90,7 +89,7 @@ class SpecialEffectsLayer<S : LivingEntityRenderState, M : EntityModel<in S>>(pr
             BUTTER_MODEL,
             butterState,
             poseStack,
-            RenderTypes.entityCutout(texture),
+            RenderType.entityCutout(texture),
             lightCoords,
             OverlayTexture.NO_OVERLAY,
             0,
@@ -137,7 +136,7 @@ class SpecialEffectsLayer<S : LivingEntityRenderState, M : EntityModel<in S>>(pr
         poseStack.popPose()
     }
 
-    private fun entityTexture(state: S): Identifier? {
+    private fun entityTexture(state: S): ResourceLocation? {
         val living = renderer as? LivingEntityRenderer<*, S, M> ?: return null
         return living.getTextureLocation(state)
     }

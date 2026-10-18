@@ -26,9 +26,9 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.ServerLevelAccessor
-import net.minecraft.world.level.gamerules.GameRules
-import net.minecraft.world.level.storage.ValueInput
-import net.minecraft.world.level.storage.ValueOutput
+import net.minecraft.world.level.GameRules
+import joshxviii.plantz.compat.ValueInput
+import joshxviii.plantz.compat.ValueOutput
 import net.minecraft.world.phys.Vec3
 
 class GraveDigger(type: EntityType<out GraveDigger>, level: Level) : PazZombie(type, level) {
@@ -120,7 +120,7 @@ class GraveDigger(type: EntityType<out GraveDigger>, level: Level) : PazZombie(t
     override fun finalizeSpawn(
         level: ServerLevelAccessor,
         difficulty: DifficultyInstance,
-        spawnReason: EntitySpawnReason,
+        spawnReason: MobSpawnType,
         groupData: SpawnGroupData?
     ): SpawnGroupData? {
         val data = super.finalizeSpawn(level, difficulty, spawnReason, groupData)

@@ -18,9 +18,9 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.sounds.SoundSource
 import net.minecraft.util.Mth
 import net.minecraft.util.RandomSource
-import net.minecraft.world.entity.EntitySpawnReason
+import net.minecraft.world.entity.MobSpawnType
 import net.minecraft.world.entity.EntityType
-import net.minecraft.world.entity.monster.zombie.Zombie
+import net.minecraft.world.entity.monster.Zombie
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.LightLayer
 import net.minecraft.world.level.block.entity.BlockEntity
@@ -82,7 +82,7 @@ class GravestoneBlockEntity(
             level,
             null,
             spawnPos,
-            EntitySpawnReason.REINFORCEMENT,
+            MobSpawnType.REINFORCEMENT,
             true,
             false
         ) ?: return

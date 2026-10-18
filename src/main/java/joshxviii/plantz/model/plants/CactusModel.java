@@ -1,4 +1,6 @@
 package joshxviii.plantz.model.plants;// Made with Blockbench 5.0.7
+
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 // Exported for Minecraft version 1.17 or later with Mojang mappings
 // Paste this class into your mod and generate all required imports
 
@@ -28,10 +30,10 @@ public class CactusModel extends PlantModel{
 	public CactusModel(ModelPart root) {
 		super(root);
 
-		initAnimation = CactusAnimation.init.bake(root);
-		idleAnimation = CactusAnimation.idle.bake(root);
-		actionAnimation = CactusAnimation.action.bake(root);
-		sleepAnimation = CactusAnimation.sleep.bake(root);
+		initAnimation = KeyframeAnimation.bake(CactusAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(CactusAnimation.idle, root);
+		actionAnimation = KeyframeAnimation.bake(CactusAnimation.action, root);
+		sleepAnimation = KeyframeAnimation.bake(CactusAnimation.sleep, root);
 
 		this.body = root.getChild("body");
 		this.trunk = this.body.getChild("trunk");

@@ -3,7 +3,7 @@ package joshxviii.plantz.model.plants;
 import joshxviii.plantz.animation.plants.ChomperAnimation;
 import joshxviii.plantz.animation.plants.PotatoMineAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
-import net.minecraft.client.animation.KeyframeAnimation;
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -25,10 +25,10 @@ public class PotatoMineModel extends PlantModel {
 	public PotatoMineModel(ModelPart root) {
 		super(root);
 
-		initAnimation = PotatoMineAnimation.init.bake(root);
-		idleAnimation = PotatoMineAnimation.idle.bake(root);
-		sleepAnimation = PotatoMineAnimation.sleep.bake(root);
-		this.hideAnimation = PotatoMineAnimation.hide.bake(root);
+		initAnimation = KeyframeAnimation.bake(PotatoMineAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(PotatoMineAnimation.idle, root);
+		sleepAnimation = KeyframeAnimation.bake(PotatoMineAnimation.sleep, root);
+		this.hideAnimation = KeyframeAnimation.bake(PotatoMineAnimation.hide, root);
 
 		this.body = root.getChild("body");
 		this.tiny_dirt = this.body.getChild("tiny_dirt");

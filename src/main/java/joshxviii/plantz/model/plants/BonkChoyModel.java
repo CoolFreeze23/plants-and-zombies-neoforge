@@ -2,7 +2,7 @@ package joshxviii.plantz.model.plants;
 
 import joshxviii.plantz.animation.plants.BonkChoyAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
-import net.minecraft.client.animation.KeyframeAnimation;
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -31,11 +31,11 @@ public class BonkChoyModel extends PlantModel {
 	public BonkChoyModel(ModelPart root) {
 		super(root);
 
-		initAnimation = BonkChoyAnimation.init.bake(root);
-		idleAnimation = BonkChoyAnimation.idle.bake(root);
-		actionAnimation = BonkChoyAnimation.action.bake(root);
-		sleepAnimation = BonkChoyAnimation.sleep.bake(root);
-		this.megaPunchAnimation = BonkChoyAnimation.uppercut.bake(root);
+		initAnimation = KeyframeAnimation.bake(BonkChoyAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(BonkChoyAnimation.idle, root);
+		actionAnimation = KeyframeAnimation.bake(BonkChoyAnimation.action, root);
+		sleepAnimation = KeyframeAnimation.bake(BonkChoyAnimation.sleep, root);
+		this.megaPunchAnimation = KeyframeAnimation.bake(BonkChoyAnimation.uppercut, root);
 
 		this.body = root.getChild("body");
 		this.head = this.body.getChild("head");

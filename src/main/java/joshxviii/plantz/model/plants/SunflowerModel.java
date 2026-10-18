@@ -1,5 +1,7 @@
 package joshxviii.plantz.model.plants;
 
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
+
 import joshxviii.plantz.animation.plants.SunflowerAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -31,10 +33,10 @@ public class SunflowerModel extends PlantModel {
 	public SunflowerModel(ModelPart root) {
 		super(root);
 
-		initAnimation = SunflowerAnimation.init.bake(root);
-		idleAnimation = SunflowerAnimation.idle.bake(root);
-		actionAnimation = SunflowerAnimation.action.bake(root);
-		sleepAnimation = SunflowerAnimation.sleep.bake(root);
+		initAnimation = KeyframeAnimation.bake(SunflowerAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(SunflowerAnimation.idle, root);
+		actionAnimation = KeyframeAnimation.bake(SunflowerAnimation.action, root);
+		sleepAnimation = KeyframeAnimation.bake(SunflowerAnimation.sleep, root);
 
 		this.body = root.getChild("body");
 		this.stem = this.body.getChild("stem");

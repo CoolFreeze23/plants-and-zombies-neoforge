@@ -1,5 +1,7 @@
 package joshxviii.plantz.model.plants;
 
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
+
 import joshxviii.plantz.animation.plants.KernelPultAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -35,10 +37,10 @@ public class KernelPultModel extends PlantModel {
 	public KernelPultModel(ModelPart root) {
 		super(root);
 
-		initAnimation = KernelPultAnimation.init.bake(root);
-		idleAnimation = KernelPultAnimation.idle.bake(root);
-		actionAnimation = KernelPultAnimation.action.bake(root);
-		sleepAnimation = KernelPultAnimation.sleep.bake(root);
+		initAnimation = KeyframeAnimation.bake(KernelPultAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(KernelPultAnimation.idle, root);
+		actionAnimation = KeyframeAnimation.bake(KernelPultAnimation.action, root);
+		sleepAnimation = KeyframeAnimation.bake(KernelPultAnimation.sleep, root);
 
 		this.body = root.getChild("body");
 		this.head = this.body.getChild("head");

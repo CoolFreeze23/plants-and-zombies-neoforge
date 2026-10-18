@@ -14,8 +14,8 @@ import net.minecraft.client.renderer.texture.SpriteContents
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.contents.objects.AtlasSprite
-import net.minecraft.resources.Identifier
-import net.minecraft.util.ARGB
+import net.minecraft.resources.ResourceLocation
+import joshxviii.plantz.compat.ARGB
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.inventory.Slot
 
@@ -26,8 +26,8 @@ class TimeMachineScreen(
 ) : AbstractContainerScreen<TimeMachineMenu>(menu, inventory, title, 176, 180) {
 
     companion object {
-        val BACKGROUND: Identifier = pazResource("textures/gui/time_machine/background.png")
-        val SUN_BATTERY_SLOT: Identifier = pazResource("textures/gui/time_machine/sun_battery_slot.png")
+        val BACKGROUND: ResourceLocation = pazResource("textures/gui/time_machine/background.png")
+        val SUN_BATTERY_SLOT: ResourceLocation = pazResource("textures/gui/time_machine/sun_battery_slot.png")
     }
 
     override fun init() {

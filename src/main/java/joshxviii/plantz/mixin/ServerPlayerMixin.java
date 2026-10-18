@@ -6,12 +6,12 @@ import net.minecraft.core.UUIDUtil;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.Portal;
 import net.minecraft.world.level.portal.TeleportTransition;
-import net.minecraft.world.level.storage.ValueInput;
+import joshxviii.plantz.compat.ValueInput;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -39,7 +39,7 @@ public abstract class ServerPlayerMixin {
             if (rootTag.isPresent()) {
                 ServerLevel serverLevel = this.level();
                 Entity entity = EntityType.loadEntityRecursive(
-                        rootTag.get(), serverLevel, EntitySpawnReason.LOAD, e -> !serverLevel.addWithUUID(e) ? null : e
+                        rootTag.get(), serverLevel, MobSpawnType.LOAD, e -> !serverLevel.addWithUUID(e) ? null : e
                 );
                 if (entity instanceof Plant plantAttachment) {
                     plantAttachment.attachToEntity((ServerPlayer) (Object) this);

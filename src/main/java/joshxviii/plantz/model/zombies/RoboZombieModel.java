@@ -3,7 +3,7 @@ package joshxviii.plantz.model.zombies;
 import joshxviii.plantz.animation.zombies.RoboZombieAnimation;
 import joshxviii.plantz.renderer.entity.zombie.PazZombieRenderState;
 import joshxviii.plantz.renderer.entity.zombie.RoboZombieRenderState;
-import net.minecraft.client.animation.KeyframeAnimation;
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -25,11 +25,11 @@ public class RoboZombieModel<S extends PazZombieRenderState> extends PazZombieMo
     public RoboZombieModel(final ModelPart root) {
         super(null, root);
         treads = root.getChild("root").getChild("treads");
-        this.bashAnimation = RoboZombieAnimation.attack.bake(root.getChild("root"));
-        this.shootAnimation = RoboZombieAnimation.missile.bake(root.getChild("root"));
-        this.walkAnimation = RoboZombieAnimation.walk.bake(root.getChild("root"));
-        this.idleAnimation = RoboZombieAnimation.idle.bake(root.getChild("root"));
-        this.tankIdleAnimation = RoboZombieAnimation.tank_idle.bake(root.getChild("root"));
+        this.bashAnimation = KeyframeAnimation.bake(RoboZombieAnimation.attack, root.getChild("root"));
+        this.shootAnimation = KeyframeAnimation.bake(RoboZombieAnimation.missile, root.getChild("root"));
+        this.walkAnimation = KeyframeAnimation.bake(RoboZombieAnimation.walk, root.getChild("root"));
+        this.idleAnimation = KeyframeAnimation.bake(RoboZombieAnimation.idle, root.getChild("root"));
+        this.tankIdleAnimation = KeyframeAnimation.bake(RoboZombieAnimation.tank_idle, root.getChild("root"));
     }
 
     public static LayerDefinition createBodyLayer() {

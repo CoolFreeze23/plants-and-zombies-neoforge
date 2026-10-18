@@ -4,7 +4,7 @@ import joshxviii.plantz.ai.ZombieState;
 import joshxviii.plantz.animation.zombies.SuperBrainzAnimation;
 import joshxviii.plantz.renderer.entity.zombie.PazZombieRenderState;
 import joshxviii.plantz.renderer.entity.zombie.SuperBrainzRenderState;
-import net.minecraft.client.animation.KeyframeAnimation;
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 import net.minecraft.client.model.AnimationUtils;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
@@ -28,11 +28,11 @@ public class SuperBrainzModel<S extends PazZombieRenderState> extends PazZombieM
     public SuperBrainzModel(final ModelPart root) {
         super(null, root);
         cape = root.getChild("root").getChild("body").getChild("cape");
-        this.walkAnimation = SuperBrainzAnimation.walk.bake(root.getChild("root"));
-        this.flyAnimation = SuperBrainzAnimation.fly.bake(root.getChild("root"));
-        this.laserAttackAnimation = SuperBrainzAnimation.action.bake(root.getChild("root"));
-        this.rightPunchAnimation = SuperBrainzAnimation.right_punch.bake(root.getChild("root"));
-        this.leftPunchAnimation = SuperBrainzAnimation.left_punch.bake(root.getChild("root"));
+        this.walkAnimation = KeyframeAnimation.bake(SuperBrainzAnimation.walk, root.getChild("root"));
+        this.flyAnimation = KeyframeAnimation.bake(SuperBrainzAnimation.fly, root.getChild("root"));
+        this.laserAttackAnimation = KeyframeAnimation.bake(SuperBrainzAnimation.action, root.getChild("root"));
+        this.rightPunchAnimation = KeyframeAnimation.bake(SuperBrainzAnimation.right_punch, root.getChild("root"));
+        this.leftPunchAnimation = KeyframeAnimation.bake(SuperBrainzAnimation.left_punch, root.getChild("root"));
     }
 
     public static LayerDefinition createBodyLayer() {

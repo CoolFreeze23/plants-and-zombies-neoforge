@@ -15,8 +15,8 @@ import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.Identifier
-import net.minecraft.util.ARGB
+import net.minecraft.resources.ResourceLocation
+import joshxviii.plantz.compat.ARGB
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.player.Inventory
 
@@ -38,11 +38,11 @@ class MailCollectionBoxScreen(
         }
 
     companion object {
-        val BACKGROUND: Identifier = pazResource("textures/gui/mail_collection_box/background.png")
-        val MAILBOX_SELECTED: Identifier = pazResource("textures/gui/mail_collection_box/title_selected.png")
-        val MAILBOX_UNSELECTED: Identifier = pazResource("textures/gui/mail_collection_box/title_unselected.png")
-        val SCROLLER: Identifier = pazResource("textures/gui/mailbox/scroller.png")
-        val SCROLLER_DISABLED: Identifier = pazResource("textures/gui/mailbox/scroller_disabled.png")
+        val BACKGROUND: ResourceLocation = pazResource("textures/gui/mail_collection_box/background.png")
+        val MAILBOX_SELECTED: ResourceLocation = pazResource("textures/gui/mail_collection_box/title_selected.png")
+        val MAILBOX_UNSELECTED: ResourceLocation = pazResource("textures/gui/mail_collection_box/title_unselected.png")
+        val SCROLLER: ResourceLocation = pazResource("textures/gui/mailbox/scroller.png")
+        val SCROLLER_DISABLED: ResourceLocation = pazResource("textures/gui/mailbox/scroller_disabled.png")
 
         const val MAX_VISIBLE_ROWS = 8
     }

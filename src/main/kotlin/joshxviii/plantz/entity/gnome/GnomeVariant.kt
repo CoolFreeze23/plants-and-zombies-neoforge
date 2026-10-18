@@ -6,7 +6,7 @@ import joshxviii.plantz.pazResource
 import net.minecraft.core.ClientAsset
 import net.minecraft.network.codec.ByteBufCodecs
 import net.minecraft.network.codec.StreamCodec
-import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.util.ByIdMap
 import net.minecraft.util.StringRepresentable
 import java.util.function.IntFunction
@@ -21,7 +21,7 @@ enum class GnomeVariant(val color: String, val id: Int) : StringRepresentable {
     YELLOW("yellow", 3);
 
     override fun getSerializedName(): String = color
-    fun getTexture(): Identifier = ClientAsset.ResourceTexture(pazResource("entity/gnome/${color}")).texturePath
+    fun getTexture(): ResourceLocation = ClientAsset.ResourceTexture(pazResource("entity/gnome/${color}")).texturePath
 
     companion object {
         fun getDefault(): GnomeVariant = BLUE

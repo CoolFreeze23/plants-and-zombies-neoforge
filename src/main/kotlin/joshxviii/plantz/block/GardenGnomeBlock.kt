@@ -9,7 +9,7 @@ import net.minecraft.sounds.SoundSource
 import net.minecraft.util.ByIdMap
 import net.minecraft.util.RandomSource
 import net.minecraft.util.StringRepresentable
-import net.minecraft.util.Util
+import net.minecraft.Util
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.Entity

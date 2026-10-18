@@ -2,7 +2,7 @@ package joshxviii.plantz.model.plants;
 
 import joshxviii.plantz.animation.plants.ScaredyShroomAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
-import net.minecraft.client.animation.KeyframeAnimation;
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -24,12 +24,12 @@ public class ScaredyShroomModel extends PlantModel {
 	public ScaredyShroomModel(ModelPart root) {
 		super(root);
 
-		initAnimation = ScaredyShroomAnimation.init.bake(root);
-		idleAnimation = ScaredyShroomAnimation.idle.bake(root);
-		actionAnimation = ScaredyShroomAnimation.action.bake(root);
-		sleepAnimation = ScaredyShroomAnimation.sleep.bake(root);
+		initAnimation = KeyframeAnimation.bake(ScaredyShroomAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(ScaredyShroomAnimation.idle, root);
+		actionAnimation = KeyframeAnimation.bake(ScaredyShroomAnimation.action, root);
+		sleepAnimation = KeyframeAnimation.bake(ScaredyShroomAnimation.sleep, root);
 
-		this.hideAnimation = ScaredyShroomAnimation.hide.bake(root);
+		this.hideAnimation = KeyframeAnimation.bake(ScaredyShroomAnimation.hide, root);
 
 		this.body = root.getChild("body");
 		this.head = this.body.getChild("head");

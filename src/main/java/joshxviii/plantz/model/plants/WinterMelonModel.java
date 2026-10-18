@@ -1,5 +1,7 @@
 package joshxviii.plantz.model.plants;
 
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
+
 import joshxviii.plantz.animation.plants.MelonPultAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -35,10 +37,10 @@ public class WinterMelonModel extends PlantModel {
 	public WinterMelonModel(ModelPart root) {
 		super(root);
 
-		initAnimation = MelonPultAnimation.init.bake(root);
-		idleAnimation = MelonPultAnimation.idle.bake(root);
-		actionAnimation = MelonPultAnimation.action.bake(root);
-		sleepAnimation = MelonPultAnimation.sleep.bake(root);
+		initAnimation = KeyframeAnimation.bake(MelonPultAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(MelonPultAnimation.idle, root);
+		actionAnimation = KeyframeAnimation.bake(MelonPultAnimation.action, root);
+		sleepAnimation = KeyframeAnimation.bake(MelonPultAnimation.sleep, root);
 
 		this.body = root.getChild("body");
 		this.head = this.body.getChild("head");

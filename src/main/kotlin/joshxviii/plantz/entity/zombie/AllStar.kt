@@ -9,7 +9,7 @@ import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.EntityDataSerializers
 import net.minecraft.network.syncher.SynchedEntityData
-import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
@@ -19,7 +19,7 @@ import net.minecraft.world.entity.*
 import net.minecraft.world.entity.ai.attributes.AttributeModifier
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.ai.goal.Goal
-import net.minecraft.world.entity.monster.zombie.Zombie
+import net.minecraft.world.entity.monster.Zombie
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.ServerLevelAccessor
 import net.minecraft.world.phys.Vec3
@@ -27,7 +27,7 @@ import net.minecraft.world.phys.Vec3
 class AllStar(type: EntityType<out AllStar>, level: Level) : PazZombie(type, level) {
     companion object {
         val CHARGE_TIME_ID: EntityDataAccessor<Int> = SynchedEntityData.defineId<Int>(AllStar::class.java, EntityDataSerializers.INT)
-        val CHARGE_BOOST_ID: Identifier = pazResource("charge_boost")
+        val CHARGE_BOOST_ID: ResourceLocation = pazResource("charge_boost")
     }
 
     init {
@@ -126,7 +126,7 @@ class AllStar(type: EntityType<out AllStar>, level: Level) : PazZombie(type, lev
     override fun finalizeSpawn(
         level: ServerLevelAccessor,
         difficulty: DifficultyInstance,
-        spawnReason: EntitySpawnReason,
+        spawnReason: MobSpawnType,
         groupData: SpawnGroupData?
     ): SpawnGroupData? {
         val data = super.finalizeSpawn(level, difficulty, spawnReason, groupData)

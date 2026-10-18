@@ -1,5 +1,7 @@
 package joshxviii.plantz.model.plants;
 
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
+
 import joshxviii.plantz.animation.plants.WallNutAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
 import joshxviii.plantz.renderer.entity.plant.WallNutRenderState;
@@ -23,10 +25,10 @@ public class WallNutModel extends PlantModel {
 	public WallNutModel(ModelPart root) {
 		super(root);
 
-		initAnimation = WallNutAnimation.init.bake(root);
-		idleAnimation = WallNutAnimation.idle.bake(root);
-		actionAnimation = WallNutAnimation.action.bake(root);
-		sleepAnimation = WallNutAnimation.sleep.bake(root);
+		initAnimation = KeyframeAnimation.bake(WallNutAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(WallNutAnimation.idle, root);
+		actionAnimation = KeyframeAnimation.bake(WallNutAnimation.action, root);
+		sleepAnimation = KeyframeAnimation.bake(WallNutAnimation.sleep, root);
 
 		this.roll = root.getChild("roll");
 		this.body = roll.getChild("body");

@@ -10,8 +10,8 @@ import net.minecraft.client.gui.components.ChatComponent
 import net.minecraft.client.gui.components.Tooltip
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.MutableComponent
-import net.minecraft.resources.Identifier
-import net.minecraft.util.ARGB
+import net.minecraft.resources.ResourceLocation
+import joshxviii.plantz.compat.ARGB
 
 /**
  * Mini address button used to populate list in collection box gui
@@ -36,9 +36,9 @@ class MiniAddressButton(
     }
 
     companion object {
-        val ADDRESS: Identifier = pazResource("textures/gui/mail_collection_box/unselected.png")
-        val ADDRESS_HIGHLIGHTED: Identifier = pazResource("textures/gui/mail_collection_box/highlighted.png")
-        val ADDRESS_SELECTED: Identifier = pazResource("textures/gui/mail_collection_box/selected.png")
+        val ADDRESS: ResourceLocation = pazResource("textures/gui/mail_collection_box/unselected.png")
+        val ADDRESS_HIGHLIGHTED: ResourceLocation = pazResource("textures/gui/mail_collection_box/highlighted.png")
+        val ADDRESS_SELECTED: ResourceLocation = pazResource("textures/gui/mail_collection_box/selected.png")
     }
 
     override fun extractContents(graphics: GuiGraphicsExtractor, mx: Int, my: Int, a: Float) {

@@ -37,10 +37,10 @@ import net.minecraft.world.Difficulty
 import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.world.effect.MobEffectInstance
-import net.minecraft.world.entity.EntitySpawnReason
+import net.minecraft.world.entity.MobSpawnType
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.SpawnGroupData
-import net.minecraft.world.entity.monster.zombie.Zombie
+import net.minecraft.world.entity.monster.Zombie
 import net.minecraft.world.entity.projectile.FireworkRocketEntity
 import net.minecraft.world.entity.projectile.Projectile
 import net.minecraft.world.item.ItemStack
@@ -330,7 +330,7 @@ class ZombieRaid(
 
         for ((type, count, configure) in waveEntries) {
             for (i in 0..<count) {
-                val zombie = type.create(level, EntitySpawnReason.EVENT) ?: break
+                val zombie = type.create(level, MobSpawnType.EVENT) ?: break
                 if (!leaderSet) {
                     setLeader(wavesSpawned, zombie)
                     leaderSet = true
@@ -360,7 +360,7 @@ class ZombieRaid(
                 zombie.finalizeSpawn(
                     level,
                     level.getCurrentDifficultyAt(pos),
-                    EntitySpawnReason.EVENT,
+                    MobSpawnType.EVENT,
                     null as SpawnGroupData?
                 )
                 zombie.setOnGround(true)

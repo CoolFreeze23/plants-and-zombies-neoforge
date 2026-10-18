@@ -2,7 +2,7 @@ package joshxviii.plantz.model.plants;
 
 import joshxviii.plantz.animation.plants.SeaShroomAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
-import net.minecraft.client.animation.KeyframeAnimation;
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -32,14 +32,14 @@ public class SeaShroomModel extends PlantModel {
 	public SeaShroomModel(ModelPart root) {
 		super(root);
 
-		initAnimation = SeaShroomAnimation.init.bake(root);
-		idleAnimation = SeaShroomAnimation.idle.bake(root);
-		actionAnimation = SeaShroomAnimation.action.bake(root);
-		sleepAnimation = SeaShroomAnimation.sleep.bake(root);
+		initAnimation = KeyframeAnimation.bake(SeaShroomAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(SeaShroomAnimation.idle, root);
+		actionAnimation = KeyframeAnimation.bake(SeaShroomAnimation.action, root);
+		sleepAnimation = KeyframeAnimation.bake(SeaShroomAnimation.sleep, root);
 
-		this.initLandAnimation = SeaShroomAnimation.init_land.bake(root);
-		this.idleLandAnimation = SeaShroomAnimation.idle_land.bake(root);
-		this.sleepLandAnimation = SeaShroomAnimation.sleep_land.bake(root);
+		this.initLandAnimation = KeyframeAnimation.bake(SeaShroomAnimation.init_land, root);
+		this.idleLandAnimation = KeyframeAnimation.bake(SeaShroomAnimation.idle_land, root);
+		this.sleepLandAnimation = KeyframeAnimation.bake(SeaShroomAnimation.sleep_land, root);
 
 		this.body = root.getChild("body");
 		this.head = this.body.getChild("head");

@@ -8,7 +8,7 @@ package joshxviii.plantz.model.zombies;
 import joshxviii.plantz.animation.zombies.DiscoZombieAnimation;
 import joshxviii.plantz.renderer.RenderingUtilsKt;
 import joshxviii.plantz.renderer.entity.zombie.PazZombieRenderState;
-import net.minecraft.client.animation.KeyframeAnimation;
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -28,7 +28,7 @@ public class DiscoZombieModel<S extends PazZombieRenderState> extends PazZombieM
 			root
 		);
 		this.afro = RenderingUtilsKt.getChildOrNull(this.getHead(), "afro");;
-		this.actionAnimation = DiscoZombieAnimation.dance.bake(root);
+		this.actionAnimation = KeyframeAnimation.bake(DiscoZombieAnimation.dance, root);
 	}
 
 	@Override

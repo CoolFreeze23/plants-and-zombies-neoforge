@@ -45,7 +45,7 @@ import net.minecraft.world.item.Item.BASE_ATTACK_SPEED_ID
 import net.minecraft.world.item.Items.GLASS_BOTTLE
 import net.minecraft.world.item.component.ItemAttributeModifiers
 import net.minecraft.world.item.component.UseCooldown
-import net.minecraft.world.item.equipment.ArmorMaterials
+import net.minecraft.world.item.ArmorMaterials
 import net.minecraft.world.item.equipment.ArmorType
 import net.minecraft.world.item.equipment.EquipmentAssets
 import net.minecraft.world.item.equipment.Equippable
@@ -374,7 +374,7 @@ object PazItems {
                         val balloonPos = dispenserPos.relative(facing)
 
                         val balloonItem = dispensed.item as? BalloonItem ?: return super.execute(source, dispensed)
-                        val balloonEntity = PazEntities.BALLOON.create(level, EntitySpawnReason.DISPENSER)?: return dispensed
+                        val balloonEntity = PazEntities.BALLOON.create(level, MobSpawnType.DISPENSER)?: return dispensed
                         balloonEntity.dyeColor = balloonItem.color
                         balloonEntity.snapTo(balloonPos.center)
                         balloonEntity.applyImpulse(facing.unitVec3, pow = 0.15f, uncertainty = 20.0f)

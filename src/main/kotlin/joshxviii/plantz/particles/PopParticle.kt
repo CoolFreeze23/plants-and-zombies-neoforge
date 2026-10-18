@@ -6,7 +6,7 @@ import net.minecraft.client.particle.ParticleProvider
 import net.minecraft.client.particle.SingleQuadParticle
 import net.minecraft.client.particle.SpriteSet
 import net.minecraft.core.particles.SimpleParticleType
-import net.minecraft.util.LightCoordsUtil
+import joshxviii.plantz.compat.LightCoordsUtil
 import net.minecraft.util.RandomSource
 
 class PopParticle private constructor(

@@ -18,7 +18,7 @@ import joshxviii.plantz.renderer.entity.plant.PlantRenderer
 import joshxviii.plantz.renderer.entity.plant.WallNutRenderer
 import joshxviii.plantz.renderer.entity.zombie.*
 import net.fabricmc.fabric.api.client.rendering.v1.ModelLayerRegistry
-import net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey
+import joshxviii.plantz.compat.client.RenderStateDataKey
 import net.minecraft.client.model.geom.ModelLayerLocation
 import net.minecraft.client.model.geom.ModelLayers
 import net.minecraft.client.model.geom.builders.LayerDefinition
@@ -28,7 +28,7 @@ import net.minecraft.client.renderer.entity.ArmorModelSet
 import net.minecraft.client.renderer.entity.EntityRenderers
 import net.minecraft.client.renderer.entity.ThrownItemRenderer
 import net.minecraft.client.renderer.item.ItemModels
-import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceLocation
 
 object PazModels {
 
@@ -43,12 +43,12 @@ object PazModels {
     @JvmField
     val PAINT_COLORS_KEY: RenderStateDataKey<Map<Int, Int>> = RenderStateDataKey.create { "plantz:painted" }
 
-    private val PAINT_OVERLAY_TEXTURE_1: Identifier = pazResource("textures/gui/overlay/paint1.png")
-    private val PAINT_OVERLAY_TEXTURE_2: Identifier = pazResource("textures/gui/overlay/paint2.png")
-    private val PAINT_OVERLAY_TEXTURE_3: Identifier = pazResource("textures/gui/overlay/paint3.png")
-    private val PAINT_OVERLAY_TEXTURE_4: Identifier = pazResource("textures/gui/overlay/paint4.png")
-    private val PAINT_OVERLAY_TEXTURE_5: Identifier = pazResource("textures/gui/overlay/paint5.png")
-    fun getOverlayTexture(value: Float): Identifier {
+    private val PAINT_OVERLAY_TEXTURE_1: ResourceLocation = pazResource("textures/gui/overlay/paint1.png")
+    private val PAINT_OVERLAY_TEXTURE_2: ResourceLocation = pazResource("textures/gui/overlay/paint2.png")
+    private val PAINT_OVERLAY_TEXTURE_3: ResourceLocation = pazResource("textures/gui/overlay/paint3.png")
+    private val PAINT_OVERLAY_TEXTURE_4: ResourceLocation = pazResource("textures/gui/overlay/paint4.png")
+    private val PAINT_OVERLAY_TEXTURE_5: ResourceLocation = pazResource("textures/gui/overlay/paint5.png")
+    fun getOverlayTexture(value: Float): ResourceLocation {
         return when {
             value < 0.2 -> PAINT_OVERLAY_TEXTURE_1
             value < 0.4 -> PAINT_OVERLAY_TEXTURE_2

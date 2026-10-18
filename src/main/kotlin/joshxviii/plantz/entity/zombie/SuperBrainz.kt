@@ -10,7 +10,7 @@ import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.EntityDataSerializers
 import net.minecraft.network.syncher.SynchedEntityData
-import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
@@ -25,8 +25,8 @@ import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.ServerLevelAccessor
 import net.minecraft.world.level.levelgen.Heightmap
-import net.minecraft.world.level.storage.ValueInput
-import net.minecraft.world.level.storage.ValueOutput
+import joshxviii.plantz.compat.ValueInput
+import joshxviii.plantz.compat.ValueOutput
 import kotlin.jvm.optionals.getOrDefault
 
 class SuperBrainz(type: EntityType<out SuperBrainz>, level: Level) : PazZombie(type, level) {
@@ -37,7 +37,7 @@ class SuperBrainz(type: EntityType<out SuperBrainz>, level: Level) : PazZombie(t
         val BEAM_COOLDOWN_ID: EntityDataAccessor<Int> = SynchedEntityData.defineId<Int>(SuperBrainz::class.java, EntityDataSerializers.INT)
         val PUNCH_TIME_ID: EntityDataAccessor<Int> = SynchedEntityData.defineId<Int>(SuperBrainz::class.java, EntityDataSerializers.INT)
         val USE_LEFT_ID: EntityDataAccessor<Boolean> = SynchedEntityData.defineId<Boolean>(SuperBrainz::class.java, EntityDataSerializers.BOOLEAN)
-        val BEAM_MODE_SPEED_ID: Identifier = pazResource("beam_mode")
+        val BEAM_MODE_SPEED_ID: ResourceLocation = pazResource("beam_mode")
         private val BEAM_MODE_SPEED = AttributeModifier(BEAM_MODE_SPEED_ID, -0.3, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL)
 
         const val BEAM_COOLDOWN = 280
@@ -284,14 +284,14 @@ class SuperBrainz(type: EntityType<out SuperBrainz>, level: Level) : PazZombie(t
     override fun finalizeSpawn(
         level: ServerLevelAccessor,
         difficulty: DifficultyInstance,
-        spawnReason: EntitySpawnReason,
+        spawnReason: MobSpawnType,
         groupData: SpawnGroupData?
     ): SpawnGroupData? {
         val data = super.finalizeSpawn(level, difficulty, spawnReason, groupData)
 
         beamCooldown = BEAM_COOLDOWN
 
-        if (spawnReason != EntitySpawnReason.CONVERSION) {
+        if (spawnReason != MobSpawnType.CONVERSION) {
             setCanBreakDoors(true)
         }
 

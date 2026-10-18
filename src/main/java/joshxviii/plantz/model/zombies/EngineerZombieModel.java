@@ -7,7 +7,7 @@ package joshxviii.plantz.model.zombies;
 
 import joshxviii.plantz.animation.zombies.EngineerZombieAnimation;
 import joshxviii.plantz.renderer.entity.zombie.PazZombieRenderState;
-import net.minecraft.client.animation.KeyframeAnimation;
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -23,7 +23,7 @@ public class EngineerZombieModel<S extends PazZombieRenderState> extends PazZomb
 
 	public EngineerZombieModel(final ModelPart root) {
 		super(null, root);
-		this.actionAnimation = EngineerZombieAnimation.build.bake(root);
+		this.actionAnimation = KeyframeAnimation.bake(EngineerZombieAnimation.build, root);
 	}
 
 	@Override

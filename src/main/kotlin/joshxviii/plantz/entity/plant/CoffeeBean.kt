@@ -7,7 +7,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.particles.DustParticleOptions
 import net.minecraft.tags.BlockTags
 import net.minecraft.util.RandomSource
-import net.minecraft.world.entity.EntitySpawnReason
+import net.minecraft.world.entity.MobSpawnType
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.LevelAccessor
@@ -19,7 +19,7 @@ class CoffeeBean(type: EntityType<out Plant>, level: Level) : Plant(type, level)
         fun checkCoffeeBeanSpawnRules(
             type: EntityType<out Plant>,
             level: LevelAccessor,
-            spawnReason: EntitySpawnReason,
+            spawnReason: MobSpawnType,
             pos: BlockPos,
             random: RandomSource
         ): Boolean {

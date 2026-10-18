@@ -2,7 +2,7 @@ package joshxviii.plantz.model.plants;
 
 import joshxviii.plantz.animation.plants.ChomperAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
-import net.minecraft.client.animation.KeyframeAnimation;
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -43,11 +43,11 @@ public class ChomperModel extends PlantModel {
 	public ChomperModel(ModelPart root) {
 		super(root);
 
-		initAnimation = ChomperAnimation.init.bake(root);
-		idleAnimation = ChomperAnimation.idle.bake(root);
-		actionAnimation = ChomperAnimation.action.bake(root);
-		sleepAnimation = ChomperAnimation.sleep.bake(root);
-		this.chewAnimation = ChomperAnimation.chew.bake(root);
+		initAnimation = KeyframeAnimation.bake(ChomperAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(ChomperAnimation.idle, root);
+		actionAnimation = KeyframeAnimation.bake(ChomperAnimation.action, root);
+		sleepAnimation = KeyframeAnimation.bake(ChomperAnimation.sleep, root);
+		this.chewAnimation = KeyframeAnimation.bake(ChomperAnimation.chew, root);
 
 		this.body = root.getChild("body");
 		this.stem = this.body.getChild("stem");

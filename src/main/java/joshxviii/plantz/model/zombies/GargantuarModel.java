@@ -3,7 +3,7 @@ package joshxviii.plantz.model.zombies;
 import joshxviii.plantz.animation.zombies.GargantuarAnimation;
 import joshxviii.plantz.renderer.entity.zombie.GargantuarRenderState;
 import joshxviii.plantz.renderer.entity.zombie.PazZombieRenderState;
-import net.minecraft.client.animation.KeyframeAnimation;
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -24,10 +24,10 @@ public class GargantuarModel<S extends PazZombieRenderState> extends PazZombieMo
 			GargantuarAnimation.init,
 			root
 		);
-		this.walkAnimation = GargantuarAnimation.walk.bake(root);
-		this.punchAnimation = GargantuarAnimation.action.bake(root);
-		this.throwAnimation = GargantuarAnimation.toss.bake(root);
-		this.smashAnimation = GargantuarAnimation.attack.bake(root);
+		this.walkAnimation = KeyframeAnimation.bake(GargantuarAnimation.walk, root);
+		this.punchAnimation = KeyframeAnimation.bake(GargantuarAnimation.action, root);
+		this.throwAnimation = KeyframeAnimation.bake(GargantuarAnimation.toss, root);
+		this.smashAnimation = KeyframeAnimation.bake(GargantuarAnimation.attack, root);
 	}
 
 	public static LayerDefinition createBodyLayer() {

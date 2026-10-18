@@ -1,5 +1,7 @@
 package joshxviii.plantz.model.plants;
 
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
+
 import joshxviii.plantz.animation.plants.CabbagePultAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -30,10 +32,10 @@ public class CabbagePultModel extends PlantModel {
 	public CabbagePultModel(ModelPart root) {
 		super(root);
 
-		initAnimation = CabbagePultAnimation.init.bake(root);
-		idleAnimation = CabbagePultAnimation.idle.bake(root);
-		actionAnimation = CabbagePultAnimation.action.bake(root);
-		sleepAnimation = CabbagePultAnimation.sleep.bake(root);
+		initAnimation = KeyframeAnimation.bake(CabbagePultAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(CabbagePultAnimation.idle, root);
+		actionAnimation = KeyframeAnimation.bake(CabbagePultAnimation.action, root);
+		sleepAnimation = KeyframeAnimation.bake(CabbagePultAnimation.sleep, root);
 
 		this.body = root.getChild("body");
 		this.head = this.body.getChild("head");

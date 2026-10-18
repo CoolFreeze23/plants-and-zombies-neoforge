@@ -13,11 +13,11 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
-import net.minecraft.world.entity.EntitySpawnReason
+import net.minecraft.world.entity.MobSpawnType
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.TamableAnimal
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.vehicle.minecart.AbstractMinecart
+import net.minecraft.world.entity.vehicle.AbstractMinecart
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
@@ -36,7 +36,7 @@ class PlantPotMinecart(type: EntityType<out AbstractMinecart>, level: Level) : A
         if (itemStack.`is`(PazItems.SEED_PACKET)) {
             val plantType = SeedPacketItem.typeFromStack(itemStack)
 
-            val entity = if (serverLevel is ServerLevel) plantType?.create(serverLevel, null, BlockPos.containing(this.position()), EntitySpawnReason.SPAWN_ITEM_USE, true, false) else null
+            val entity = if (serverLevel is ServerLevel) plantType?.create(serverLevel, null, BlockPos.containing(this.position()), MobSpawnType.SPAWN_EGG, true, false) else null
 
             // snap rotation
             if (entity is Plant) {

@@ -1,5 +1,7 @@
 package joshxviii.plantz.model.plants;
 
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
+
 import joshxviii.plantz.animation.plants.CherryBombAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -26,9 +28,9 @@ public class CherryBombModel extends PlantModel {
 	public CherryBombModel(ModelPart root) {
 		super(root);
 
-		initAnimation = CherryBombAnimation.init.bake(root);
-		idleAnimation = CherryBombAnimation.idle.bake(root);
-		sleepAnimation = CherryBombAnimation.sleep.bake(root);
+		initAnimation = KeyframeAnimation.bake(CherryBombAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(CherryBombAnimation.idle, root);
+		sleepAnimation = KeyframeAnimation.bake(CherryBombAnimation.sleep, root);
 
 		this.body = root.getChild("body");
 		this.stem = this.body.getChild("stem");

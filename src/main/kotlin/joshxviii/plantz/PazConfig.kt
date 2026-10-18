@@ -4,7 +4,7 @@ import com.google.gson.GsonBuilder
 import net.fabricmc.api.EnvType
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.entity.EntityType
 import java.nio.file.Files
 import java.nio.file.Path
@@ -211,12 +211,12 @@ object PazConfig {
         return chance
     }
 
-    fun putDefaultSunCost(entityId: Identifier, sunCost: Int) {
+    fun putDefaultSunCost(entityId: ResourceLocation, sunCost: Int) {
         server.sunCosts.putIfAbsent(entityId.toString(), sunCost.coerceAtLeast(0))
         saveConfig(serverConfigPath, server)
     }
 
-    fun putDefaultAlloyCost(entityId: Identifier, alloyCost: Int) {
+    fun putDefaultAlloyCost(entityId: ResourceLocation, alloyCost: Int) {
         server.alloyCosts.putIfAbsent(entityId.toString(), alloyCost.coerceAtLeast(0))
         saveConfig(serverConfigPath, server)
     }

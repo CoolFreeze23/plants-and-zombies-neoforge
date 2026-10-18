@@ -6,3 +6,4 @@ runs/
 .idea/
 *.iml
 .kotlin/
+*.log

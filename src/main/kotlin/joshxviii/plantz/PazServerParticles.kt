@@ -13,7 +13,7 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.RegistryFriendlyByteBuf
 import net.minecraft.network.codec.ByteBufCodecs
 import net.minecraft.network.codec.StreamCodec
-import net.minecraft.util.ARGB
+import joshxviii.plantz.compat.ARGB
 import net.minecraft.util.ExtraCodecs
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector3f

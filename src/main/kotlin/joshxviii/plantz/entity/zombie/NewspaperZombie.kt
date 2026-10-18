@@ -5,7 +5,7 @@ import joshxviii.plantz.PazSounds
 import joshxviii.plantz.PazTags
 import joshxviii.plantz.entity.plant.WallNut.Companion.ROLLING_ID
 import joshxviii.plantz.pazResource
-import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
@@ -23,7 +23,7 @@ import net.minecraft.world.level.ServerLevelAccessor
 class NewspaperZombie(type: EntityType<out NewspaperZombie>, level: Level) : PazZombie(type, level) {
 
     companion object {
-        val ANGRY_BONUS_ID: Identifier = pazResource("angry_zombie_bonus")
+        val ANGRY_BONUS_ID: ResourceLocation = pazResource("angry_zombie_bonus")
     }
 
     override fun getAmbientSound(): SoundEvent {// TODO: custom sounds
@@ -87,7 +87,7 @@ class NewspaperZombie(type: EntityType<out NewspaperZombie>, level: Level) : Paz
     override fun finalizeSpawn(
         level: ServerLevelAccessor,
         difficulty: DifficultyInstance,
-        spawnReason: EntitySpawnReason,
+        spawnReason: MobSpawnType,
         groupData: SpawnGroupData?
     ): SpawnGroupData? {
         val data = super.finalizeSpawn(level, difficulty, spawnReason, groupData)

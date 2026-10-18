@@ -1,12 +1,13 @@
 package joshxviii.plantz.model;
 
+import net.minecraft.client.renderer.RenderType;
+
 import joshxviii.plantz.renderer.FlagRenderState;
-import net.minecraft.client.model.Model;
+import joshxviii.plantz.compat.client.model.Model;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.util.Mth;
 
 import static joshxviii.plantz.UtilsKt.pazResource;

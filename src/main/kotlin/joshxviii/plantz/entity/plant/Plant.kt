@@ -20,7 +20,7 @@ import net.minecraft.network.chat.Component
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.EntityDataSerializers
 import net.minecraft.network.syncher.SynchedEntityData
-import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvent
@@ -50,7 +50,7 @@ import net.minecraft.world.entity.ai.village.poi.PoiManager
 import net.minecraft.world.entity.item.ItemEntity
 import net.minecraft.world.entity.monster.Enemy
 import net.minecraft.world.entity.monster.Shulker
-import net.minecraft.world.entity.monster.zombie.Zombie
+import net.minecraft.world.entity.monster.Zombie
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.*
@@ -58,8 +58,8 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.level.portal.TeleportTransition
 import net.minecraft.world.level.storage.TagValueOutput
-import net.minecraft.world.level.storage.ValueInput
-import net.minecraft.world.level.storage.ValueOutput
+import joshxviii.plantz.compat.ValueInput
+import joshxviii.plantz.compat.ValueOutput
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import org.slf4j.Logger
@@ -84,7 +84,7 @@ abstract class Plant(type: EntityType<out Plant>, level: Level) : TamableAnimal(
         fun checkPlantSpawnRules(
             type: EntityType<out Plant>,
             level: LevelAccessor,
-            spawnReason: EntitySpawnReason,
+            spawnReason: MobSpawnType,
             pos: BlockPos,
             random: RandomSource
         ): Boolean {
@@ -97,13 +97,13 @@ abstract class Plant(type: EntityType<out Plant>, level: Level) : TamableAnimal(
          * General Plant spawn rules. Should use this is for other plants custom spawn rules.
          * Ensure plant groups are spread out and not clumped too close together. And then roll a 60% chance.
          */
-        fun checkValidSpawn(level: LevelAccessor, pos: BlockPos, spawnReason: EntitySpawnReason, random: RandomSource): Boolean {
+        fun checkValidSpawn(level: LevelAccessor, pos: BlockPos, spawnReason: MobSpawnType, random: RandomSource): Boolean {
             val blockAtPos = level.getBlockState(pos)
             return (level.getEntitiesOfClass(Plant::class.java, AABB(pos).inflate(42.0)) { it.tickCount > 0 }.isEmpty()
-                    && blockAtPos.getCollisionShape(level, pos.above()).isEmpty) || EntitySpawnReason.isSpawner(spawnReason) && random.nextFloat() < 0.6f
+                    && blockAtPos.getCollisionShape(level, pos.above()).isEmpty) || MobSpawnType.isSpawner(spawnReason) && random.nextFloat() < 0.6f
         }
 
-        fun checkWaterSpawn(level: LevelAccessor, pos: BlockPos, spawnReason: EntitySpawnReason, random: RandomSource): Boolean {
+        fun checkWaterSpawn(level: LevelAccessor, pos: BlockPos, spawnReason: MobSpawnType, random: RandomSource): Boolean {
             val inWater = level.getFluidState(pos).`is`(FluidTags.WATER)
             val waterHeight = level.getHeight(Heightmap.Types.WORLD_SURFACE, pos.x, pos.z)
             return checkValidSpawn(level, pos.above(waterHeight - pos.y), spawnReason, random) && inWater
@@ -119,7 +119,7 @@ abstract class Plant(type: EntityType<out Plant>, level: Level) : TamableAnimal(
         val SLEEPING: EntityDataAccessor<Boolean> = SynchedEntityData.defineId<Boolean>(Plant::class.java, EntityDataSerializers.BOOLEAN)
         val POWERED_UP: EntityDataAccessor<Boolean> = SynchedEntityData.defineId<Boolean>(Plant::class.java, EntityDataSerializers.BOOLEAN)
 
-        val ON_PLAYER_HEAD_EFFECTS: Identifier = pazResource("on_player_head_effects")
+        val ON_PLAYER_HEAD_EFFECTS: ResourceLocation = pazResource("on_player_head_effects")
 
         const val PLANT_DAMAGE = 1.0
 
@@ -688,11 +688,11 @@ abstract class Plant(type: EntityType<out Plant>, level: Level) : TamableAnimal(
     override fun finalizeSpawn(
         level: ServerLevelAccessor,
         difficulty: DifficultyInstance,
-        spawnReason: EntitySpawnReason,
+        spawnReason: MobSpawnType,
         groupData: SpawnGroupData?
     ): SpawnGroupData? {
         state = PlantState.INIT
-        if (spawnReason == EntitySpawnReason.NATURAL) {
+        if (spawnReason == MobSpawnType.NATURAL) {
             val yaw = Direction.getRandom(random).toYRot()
             yHeadRot = yaw
             yBodyRot = yaw

@@ -31,7 +31,7 @@ class DiggerZombie(type: EntityType<out DiggerZombie>, level: Level) : PazZombie
         fun checkMinerSpawnRules(
             type: EntityType<out Mob>,
             level: ServerLevelAccessor,
-            spawnReason: EntitySpawnReason,
+            spawnReason: MobSpawnType,
             pos: BlockPos,
             random: RandomSource
         ): Boolean {
@@ -39,7 +39,7 @@ class DiggerZombie(type: EntityType<out DiggerZombie>, level: Level) : PazZombie
             val isMineshaftSpawn = (level as ServerLevel).structureManager().getStructureWithPieceAt(pos, StructureTags.MINESHAFT).isValid
 
             return level.difficulty != Difficulty.PEACEFUL
-                    && ((EntitySpawnReason.ignoresLightRequirements(spawnReason) || isDarkEnoughToSpawn(level, pos, random))
+                    && ((MobSpawnType.ignoresLightRequirements(spawnReason) || isDarkEnoughToSpawn(level, pos, random))
                     && checkMobSpawnRules(type, level, spawnReason, pos, random)
                     && pos.y < 10) || isMineshaftSpawn
         }
@@ -91,7 +91,7 @@ class DiggerZombie(type: EntityType<out DiggerZombie>, level: Level) : PazZombie
     override fun finalizeSpawn(
         level: ServerLevelAccessor,
         difficulty: DifficultyInstance,
-        spawnReason: EntitySpawnReason,
+        spawnReason: MobSpawnType,
         groupData: SpawnGroupData?
     ): SpawnGroupData? {
         val data = super.finalizeSpawn(level, difficulty, spawnReason, groupData)

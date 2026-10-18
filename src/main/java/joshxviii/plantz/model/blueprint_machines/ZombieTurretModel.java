@@ -2,8 +2,8 @@ package joshxviii.plantz.model.blueprint_machines;
 
 import joshxviii.plantz.animation.blueprint_machines.ZombieTurretAnimation;
 import joshxviii.plantz.renderer.entity.BlueprintMachineRenderState;
-import net.minecraft.client.animation.KeyframeAnimation;
-import net.minecraft.client.model.EntityModel;
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
+import joshxviii.plantz.compat.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -31,9 +31,9 @@ public class ZombieTurretModel<T extends BlueprintMachineRenderState> extends En
 		this.head = this.neck.getChild("head");
 		this.jaw = this.head.getChild("jaw");
 		this.turrent = this.head.getChild("turrent");
-		this.initAnimation = ZombieTurretAnimation.init.bake(root);
-		this.idleAnimation = ZombieTurretAnimation.idle.bake(root);
-		this.actionAnimation = ZombieTurretAnimation.action.bake(root);
+		this.initAnimation = KeyframeAnimation.bake(ZombieTurretAnimation.init, root);
+		this.idleAnimation = KeyframeAnimation.bake(ZombieTurretAnimation.idle, root);
+		this.actionAnimation = KeyframeAnimation.bake(ZombieTurretAnimation.action, root);
 	}
 
 	public static LayerDefinition createBodyLayer() {

@@ -2,7 +2,7 @@ package joshxviii.plantz.model.zombies;
 
 import joshxviii.plantz.animation.zombies.PirateCaptainGhostAnimation;
 import joshxviii.plantz.renderer.entity.zombie.PazZombieRenderState;
-import net.minecraft.client.animation.KeyframeAnimation;
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -17,7 +17,7 @@ public class PirateCaptainGhostModel<S extends PazZombieRenderState> extends Paz
 
     public PirateCaptainGhostModel(final ModelPart root) {
         super(null, root);
-        this.idleAnimation = PirateCaptainGhostAnimation.idle.bake(root.getChild("root"));
+        this.idleAnimation = KeyframeAnimation.bake(PirateCaptainGhostAnimation.idle, root.getChild("root"));
     }
 
     public static LayerDefinition createBodyLayer() {

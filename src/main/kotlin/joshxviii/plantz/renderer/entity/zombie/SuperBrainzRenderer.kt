@@ -5,11 +5,11 @@ import joshxviii.plantz.entity.zombie.PazZombie
 import joshxviii.plantz.entity.zombie.SuperBrainz
 import joshxviii.plantz.model.zombies.PazZombieModel
 import joshxviii.plantz.model.zombies.SuperBrainzModel
-import net.minecraft.client.renderer.SubmitNodeCollector
+import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector
 import net.minecraft.client.renderer.entity.EntityRendererProvider
-import net.minecraft.client.renderer.state.level.CameraRenderState
+import joshxviii.plantz.compat.client.CameraRenderState
 import net.minecraft.util.Mth
-import net.minecraft.world.entity.AnimationState
+import joshxviii.plantz.compat.AnimationState
 
 class SuperBrainzRenderer(
     context: EntityRendererProvider.Context,

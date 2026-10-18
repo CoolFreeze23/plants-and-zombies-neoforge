@@ -8,7 +8,7 @@ import net.minecraft.client.particle.SingleQuadParticle
 import net.minecraft.client.particle.SpriteSet
 import net.minecraft.client.renderer.state.level.QuadParticleRenderState
 import net.minecraft.core.particles.SimpleParticleType
-import net.minecraft.util.LightCoordsUtil
+import joshxviii.plantz.compat.LightCoordsUtil
 import net.minecraft.util.Mth
 import net.minecraft.util.RandomSource
 import org.joml.Quaternionf

@@ -1,5 +1,7 @@
 package joshxviii.plantz.model.plants;
 
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
+
 import joshxviii.plantz.animation.plants.LightningReedAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -29,10 +31,10 @@ public class LightningReedModel extends PlantModel {
 	public LightningReedModel(ModelPart root) {
 		super(root);
 
-		initAnimation = LightningReedAnimation.init.bake(root);
-		idleAnimation = LightningReedAnimation.idle.bake(root);
-		actionAnimation = LightningReedAnimation.action.bake(root);
-		sleepAnimation = LightningReedAnimation.sleep.bake(root);
+		initAnimation = KeyframeAnimation.bake(LightningReedAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(LightningReedAnimation.idle, root);
+		actionAnimation = KeyframeAnimation.bake(LightningReedAnimation.action, root);
+		sleepAnimation = KeyframeAnimation.bake(LightningReedAnimation.sleep, root);
 
 		this.body = root.getChild("body");
 		this.stem = this.body.getChild("stem");

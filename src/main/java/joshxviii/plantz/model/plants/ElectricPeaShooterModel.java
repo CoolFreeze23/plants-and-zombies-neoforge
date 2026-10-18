@@ -1,5 +1,7 @@
 package joshxviii.plantz.model.plants;
 
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
+
 import joshxviii.plantz.animation.plants.ElectricPeaAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -33,10 +35,10 @@ public class ElectricPeaShooterModel extends PlantModel {
 	public ElectricPeaShooterModel(ModelPart root) {
 		super(root);
 
-		initAnimation = ElectricPeaAnimation.init.bake(root);
-		idleAnimation = ElectricPeaAnimation.idle.bake(root);
-		actionAnimation = ElectricPeaAnimation.action.bake(root);
-		sleepAnimation = ElectricPeaAnimation.sleep.bake(root);
+		initAnimation = KeyframeAnimation.bake(ElectricPeaAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(ElectricPeaAnimation.idle, root);
+		actionAnimation = KeyframeAnimation.bake(ElectricPeaAnimation.action, root);
+		sleepAnimation = KeyframeAnimation.bake(ElectricPeaAnimation.sleep, root);
 
 		this.body = root.getChild("body");
 		this.stem = this.body.getChild("stem");

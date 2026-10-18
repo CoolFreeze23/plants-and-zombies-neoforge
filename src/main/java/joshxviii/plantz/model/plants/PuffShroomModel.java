@@ -1,5 +1,7 @@
 package joshxviii.plantz.model.plants;
 
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
+
 import joshxviii.plantz.animation.plants.PuffShroomAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -21,10 +23,10 @@ public class PuffShroomModel extends PlantModel {
 	public PuffShroomModel(ModelPart root) {
 		super(root);
 
-		initAnimation = PuffShroomAnimation.init.bake(root);
-		idleAnimation = PuffShroomAnimation.idle.bake(root);
-		actionAnimation = PuffShroomAnimation.action.bake(root);
-		sleepAnimation = PuffShroomAnimation.sleep.bake(root);
+		initAnimation = KeyframeAnimation.bake(PuffShroomAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(PuffShroomAnimation.idle, root);
+		actionAnimation = KeyframeAnimation.bake(PuffShroomAnimation.action, root);
+		sleepAnimation = KeyframeAnimation.bake(PuffShroomAnimation.sleep, root);
 
 		this.body = root.getChild("body");
 		this.head = this.body.getChild("head");

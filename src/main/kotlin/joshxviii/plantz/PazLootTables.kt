@@ -2,7 +2,7 @@ package joshxviii.plantz
 
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents
 import net.minecraft.core.registries.Registries
-import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.resources.ResourceKey
 import net.minecraft.world.item.trading.VillagerTrade
 import net.minecraft.world.level.storage.loot.BuiltInLootTables
@@ -70,7 +70,7 @@ object LootInjector {
     private val injectionIds = injections.map {it.identifier()}.toSet()
     private val villageInjectionIds = villageHouseBuiltInLootTables.map { it.identifier() }.toSet()
 
-    fun attemptInjection(key: Identifier, provider: (LootPool.Builder) -> Unit): Boolean {
+    fun attemptInjection(key: ResourceLocation, provider: (LootPool.Builder) -> Unit): Boolean {
         if (!this.injectionIds.contains(key)) {
             return false
         }
@@ -80,14 +80,14 @@ object LootInjector {
         return true
     }
 
-    private fun convertToPotentialInjected(key: Identifier): Identifier {
+    private fun convertToPotentialInjected(key: ResourceLocation): ResourceLocation {
         return if (this.villageInjectionIds.contains(key))
             pazResource("${PREFIX}chests/village_house")
         else
             pazResource("${PREFIX}${key.path}")
     }
 
-    private fun injectLootPool(resulting: Identifier): LootPool.Builder {
+    private fun injectLootPool(resulting: ResourceLocation): LootPool.Builder {
         return LootPool.lootPool()
             .add(
                 NestedLootTable

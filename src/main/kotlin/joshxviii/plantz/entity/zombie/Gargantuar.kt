@@ -24,7 +24,7 @@ import net.minecraft.world.entity.ai.control.LookControl
 import net.minecraft.world.entity.ai.control.MoveControl
 import net.minecraft.world.entity.ai.goal.FloatGoal
 import net.minecraft.world.entity.ai.goal.Goal
-import net.minecraft.world.entity.monster.zombie.Zombie
+import net.minecraft.world.entity.monster.Zombie
 import net.minecraft.world.entity.vehicle.boat.AbstractBoat
 import net.minecraft.world.level.ExplosionDamageCalculator
 import net.minecraft.world.level.Level
@@ -32,8 +32,8 @@ import net.minecraft.world.level.ServerLevelAccessor
 import net.minecraft.world.level.SimpleExplosionDamageCalculator
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.gameevent.GameEvent
-import net.minecraft.world.level.storage.ValueInput
-import net.minecraft.world.level.storage.ValueOutput
+import joshxviii.plantz.compat.ValueInput
+import joshxviii.plantz.compat.ValueOutput
 import net.minecraft.world.phys.Vec3
 import java.util.*
 import kotlin.jvm.optionals.getOrDefault
@@ -292,7 +292,7 @@ class Gargantuar(type: EntityType<out Gargantuar>, level: Level) : PazZombie(typ
     override fun finalizeSpawn(
         level: ServerLevelAccessor,
         difficulty: DifficultyInstance,
-        spawnReason: EntitySpawnReason,
+        spawnReason: MobSpawnType,
         groupData: SpawnGroupData?
     ): SpawnGroupData? {
         state = ZombieState.EMERGING
@@ -337,7 +337,7 @@ class Gargantuar(type: EntityType<out Gargantuar>, level: Level) : PazZombie(typ
                 spawnDirection.y + gargantuar.y+2.5f,
                 spawnDirection.z + gargantuar.z
             )
-           PazEntities.IMP.create(level, EntitySpawnReason.MOB_SUMMONED)?.let { imp ->
+           PazEntities.IMP.create(level, MobSpawnType.MOB_SUMMONED)?.let { imp ->
                 val lookDirection = gargantuar.calculateViewVector(0f, gargantuar.yRot)
                 imp.snapTo(spawnPos, gargantuar.yRot, 0.0f)
                 imp.applyImpulse(lookDirection.x, lookDirection.y, lookDirection.z, 1.0f, 0f)

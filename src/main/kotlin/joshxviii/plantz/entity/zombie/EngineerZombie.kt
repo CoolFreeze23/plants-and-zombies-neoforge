@@ -108,7 +108,7 @@ class EngineerZombie(type: EntityType<out EngineerZombie>, level: Level) : PazZo
     override fun finalizeSpawn(
         level: ServerLevelAccessor,
         difficulty: DifficultyInstance,
-        spawnReason: EntitySpawnReason,
+        spawnReason: MobSpawnType,
         groupData: SpawnGroupData?
     ): SpawnGroupData? {
         val data = super.finalizeSpawn(level, difficulty, spawnReason, groupData)
@@ -187,9 +187,9 @@ class EngineerZombie(type: EntityType<out EngineerZombie>, level: Level) : PazZo
             } while (pos.y >= Mth.floor(minY) - 1)
 
             if (success) {
-                val bot : ZombieRobot = ZOMBIE_BOTS.random().create(level, EntitySpawnReason.MOB_SUMMONED)?: return
+                val bot : ZombieRobot = ZOMBIE_BOTS.random().create(level, MobSpawnType.MOB_SUMMONED)?: return
                 bot.snapTo(BlockPos(Vec3i(x.toInt(),(pos.y+topOffset).toInt(),z.toInt())), angle * Mth.RAD_TO_DEG, 0.0f)
-                bot.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), EntitySpawnReason.REINFORCEMENT, PazZombieGroupData(isRaider = false))
+                bot.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.REINFORCEMENT, PazZombieGroupData(isRaider = false))
                 bot.owner = engineerZombie
                 level.addFreshEntity(bot)
                 level.gameEvent(GameEvent.ENTITY_PLACE, Vec3(x, pos.y+topOffset, z), GameEvent.Context.of(engineerZombie))

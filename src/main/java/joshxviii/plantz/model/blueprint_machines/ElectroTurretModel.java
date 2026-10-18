@@ -2,8 +2,8 @@ package joshxviii.plantz.model.blueprint_machines;
 
 import joshxviii.plantz.animation.blueprint_machines.ElectroTurretAnimation;
 import joshxviii.plantz.renderer.entity.BlueprintMachineRenderState;
-import net.minecraft.client.animation.KeyframeAnimation;
-import net.minecraft.client.model.EntityModel;
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
+import joshxviii.plantz.compat.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -36,9 +36,9 @@ public class ElectroTurretModel<T extends BlueprintMachineRenderState> extends E
 		this.left_hand = this.left_arm.getChild("left_hand");
 		this.head = this.neck.getChild("head");
 		this.turrent = this.head.getChild("turrent");
-		this.initAnimation = ElectroTurretAnimation.init.bake(root);
-		this.idleAnimation = ElectroTurretAnimation.idle.bake(root);
-		this.actionAnimation = ElectroTurretAnimation.action.bake(root);
+		this.initAnimation = KeyframeAnimation.bake(ElectroTurretAnimation.init, root);
+		this.idleAnimation = KeyframeAnimation.bake(ElectroTurretAnimation.idle, root);
+		this.actionAnimation = KeyframeAnimation.bake(ElectroTurretAnimation.action, root);
 	}
 
 	public static LayerDefinition createBodyLayer() {

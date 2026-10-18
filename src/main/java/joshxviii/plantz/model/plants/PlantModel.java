@@ -3,8 +3,8 @@ package joshxviii.plantz.model.plants;
 import joshxviii.plantz.ai.PlantState;
 import joshxviii.plantz.animation.plants.PlantAnimations;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
-import net.minecraft.client.animation.KeyframeAnimation;
-import net.minecraft.client.model.EntityModel;
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
+import joshxviii.plantz.compat.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelPart;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,7 +23,7 @@ public class PlantModel extends EntityModel<@NotNull PlantRenderState> {
 
     protected PlantModel(ModelPart root) {
         super(root);
-        bounceAnimation = PlantAnimations.bounce.bake(root);
+        bounceAnimation = KeyframeAnimation.bake(PlantAnimations.bounce, root);
     }
 
     public KeyframeAnimation getProcessedInit(PlantRenderState state) {

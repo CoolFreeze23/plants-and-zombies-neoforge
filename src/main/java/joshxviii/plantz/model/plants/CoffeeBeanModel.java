@@ -1,5 +1,7 @@
 package joshxviii.plantz.model.plants;
 
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
+
 import joshxviii.plantz.animation.plants.CoffeeBeanAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -20,10 +22,10 @@ public class CoffeeBeanModel extends PlantModel {
 	public CoffeeBeanModel(ModelPart root) {
 		super(root);
 
-		initAnimation = CoffeeBeanAnimation.init.bake(root);
-		idleAnimation = CoffeeBeanAnimation.idle.bake(root);
-		actionAnimation = CoffeeBeanAnimation.action.bake(root);
-		sleepAnimation = CoffeeBeanAnimation.sleep.bake(root);
+		initAnimation = KeyframeAnimation.bake(CoffeeBeanAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(CoffeeBeanAnimation.idle, root);
+		actionAnimation = KeyframeAnimation.bake(CoffeeBeanAnimation.action, root);
+		sleepAnimation = KeyframeAnimation.bake(CoffeeBeanAnimation.sleep, root);
 
         this.body = root.getChild("body");
 		this.head = this.body.getChild("head");

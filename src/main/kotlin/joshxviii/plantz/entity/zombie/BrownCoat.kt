@@ -15,8 +15,8 @@ import net.minecraft.world.item.DyeColor
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.ServerLevelAccessor
-import net.minecraft.world.level.storage.ValueInput
-import net.minecraft.world.level.storage.ValueOutput
+import joshxviii.plantz.compat.ValueInput
+import joshxviii.plantz.compat.ValueOutput
 import kotlin.jvm.optionals.getOrDefault
 
 class BrownCoat(type: EntityType<out BrownCoat>, level: Level) : PazZombie(type, level) {
@@ -61,7 +61,7 @@ class BrownCoat(type: EntityType<out BrownCoat>, level: Level) : PazZombie(type,
     override fun finalizeSpawn(
         level: ServerLevelAccessor,
         difficulty: DifficultyInstance,
-        spawnReason: EntitySpawnReason,
+        spawnReason: MobSpawnType,
         groupData: SpawnGroupData?
     ): SpawnGroupData? {
         val data = super.finalizeSpawn(level, difficulty, spawnReason, groupData)
@@ -88,7 +88,7 @@ class BrownCoat(type: EntityType<out BrownCoat>, level: Level) : PazZombie(type,
             }
         }
 
-        val spawnBalloons = (spawnReason != EntitySpawnReason.EVENT && spawnReason != EntitySpawnReason.REINFORCEMENT && random.nextFloat() < 0.02)
+        val spawnBalloons = (spawnReason != MobSpawnType.EVENT && spawnReason != MobSpawnType.REINFORCEMENT && random.nextFloat() < 0.02)
         if (spawnBalloons) Balloon.browncoatBallons[variant]?.let{
             spawnBalloons(random.nextIntBetweenInclusive(2,3), it)
         }

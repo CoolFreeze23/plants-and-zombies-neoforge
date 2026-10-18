@@ -10,7 +10,7 @@ import net.minecraft.client.renderer.item.ItemStackRenderState
 import net.minecraft.client.resources.model.ResolvableModel
 import net.minecraft.core.component.DataComponents
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.ItemOwner
 import net.minecraft.world.item.ItemDisplayContext
@@ -27,12 +27,12 @@ class PlantIconItemModel(
             val resourceManager = Minecraft.getInstance().resourceManager
             return reg.mapNotNull { type ->
                 val overlayId = overlayIdFor(type)
-                val modelLocation = Identifier.fromNamespaceAndPath(overlayId.namespace, "models/${overlayId.path}.json")
+                val modelLocation = ResourceLocation.fromNamespaceAndPath(overlayId.namespace, "models/${overlayId.path}.json")
                 if (resourceManager.getResource(modelLocation).isPresent) type else null
             }
         }
 
-        fun overlayIdFor(type: EntityType<*>): Identifier {
+        fun overlayIdFor(type: EntityType<*>): ResourceLocation {
             val id = BuiltInRegistries.ENTITY_TYPE.getKey(type)
             return pazResource("item/plant_icon/${id.path}")
         }

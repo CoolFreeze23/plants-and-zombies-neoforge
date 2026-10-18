@@ -5,11 +5,11 @@ import joshxviii.plantz.PazEffects
 import joshxviii.plantz.block.entity.MailboxBlockEntity
 import joshxviii.plantz.effect.GardenHeroEffect
 import net.minecraft.client.Minecraft
-import net.minecraft.client.renderer.SubmitNodeCollector
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
-import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState
-import net.minecraft.client.renderer.feature.ModelFeatureRenderer
-import net.minecraft.client.renderer.state.level.CameraRenderState
+import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector
+import joshxviii.plantz.compat.client.renderer.blockentity.BlockEntityRenderer
+import joshxviii.plantz.compat.client.state.BlockEntityRenderState
+import joshxviii.plantz.compat.client.renderer.ModelFeatureRenderer
+import joshxviii.plantz.compat.client.CameraRenderState
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.core.particles.SpellParticleOption
 import net.minecraft.world.level.Level

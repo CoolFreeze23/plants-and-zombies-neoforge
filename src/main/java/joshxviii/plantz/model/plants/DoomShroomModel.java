@@ -1,5 +1,7 @@
 package joshxviii.plantz.model.plants;
 
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
+
 import joshxviii.plantz.animation.plants.DoomShroomAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -21,10 +23,10 @@ public class DoomShroomModel extends PlantModel {
 	public DoomShroomModel(ModelPart root) {
 		super(root);
 
-		initAnimation = DoomShroomAnimation.init.bake(root);
-		idleAnimation = DoomShroomAnimation.idle.bake(root);
-		actionAnimation = DoomShroomAnimation.action.bake(root);
-		sleepAnimation = DoomShroomAnimation.sleep.bake(root);
+		initAnimation = KeyframeAnimation.bake(DoomShroomAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(DoomShroomAnimation.idle, root);
+		actionAnimation = KeyframeAnimation.bake(DoomShroomAnimation.action, root);
+		sleepAnimation = KeyframeAnimation.bake(DoomShroomAnimation.sleep, root);
 
 		this.body = root.getChild("body");
 		this.head = this.body.getChild("head");

@@ -6,11 +6,11 @@ import joshxviii.plantz.entity.zombie.PirateCaptain
 import joshxviii.plantz.entity.zombie.PirateCaptainGhost
 import joshxviii.plantz.model.zombies.PazZombieModel
 import joshxviii.plantz.model.zombies.PirateCaptainModel
-import net.minecraft.client.renderer.SubmitNodeCollector
+import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector
 import net.minecraft.client.renderer.entity.EntityRendererProvider
-import net.minecraft.client.renderer.rendertype.RenderType
-import net.minecraft.client.renderer.state.level.CameraRenderState
-import net.minecraft.world.entity.AnimationState
+import net.minecraft.client.renderer.RenderType
+import joshxviii.plantz.compat.client.CameraRenderState
+import joshxviii.plantz.compat.AnimationState
 
 class PirateCaptainRenderer(
     context: EntityRendererProvider.Context,

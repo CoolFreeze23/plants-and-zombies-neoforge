@@ -1,5 +1,7 @@
 package joshxviii.plantz.model.plants;
 
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
+
 import joshxviii.plantz.animation.plants.HypnoShroomAnimation;
 import joshxviii.plantz.animation.plants.IceShroomAnimation;
 import joshxviii.plantz.entity.plant.IceShroom;
@@ -21,10 +23,10 @@ public class IceShroomModel extends PlantModel {
 	public IceShroomModel(ModelPart root) {
 		super(root);
 
-		initAnimation = IceShroomAnimation.init.bake(root);
-		idleAnimation = IceShroomAnimation.idle.bake(root);
-		actionAnimation = IceShroomAnimation.action.bake(root);
-		sleepAnimation = IceShroomAnimation.sleep.bake(root);
+		initAnimation = KeyframeAnimation.bake(IceShroomAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(IceShroomAnimation.idle, root);
+		actionAnimation = KeyframeAnimation.bake(IceShroomAnimation.action, root);
+		sleepAnimation = KeyframeAnimation.bake(IceShroomAnimation.sleep, root);
 
 		this.body = root.getChild("body");
 		this.head = this.body.getChild("head");

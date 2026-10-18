@@ -7,21 +7,20 @@ import joshxviii.plantz.entity.zombie.ZombieRobot
 import joshxviii.plantz.model.blueprint_machines.ZombieTurretModel
 import joshxviii.plantz.renderer.getEmissiveTextureLocation
 import joshxviii.plantz.renderer.getTextureLocation
-import net.minecraft.client.model.EntityModel
-import net.minecraft.client.renderer.SubmitNodeCollector
-import net.minecraft.client.renderer.entity.EntityRenderer
+import joshxviii.plantz.compat.client.model.EntityModel
+import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector
+import joshxviii.plantz.compat.client.renderer.EntityRenderer
 import net.minecraft.client.renderer.entity.EntityRendererProvider
-import net.minecraft.client.renderer.entity.LivingEntityRenderer
-import net.minecraft.client.renderer.entity.RenderLayerParent
-import net.minecraft.client.renderer.entity.layers.EyesLayer
-import net.minecraft.client.renderer.entity.state.EntityRenderState
-import net.minecraft.client.renderer.entity.state.LivingEntityRenderState
-import net.minecraft.client.renderer.rendertype.RenderType
-import net.minecraft.client.renderer.rendertype.RenderTypes
-import net.minecraft.client.renderer.state.level.CameraRenderState
+import joshxviii.plantz.compat.client.renderer.LivingEntityRenderer
+import joshxviii.plantz.compat.client.renderer.layers.RenderLayerParent
+import joshxviii.plantz.compat.client.renderer.layers.EyesLayer
+import joshxviii.plantz.compat.client.state.EntityRenderState
+import joshxviii.plantz.compat.client.state.LivingEntityRenderState
+import net.minecraft.client.renderer.RenderType
+import joshxviii.plantz.compat.client.CameraRenderState
 import net.minecraft.client.renderer.texture.OverlayTexture
-import net.minecraft.resources.Identifier
-import net.minecraft.world.entity.AnimationState
+import net.minecraft.resources.ResourceLocation
+import joshxviii.plantz.compat.AnimationState
 import net.minecraft.world.entity.LivingEntity
 
 class BlueprintMachineRenderer(
@@ -61,7 +60,7 @@ class BlueprintMachineRenderer(
         return BlueprintMachineRenderState()
     }
 
-    override fun getTextureLocation(state: BlueprintMachineRenderState): Identifier {
+    override fun getTextureLocation(state: BlueprintMachineRenderState): ResourceLocation {
         val texture = state.getTextureLocation(BlueprintMachineRenderState.TEXTURE_PATH)
         return texture
     }
@@ -80,11 +79,11 @@ class EmissiveBlueprintMachineLayer<M : EntityModel<BlueprintMachineRenderState>
         xRot: Float
     ) {
         val textureLocation = state.getEmissiveTextureLocation(BlueprintMachineRenderState.TEXTURE_PATH) ?: return
-        val renderType = RenderTypes.eyes(textureLocation)
+        val renderType = RenderType.eyes(textureLocation)
         submitNodeCollector.order(1).submitModel(this.parentModel, state, poseStack, renderType, lightCoords, OverlayTexture.NO_OVERLAY, state.outlineColor, null);
     }
 
-    override fun renderType(): RenderType = RenderTypes.lines()
+    override fun renderType(): RenderType = RenderType.lines()
 }
 
 class BlueprintMachineRenderState : LivingEntityRenderState() {

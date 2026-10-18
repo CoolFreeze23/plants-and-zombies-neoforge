@@ -2,7 +2,7 @@ package joshxviii.plantz.model.zombies;
 
 import joshxviii.plantz.animation.zombies.AllStarAnimation;
 import joshxviii.plantz.renderer.entity.zombie.PazZombieRenderState;
-import net.minecraft.client.animation.KeyframeAnimation;
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -18,7 +18,7 @@ public class AllStarModel<S extends PazZombieRenderState> extends PazZombieModel
 
     public AllStarModel(final ModelPart root) {
         super(null, root);
-        this.actionAnimation = AllStarAnimation.action.bake(root);
+        this.actionAnimation = KeyframeAnimation.bake(AllStarAnimation.action, root);
     }
 
     @Override

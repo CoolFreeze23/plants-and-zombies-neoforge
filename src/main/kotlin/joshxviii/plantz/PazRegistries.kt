@@ -5,17 +5,17 @@ import net.fabricmc.fabric.api.event.registry.DynamicRegistries
 import net.minecraft.core.Registry
 import net.minecraft.core.registries.Registries
 import net.minecraft.core.registries.Registries.ROOT_REGISTRY_NAME
-import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.resources.ResourceKey
 import net.minecraft.resources.ResourceKey.InternKey
 
 object PazRegistries {
-    val PAZ_ROOT_REGISTRY: Identifier = pazResource("root")
+    val PAZ_ROOT_REGISTRY: ResourceLocation = pazResource("root")
 
     @JvmField val SEED_MUTATION: ResourceKey<Registry<SeedMutationData>> = register("seed_mutation")
 
     fun <T : Any> register(name: String): ResourceKey<Registry<T>> {
-        return ResourceKey.createRegistryKey(Identifier.withDefaultNamespace(name))
+        return ResourceKey.createRegistryKey(ResourceLocation.withDefaultNamespace(name))
     }
 
     fun initialize() {

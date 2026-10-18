@@ -7,7 +7,7 @@ import net.minecraft.client.particle.ParticleProvider
 import net.minecraft.client.particle.SpriteSet
 import net.minecraft.client.renderer.state.level.QuadParticleRenderState
 import net.minecraft.core.particles.SimpleParticleType
-import net.minecraft.util.ARGB
+import joshxviii.plantz.compat.ARGB
 import net.minecraft.util.Mth
 import net.minecraft.util.RandomSource
 import org.joml.Quaternionf

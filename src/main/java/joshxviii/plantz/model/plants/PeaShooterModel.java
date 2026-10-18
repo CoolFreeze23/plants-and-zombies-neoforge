@@ -1,5 +1,7 @@
 package joshxviii.plantz.model.plants;
 
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
+
 import joshxviii.plantz.animation.plants.PeaShooterAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -32,10 +34,10 @@ public class PeaShooterModel extends PlantModel {
 	public PeaShooterModel(ModelPart root) {
 		super(root);
 
-		initAnimation = PeaShooterAnimation.init.bake(root);
-		idleAnimation = PeaShooterAnimation.idle.bake(root);
-		actionAnimation = PeaShooterAnimation.action.bake(root);
-		sleepAnimation = PeaShooterAnimation.sleep.bake(root);
+		initAnimation = KeyframeAnimation.bake(PeaShooterAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(PeaShooterAnimation.idle, root);
+		actionAnimation = KeyframeAnimation.bake(PeaShooterAnimation.action, root);
+		sleepAnimation = KeyframeAnimation.bake(PeaShooterAnimation.sleep, root);
 
 		this.body = root.getChild("body");
 		this.stem = this.body.getChild("stem");

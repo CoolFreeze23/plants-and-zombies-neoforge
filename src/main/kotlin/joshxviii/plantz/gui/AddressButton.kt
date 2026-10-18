@@ -8,8 +8,8 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.Tooltip
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.MutableComponent
-import net.minecraft.resources.Identifier
-import net.minecraft.util.ARGB
+import net.minecraft.resources.ResourceLocation
+import joshxviii.plantz.compat.ARGB
 
 /**
  * Address button used to populate list in mailbox gui
@@ -31,9 +31,9 @@ class AddressButton(
     }
 
     companion object {
-        val ADDRESS: Identifier = pazResource("textures/gui/mailbox/address.png")
-        val ADDRESS_HIGHLIGHTED: Identifier = pazResource("textures/gui/mailbox/address_highlighted.png")
-        val ADDRESS_SELECTED: Identifier = pazResource("textures/gui/mailbox/address_selected.png")
+        val ADDRESS: ResourceLocation = pazResource("textures/gui/mailbox/address.png")
+        val ADDRESS_HIGHLIGHTED: ResourceLocation = pazResource("textures/gui/mailbox/address_highlighted.png")
+        val ADDRESS_SELECTED: ResourceLocation = pazResource("textures/gui/mailbox/address_selected.png")
     }
 
     override fun extractContents(graphics: GuiGraphicsExtractor, mx: Int, my: Int, a: Float) {

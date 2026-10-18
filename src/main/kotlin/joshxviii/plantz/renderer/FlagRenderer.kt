@@ -1,5 +1,7 @@
 package joshxviii.plantz.renderer
 
+import net.minecraft.client.renderer.RenderType
+
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import joshxviii.plantz.PazBlocks
@@ -9,12 +11,11 @@ import joshxviii.plantz.block.entity.FlagBlockEntity
 import joshxviii.plantz.block.entity.FlagBlockEntity.Companion.MAX_HEALTH
 import joshxviii.plantz.model.FlagBlockModel
 import joshxviii.plantz.pazResource
-import net.minecraft.client.renderer.SubmitNodeCollector
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderer
-import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState
-import net.minecraft.client.renderer.feature.ModelFeatureRenderer
-import net.minecraft.client.renderer.rendertype.RenderTypes
-import net.minecraft.client.renderer.state.level.CameraRenderState
+import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector
+import joshxviii.plantz.compat.client.renderer.blockentity.BlockEntityRenderer
+import joshxviii.plantz.compat.client.state.BlockEntityRenderState
+import joshxviii.plantz.compat.client.renderer.ModelFeatureRenderer
+import joshxviii.plantz.compat.client.CameraRenderState
 import net.minecraft.client.renderer.texture.OverlayTexture
 import net.minecraft.client.resources.model.sprite.SpriteId
 import net.minecraft.network.chat.Component
@@ -69,7 +70,7 @@ class FlagRenderer(
         )
 
         val material = state.sprite?: return
-        val renderType = material.renderType { RenderTypes.entityCutout(it) }
+        val renderType = material.renderType { RenderType.entityCutout(it) }
         poseStack.translate(0.5f, 0.0f, 0.5f)
         poseStack.mulPose(Axis.YP.rotationDegrees(state.angle+90f))
         submitNodeCollector.submitModel(

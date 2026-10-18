@@ -4,12 +4,12 @@ import joshxviii.plantz.ai.ZombieState;
 import joshxviii.plantz.animation.zombies.PazZombieAnimations;
 import joshxviii.plantz.renderer.entity.zombie.PazZombieRenderState;
 import net.minecraft.client.animation.AnimationDefinition;
-import net.minecraft.client.animation.KeyframeAnimation;
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
-import net.minecraft.client.model.monster.zombie.ZombieModel;
+import joshxviii.plantz.compat.client.model.ZombieModel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,9 +31,9 @@ public class PazZombieModel<S extends PazZombieRenderState> extends ZombieModel<
         var mainRoot = root.hasChild("root") ? root.getChild("root") : root;
         super(mainRoot);
 
-        this.emergeAnimation = Objects.requireNonNullElse(initAnimationOverride, PazZombieAnimations.emerge).bake(mainRoot);
-        this.retreatAnimation = PazZombieAnimations.retreat.bake(mainRoot);
-        this.floatAnimation = PazZombieAnimations.balloon_float.bake(mainRoot);
+        this.emergeAnimation = KeyframeAnimation.bake(Objects.requireNonNullElse(initAnimationOverride, PazZombieAnimations.emerge), mainRoot);
+        this.retreatAnimation = KeyframeAnimation.bake(PazZombieAnimations.retreat, mainRoot);
+        this.floatAnimation = KeyframeAnimation.bake(PazZombieAnimations.balloon_float, mainRoot);
 
     }
 

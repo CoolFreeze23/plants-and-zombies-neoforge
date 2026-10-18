@@ -12,13 +12,13 @@ import net.minecraft.core.Vec3i
 import net.minecraft.core.component.DataComponents
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.resources.ResourceKey
 import net.minecraft.server.level.ServerEntityGetter
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
-import net.minecraft.util.ARGB
+import joshxviii.plantz.compat.ARGB
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.damagesource.DamageSource
@@ -49,7 +49,7 @@ import kotlin.math.atan2
 import kotlin.math.pow
 import kotlin.math.sqrt
 
-fun pazResource(path: String): Identifier = Identifier.fromNamespaceAndPath(MODID, path)
+fun pazResource(path: String): ResourceLocation = ResourceLocation.fromNamespaceAndPath(MODID, path)
 
 interface GardenHeroRewards {
     fun `plantz$getWaveList`(): MutableList<WaveType>
@@ -158,7 +158,7 @@ data class HSV(
 }
 
 fun createFallingBlock(level: Level, pos: Vec3, blockState: BlockState): FallingBlockEntity? {
-    val block = EntityType.FALLING_BLOCK.create(level, EntitySpawnReason.SPAWN_ITEM_USE)?: return null
+    val block = EntityType.FALLING_BLOCK.create(level, MobSpawnType.SPAWN_EGG)?: return null
     val tag = block.saveAsCompoundTag()
     tag.store("BlockState", BlockState.CODEC, blockState);
     TypedEntityData.of(block.type, tag).loadInto(block)

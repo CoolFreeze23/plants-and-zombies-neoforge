@@ -5,9 +5,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import joshxviii.plantz.animation.GnomeAnimation;
 import joshxviii.plantz.block.GardenGnomePose;
 import joshxviii.plantz.renderer.entity.GnomeRenderState;
-import net.minecraft.client.animation.KeyframeAnimation;
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 import net.minecraft.client.model.ArmedModel;
-import net.minecraft.client.model.EntityModel;
+import joshxviii.plantz.compat.client.model.EntityModel;
 import net.minecraft.client.model.HeadedModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
@@ -56,10 +56,10 @@ public class GnomeModel<T extends GnomeRenderState> extends EntityModel<T> imple
 		this.legs = this.torso.getChild("legs");
 		this.leg_L = this.legs.getChild("leg_L");
 		this.leg_R = this.legs.getChild("leg_R");
-		waveAnimation = GnomeAnimation.hello.bake(root);
-		relaxAnimation = GnomeAnimation.relax.bake(root);
-		sitAnimation = GnomeAnimation.sit.bake(root);
-		thinkAnimation = GnomeAnimation.thinker.bake(root);
+		waveAnimation = KeyframeAnimation.bake(GnomeAnimation.hello, root);
+		relaxAnimation = KeyframeAnimation.bake(GnomeAnimation.relax, root);
+		sitAnimation = KeyframeAnimation.bake(GnomeAnimation.sit, root);
+		thinkAnimation = KeyframeAnimation.bake(GnomeAnimation.thinker, root);
 	}
 
 	public static LayerDefinition createBodyLayer() {

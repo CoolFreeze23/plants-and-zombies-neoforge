@@ -1,5 +1,7 @@
 package joshxviii.plantz.model.plants;
 
+import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
+
 import joshxviii.plantz.animation.plants.RepeaterAnimation;
 import joshxviii.plantz.renderer.entity.plant.PlantRenderState;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -39,10 +41,10 @@ public class RepeaterModel extends PlantModel {
 	public RepeaterModel(ModelPart root) {
 		super(root);
 
-		initAnimation = RepeaterAnimation.init.bake(root);
-		idleAnimation = RepeaterAnimation.idle.bake(root);
-		actionAnimation = RepeaterAnimation.action.bake(root);
-		sleepAnimation = RepeaterAnimation.sleep.bake(root);
+		initAnimation = KeyframeAnimation.bake(RepeaterAnimation.init, root);
+		idleAnimation = KeyframeAnimation.bake(RepeaterAnimation.idle, root);
+		actionAnimation = KeyframeAnimation.bake(RepeaterAnimation.action, root);
+		sleepAnimation = KeyframeAnimation.bake(RepeaterAnimation.sleep, root);
 
 		this.body = root.getChild("body");
 		this.stem = this.body.getChild("stem");
