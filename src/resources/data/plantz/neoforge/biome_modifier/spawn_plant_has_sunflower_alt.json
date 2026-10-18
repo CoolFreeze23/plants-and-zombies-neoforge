@@ -1,0 +1,13 @@
+{
+  "type": "plantz:add_spawns",
+  "biomes": "#plantz:plant/has_sunflower_alt",
+  "category": "ambient",
+  "spawners": [
+    {
+      "type": "plantz:sunflower",
+      "weight": 10,
+      "minCount": 2,
+      "maxCount": 4
+    }
+  ]
+}

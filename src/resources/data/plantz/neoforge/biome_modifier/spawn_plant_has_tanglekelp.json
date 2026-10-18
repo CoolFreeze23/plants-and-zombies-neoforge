@@ -1,0 +1,13 @@
+{
+  "type": "plantz:add_spawns",
+  "biomes": "#plantz:plant/has_tanglekelp",
+  "category": "ambient",
+  "spawners": [
+    {
+      "type": "plantz:tanglekelp",
+      "weight": 9,
+      "minCount": 3,
+      "maxCount": 5
+    }
+  ]
+}

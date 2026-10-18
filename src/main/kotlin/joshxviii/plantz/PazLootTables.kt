@@ -1,10 +1,9 @@
 package joshxviii.plantz
 
-import net.fabricmc.fabric.api.loot.v3.LootTableEvents
 import net.minecraft.core.registries.Registries
+import net.neoforged.neoforge.event.LootTableLoadEvent
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.resources.ResourceKey
-import net.minecraft.world.item.trading.VillagerTrade
 import net.minecraft.world.level.storage.loot.BuiltInLootTables
 import net.minecraft.world.level.storage.loot.LootPool
 import net.minecraft.world.level.storage.loot.LootTable
@@ -36,16 +35,11 @@ object PazLootTables {
         return ResourceKey.create(Registries.LOOT_TABLE, pazResource(name) )
     }
 
-    private fun registerVillagerTrade(
-        name: String
-    ) : ResourceKey<VillagerTrade> {
-        return ResourceKey.create(Registries.VILLAGER_TRADE, pazResource(name) )
-    }
+    fun initialize() {}
 
-    fun initialize() {
-        LootTableEvents.MODIFY.register { key, builder, source, provider ->
-            LootInjector.attemptInjection(key.identifier(), builder::withPool)
-        }
+    /** Fabric's LootTableEvents.MODIFY → NeoForge LootTableLoadEvent. */
+    fun onLootTableLoad(event: LootTableLoadEvent) {
+        LootInjector.attemptInjection(event.name) { pool -> event.table.addPool(pool.build()) }
     }
 
 }
@@ -67,8 +61,8 @@ object LootInjector {
         BuiltInLootTables.BASTION_OTHER,
     ).apply { addAll(villageHouseBuiltInLootTables) }
 
-    private val injectionIds = injections.map {it.identifier()}.toSet()
-    private val villageInjectionIds = villageHouseBuiltInLootTables.map { it.identifier() }.toSet()
+    private val injectionIds = injections.map {it.location()}.toSet()
+    private val villageInjectionIds = villageHouseBuiltInLootTables.map { it.location() }.toSet()
 
     fun attemptInjection(key: ResourceLocation, provider: (LootPool.Builder) -> Unit): Boolean {
         if (!this.injectionIds.contains(key)) {

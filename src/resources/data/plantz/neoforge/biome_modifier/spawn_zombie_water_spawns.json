@@ -1,0 +1,19 @@
+{
+  "type": "plantz:add_spawns",
+  "biomes": "#plantz:zombie/water_spawns",
+  "category": "monster",
+  "spawners": [
+    {
+      "type": "plantz:browncoat",
+      "weight": 10,
+      "minCount": 1,
+      "maxCount": 2
+    },
+    {
+      "type": "plantz:newspaper_zombie",
+      "weight": 4,
+      "minCount": 1,
+      "maxCount": 1
+    }
+  ]
+}

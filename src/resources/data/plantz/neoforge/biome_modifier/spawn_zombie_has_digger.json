@@ -1,0 +1,13 @@
+{
+  "type": "plantz:add_spawns",
+  "biomes": "#plantz:zombie/has_digger",
+  "category": "monster",
+  "spawners": [
+    {
+      "type": "plantz:digger_zombie",
+      "weight": 8,
+      "minCount": 1,
+      "maxCount": 1
+    }
+  ]
+}

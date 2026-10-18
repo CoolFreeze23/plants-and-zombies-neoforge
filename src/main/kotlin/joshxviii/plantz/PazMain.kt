@@ -1,57 +1,96 @@
 package joshxviii.plantz
 
-import joshxviii.plantz.api.SeedMutationManager
 import joshxviii.plantz.block.entity.MailboxBlockEntity
 import joshxviii.plantz.block.entity.MailboxManager
 import joshxviii.plantz.block.entity.getMailboxMailQueue
 import joshxviii.plantz.networking.ServerConfigResponsePayload
 import joshxviii.plantz.raid.getZombieRaids
-import net.fabricmc.api.ModInitializer
-import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerBlockEntityEvents
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
-import net.minecraft.server.ReloadableServerResources
-import net.minecraft.server.packs.PackType
-import net.minecraft.server.packs.resources.ReloadableResourceManager
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.neoforged.fml.common.Mod
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent
+import net.neoforged.fml.loading.FMLEnvironment
+import net.neoforged.neoforge.common.NeoForge
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent
+import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent
+import net.neoforged.neoforge.event.entity.player.PlayerEvent
+import net.neoforged.neoforge.event.server.ServerStartingEvent
+import net.neoforged.neoforge.event.tick.LevelTickEvent
+import net.neoforged.neoforge.network.PacketDistributor
+import net.neoforged.neoforge.registries.DataPackRegistryEvent
+import net.neoforged.neoforge.registries.RegisterEvent
+import net.neoforged.neoforge.event.LootTableLoadEvent
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import thedarkcolour.kotlinforforge.neoforge.forge.MOD_BUS
 
-
-object PazMain : ModInitializer {
+@Mod(PazMain.MODID)
+object PazMain {
 	const val MODID = "plantz"
 	@JvmField
 	val LOGGER: Logger = LogManager.getLogger("Plants & Zombies")
 
-	override fun onInitialize() {
-		PazRegistries.initialize()
+	private var registered = false
+
+	init {
 		PazConfig.load()
+
+		// mod bus
+		MOD_BUS.addListener(::onRegister)
+		MOD_BUS.addListener(PazNetwork::register)
+		MOD_BUS.addListener { event: EntityAttributeCreationEvent -> PazEntities.registerAttributes(event) }
+		MOD_BUS.addListener { event: RegisterSpawnPlacementsEvent -> PazSpawnPlacements.register(event) }
+		MOD_BUS.addListener { event: DataPackRegistryEvent.NewRegistry -> PazRegistries.registerDataPackRegistries(event) }
+		MOD_BUS.addListener { event: FMLCommonSetupEvent -> event.enqueueWork { PazWorldGen.onTerraBlenderInitialized() } }
+		PazHooks.registerModBus(MOD_BUS)
+
+		// game bus
+		val bus = NeoForge.EVENT_BUS
 		// clear client raid cache + load config
-		ServerLifecycleEvents.SERVER_STARTING.register {
+		bus.addListener { _: ServerStartingEvent ->
 			PazNetwork.ZombieRaidClientCache.clear()
 			PazConfig.load()
 		}
 		// config sync
-		ServerPlayerEvents.JOIN.register { player ->
+		bus.addListener { event: PlayerEvent.PlayerLoggedInEvent ->
+			val player = event.entity as? ServerPlayer ?: return@addListener
 			val json = PazConfig.let { it.GSON.toJson(it.server) }
-			val payload = ServerConfigResponsePayload(json)
-			ServerPlayNetworking.send(player, payload)
-
+			PacketDistributor.sendToPlayer(player, ServerConfigResponsePayload(json))
 			LOGGER.info("Sent server config to ${player.name.string}")
 		}
 		// raid ticking
-		ServerTickEvents.END_LEVEL_TICK.register { it.getZombieRaids().tick(it) }
-
-		// mailbox managing
-		ServerBlockEntityEvents.BLOCK_ENTITY_LOAD.register { blockEntity, level ->
-			(blockEntity as? MailboxBlockEntity)?.let {
-				MailboxManager.registerMailbox(level, it)
-				level.getMailboxMailQueue().deliverTo(it)
-			}
+		bus.addListener { event: LevelTickEvent.Post ->
+			(event.level as? ServerLevel)?.let { it.getZombieRaids().tick(it) }
 		}
-		ServerBlockEntityEvents.BLOCK_ENTITY_UNLOAD.register { blockEntity, level -> }
+		// goal injection for vanilla mobs
+		bus.addListener { event: EntityJoinLevelEvent ->
+			if (!event.level.isClientSide) PazEntities.onEntityLoad(event.entity, event.level)
+		}
+		bus.addListener { event: LootTableLoadEvent -> PazLootTables.onLootTableLoad(event) }
+		PazHooks.registerGameBus(bus)
 
+		if (FMLEnvironment.dist.isClient) PazClient.init(MOD_BUS)
+	}
+
+	/** Mailbox bookkeeping when a mailbox block entity loads on the server (Fabric's BLOCK_ENTITY_LOAD). */
+	@JvmStatic
+	fun onBlockEntityLoad(blockEntity: BlockEntity, level: ServerLevel) {
+		(blockEntity as? MailboxBlockEntity)?.let {
+			MailboxManager.registerMailbox(level, it)
+			level.getMailboxMailQueue().deliverTo(it)
+		}
+	}
+
+	/**
+	 * Upstream registered everything eagerly from its Fabric initializer. NeoForge unfreezes every registry for the
+	 * whole RegisterEvent phase, so running the same initializers during the first RegisterEvent keeps the eager
+	 * `Registry.register(...)` style intact.
+	 */
+	private fun onRegister(event: RegisterEvent) {
+		if (registered) return
+		registered = true
 		PazServerParticles.initialize()
 		PazBlocks.initialize()
 		PazItems.initialize()
@@ -64,9 +103,8 @@ object PazMain : ModInitializer {
 		PazDataSerializers.initialize()
 		PazAttributes.initialize()
 		PazSounds.initialize()
-		PazSpawnPlacements.initialize()
 		PazMenus.initialize()
-		PazNetwork.initialize()
 		PazJukeboxSongs.initialize()
+		PazBiomeModifiers.initialize()
 	}
 }

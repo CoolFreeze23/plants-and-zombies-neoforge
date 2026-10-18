@@ -40,13 +40,15 @@ class MailboxMenu(
             init { Objects.requireNonNull(this@MailboxMenu) }
             override fun mayPlace(itemStack: ItemStack): Boolean = true
         })
-        addStandardInventorySlots(inventory, 8, 98)
+        // 26.1 addStandardInventorySlots(inventory, 8, 98): main inventory rows, then the hotbar 58px below
+        for (row in 0..2) for (col in 0..8) addSlot(Slot(inventory, col + row * 9 + 9, 8 + col * 18, 98 + row * 18))
+        for (col in 0..8) addSlot(Slot(inventory, col, 8 + col * 18, 98 + 58))
     }
 
     override fun stillValid(player: Player): Boolean {
         return ContainerLevelAccess.NULL.evaluate( { level: Level, pos: BlockPos ->
             if (!isValidBlock(level.getBlockState(pos))) false
-            else player.isWithinBlockInteractionRange(pos, 4.0)
+            else player.canInteractWithBlock(pos, 4.0)
         }, true)
     }
     fun isValidBlock(state: BlockState): Boolean = state.`is`(PazTags.BlockTags.MAILBOX)

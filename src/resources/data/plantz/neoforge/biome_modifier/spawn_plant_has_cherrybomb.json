@@ -1,0 +1,13 @@
+{
+  "type": "plantz:add_spawns",
+  "biomes": "#plantz:plant/has_cherrybomb",
+  "category": "ambient",
+  "spawners": [
+    {
+      "type": "plantz:cherrybomb",
+      "weight": 20,
+      "minCount": 1,
+      "maxCount": 1
+    }
+  ]
+}

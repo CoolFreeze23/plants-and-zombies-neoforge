@@ -1,0 +1,13 @@
+{
+  "type": "plantz:add_spawns",
+  "biomes": "#plantz:zombie/has_disco_zombie",
+  "category": "monster",
+  "spawners": [
+    {
+      "type": "plantz:disco_zombie",
+      "weight": 12,
+      "minCount": 1,
+      "maxCount": 1
+    }
+  ]
+}

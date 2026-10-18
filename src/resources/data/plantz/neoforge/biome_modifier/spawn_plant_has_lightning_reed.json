@@ -1,0 +1,13 @@
+{
+  "type": "plantz:add_spawns",
+  "biomes": "#plantz:plant/has_lightning_reed",
+  "category": "ambient",
+  "spawners": [
+    {
+      "type": "plantz:lightning_reed",
+      "weight": 12,
+      "minCount": 2,
+      "maxCount": 3
+    }
+  ]
+}

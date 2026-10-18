@@ -1,0 +1,13 @@
+{
+  "type": "plantz:add_spawns",
+  "biomes": "#plantz:zombie/has_newspaper_zombie",
+  "category": "monster",
+  "spawners": [
+    {
+      "type": "plantz:newspaper_zombie",
+      "weight": 25,
+      "minCount": 1,
+      "maxCount": 1
+    }
+  ]
+}

@@ -3,7 +3,6 @@ package joshxviii.plantz
 import com.mojang.serialization.Codec
 import com.mojang.serialization.MapCodec
 import com.mojang.serialization.codecs.RecordCodecBuilder
-import net.fabricmc.fabric.api.particle.v1.FabricParticleTypes
 import net.minecraft.core.Registry
 import net.minecraft.core.particles.ParticleOptions
 import net.minecraft.core.particles.ParticleType
@@ -50,8 +49,11 @@ object PazServerParticles {
     @JvmField val ELECTRIC_ARC: ParticleType<ElectricArcParticleOptions> = register("electric_arc", {ElectricArcParticleOptions.CODEC}, {ElectricArcParticleOptions.STREAM_CODEC})
     @JvmField val BEAM: ParticleType<BeamParticleOptions> = register("beam", { BeamParticleOptions.CODEC}, {BeamParticleOptions.STREAM_CODEC})
 
+    /** 26.1's PazServerParticles.RGB_COLOR_CODEC (int or [r, g, b] floats); 1.21.1 only has the ARGB variant. */
+    @JvmField val RGB_COLOR_CODEC: Codec<Int> = Codec.withAlternative(Codec.INT, ExtraCodecs.VECTOR3F) { v -> ARGB.colorFromFloat(1.0f, v.x(), v.y(), v.z()) }
+
     fun registerSimple(name: String): SimpleParticleType {
-        val particleType = FabricParticleTypes.simple()
+        val particleType = SimpleParticleType(false)
         Registry.register(BuiltInRegistries.PARTICLE_TYPE, pazResource(name), particleType)
         return particleType
     }
@@ -81,12 +83,12 @@ class PaintParticleOptions(private val color: Int, scale: Float = 1f) : Scalable
     companion object {
         val CODEC: MapCodec<PaintParticleOptions> = RecordCodecBuilder.mapCodec { i ->
                 i.group(
-                    ExtraCodecs.RGB_COLOR_CODEC.fieldOf("color").forGetter { it.color },
-                    SCALE.fieldOf("scale").forGetter { it.scale }
+                    PazServerParticles.RGB_COLOR_CODEC.fieldOf("color").forGetter { it.color },
+                    SCALE.fieldOf("scale").forGetter { it.getScale() }
                 ).apply(i, ::PaintParticleOptions) }
         val STREAM_CODEC: StreamCodec<RegistryFriendlyByteBuf, PaintParticleOptions> = StreamCodec.composite(
             ByteBufCodecs.INT, { it.color },
-            ByteBufCodecs.FLOAT, { it.scale },
+            ByteBufCodecs.FLOAT, { it.getScale() },
             ::PaintParticleOptions)
     }
 }
@@ -98,11 +100,11 @@ class NukeWaveParticleOptions(private val color: Int = 0xFFFFFF, scale: Float = 
     companion object {
         val CODEC: MapCodec<NukeWaveParticleOptions> = RecordCodecBuilder.mapCodec { i ->
             i.group(
-                ExtraCodecs.RGB_COLOR_CODEC.fieldOf("color").forGetter { it.color },
-                SCALE.fieldOf("scale").forGetter { it.scale }
+                PazServerParticles.RGB_COLOR_CODEC.fieldOf("color").forGetter { it.color },
+                SCALE.fieldOf("scale").forGetter { it.getScale() }
             ).apply(i, ::NukeWaveParticleOptions) }
         val STREAM_CODEC: StreamCodec<RegistryFriendlyByteBuf, NukeWaveParticleOptions> = StreamCodec.composite(
-            ByteBufCodecs.INT, { it.color }, ByteBufCodecs.FLOAT, { it.scale }, ::NukeWaveParticleOptions)
+            ByteBufCodecs.INT, { it.color }, ByteBufCodecs.FLOAT, { it.getScale() }, ::NukeWaveParticleOptions)
     }
 }
 
@@ -113,11 +115,11 @@ class NukeBlastParticleOptions(private val color: Int = 0xFFFFFF, scale: Float =
     companion object {
         val CODEC: MapCodec<NukeBlastParticleOptions> = RecordCodecBuilder.mapCodec { i ->
             i.group(
-                ExtraCodecs.RGB_COLOR_CODEC.fieldOf("color").forGetter { it.color },
-                SCALE.fieldOf("scale").forGetter { it.scale }
+                PazServerParticles.RGB_COLOR_CODEC.fieldOf("color").forGetter { it.color },
+                SCALE.fieldOf("scale").forGetter { it.getScale() }
             ).apply(i, ::NukeBlastParticleOptions) }
         val STREAM_CODEC: StreamCodec<RegistryFriendlyByteBuf, NukeBlastParticleOptions> = StreamCodec.composite(
-            ByteBufCodecs.INT, { it.color }, ByteBufCodecs.FLOAT, { it.scale }, ::NukeBlastParticleOptions)
+            ByteBufCodecs.INT, { it.color }, ByteBufCodecs.FLOAT, { it.getScale() }, ::NukeBlastParticleOptions)
     }
 }
 
@@ -128,11 +130,11 @@ class NukeSmokeParticleOptions(private val color: Int = 0xFFFFFF, scale: Float =
     companion object {
         val CODEC: MapCodec<NukeSmokeParticleOptions> = RecordCodecBuilder.mapCodec { i ->
             i.group(
-                ExtraCodecs.RGB_COLOR_CODEC.fieldOf("color").forGetter { it.color },
-                SCALE.fieldOf("scale").forGetter { it.scale }
+                PazServerParticles.RGB_COLOR_CODEC.fieldOf("color").forGetter { it.color },
+                SCALE.fieldOf("scale").forGetter { it.getScale() }
             ).apply(i, ::NukeSmokeParticleOptions) }
         val STREAM_CODEC: StreamCodec<RegistryFriendlyByteBuf, NukeSmokeParticleOptions> = StreamCodec.composite(
-            ByteBufCodecs.INT, { it.color }, ByteBufCodecs.FLOAT, { it.scale }, ::NukeSmokeParticleOptions)
+            ByteBufCodecs.INT, { it.color }, ByteBufCodecs.FLOAT, { it.getScale() }, ::NukeSmokeParticleOptions)
     }
 }
 
@@ -150,7 +152,7 @@ class ElectricArcParticleOptions(
                 Codec.DOUBLE.optionalFieldOf("tx", 0.0).forGetter { it.targetPos.x },
                 Codec.DOUBLE.optionalFieldOf("ty", 0.0).forGetter { it.targetPos.y },
                 Codec.DOUBLE.optionalFieldOf("tz", 0.0).forGetter { it.targetPos.z },
-                ExtraCodecs.RGB_COLOR_CODEC.optionalFieldOf("color", 0xAACCFF).forGetter { it.color },
+                PazServerParticles.RGB_COLOR_CODEC.optionalFieldOf("color", 0xAACCFF).forGetter { it.color },
                 Codec.FLOAT.optionalFieldOf("width", 0.0f).forGetter { it.width }
             ).apply(builder
             ) { x, y, z, color, thickness -> ElectricArcParticleOptions(Vec3(x, y, z), color, thickness) }
@@ -183,7 +185,7 @@ class BeamParticleOptions(
                 Codec.DOUBLE.optionalFieldOf("tx", 0.0).forGetter { it.targetPos.x },
                 Codec.DOUBLE.optionalFieldOf("ty", 0.0).forGetter { it.targetPos.y },
                 Codec.DOUBLE.optionalFieldOf("tz", 0.0).forGetter { it.targetPos.z },
-                ExtraCodecs.RGB_COLOR_CODEC.optionalFieldOf("color", 0xAACCFF).forGetter { it.color },
+                PazServerParticles.RGB_COLOR_CODEC.optionalFieldOf("color", 0xAACCFF).forGetter { it.color },
                 Codec.FLOAT.optionalFieldOf("width", 0.0f).forGetter { it.width },
                 Codec.INT.optionalFieldOf("lifeTime", 1).forGetter { it.lifeTime }
             ).apply(builder

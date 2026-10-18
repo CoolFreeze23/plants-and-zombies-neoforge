@@ -1,12 +1,10 @@
 package joshxviii.plantz
 
+import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent
 import joshxviii.plantz.entity.plant.*
 import joshxviii.plantz.entity.zombie.DiggerZombie
 import joshxviii.plantz.entity.zombie.PazZombie
 import joshxviii.plantz.entity.zombie.ZombieYeti
-import joshxviii.plantz.mixin.SpawnPlacementsInvoker
-import net.fabricmc.fabric.api.biome.v1.BiomeModifications
-import net.fabricmc.fabric.api.biome.v1.BiomeSelectionContext
 import net.minecraft.tags.TagKey
 import net.minecraft.world.entity.*
 import net.minecraft.world.level.biome.Biome
@@ -160,16 +158,26 @@ object PazSpawnPlacements {
         // endregion
     }
 
+    /**
+     * Biome spawns are data on NeoForge: every call here has a matching `plantz:add_spawns` biome modifier in
+     * data/plantz/neoforge/biome_modifier/ (generated from this table; same tag, category, weight and group sizes).
+     */
+    @Suppress("UNUSED_PARAMETER")
     fun <T : Mob> addBiomeSpawn(biomeTag: TagKey<Biome>, entityType: EntityType<T>, weight: Int, minGroupSize: Int, maxGroupSize: Int, category: MobCategory = MobCategory.AMBIENT) {
-        BiomeModifications.addSpawn({ biomeSelector: BiomeSelectionContext -> biomeSelector.hasTag(biomeTag) }, category, entityType, weight, minGroupSize, maxGroupSize)
+    }
+
+    private var event: RegisterSpawnPlacementsEvent? = null
+
+    fun register(event: RegisterSpawnPlacementsEvent) {
+        this.event = event
+        try {
+            initialize()
+        } finally {
+            this.event = null
+        }
     }
 
     fun <T : Mob> registerSpawnPlacement(entityType: EntityType<T>, spawnRules: SpawnPlacements.SpawnPredicate<T>, heightmap: Heightmap.Types = Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,spawnPlacements: SpawnPlacementType = SpawnPlacementTypes.ON_GROUND) {
-        SpawnPlacementsInvoker.invokeRegister(
-            entityType,
-            spawnPlacements,
-            heightmap,
-            spawnRules
-        )
+        event?.register(entityType, spawnPlacements, heightmap, spawnRules, RegisterSpawnPlacementsEvent.Operation.REPLACE)
     }
 }

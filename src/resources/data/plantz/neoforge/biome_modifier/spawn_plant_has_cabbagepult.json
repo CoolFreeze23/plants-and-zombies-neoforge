@@ -1,0 +1,13 @@
+{
+  "type": "plantz:add_spawns",
+  "biomes": "#plantz:plant/has_cabbagepult",
+  "category": "ambient",
+  "spawners": [
+    {
+      "type": "plantz:cabbagepult",
+      "weight": 4,
+      "minCount": 1,
+      "maxCount": 1
+    }
+  ]
+}

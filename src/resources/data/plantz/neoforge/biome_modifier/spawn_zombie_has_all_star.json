@@ -1,0 +1,13 @@
+{
+  "type": "plantz:add_spawns",
+  "biomes": "#plantz:zombie/has_all_star",
+  "category": "monster",
+  "spawners": [
+    {
+      "type": "plantz:all_star",
+      "weight": 12,
+      "minCount": 1,
+      "maxCount": 1
+    }
+  ]
+}

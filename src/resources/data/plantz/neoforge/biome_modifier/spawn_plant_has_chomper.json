@@ -1,0 +1,13 @@
+{
+  "type": "plantz:add_spawns",
+  "biomes": "#plantz:plant/has_chomper",
+  "category": "ambient",
+  "spawners": [
+    {
+      "type": "plantz:chomper",
+      "weight": 4,
+      "minCount": 1,
+      "maxCount": 1
+    }
+  ]
+}

@@ -17,9 +17,10 @@ import terrablender.api.ParameterUtils.*
 import java.util.function.Consumer
 
 
-object PazWorldGen: TerraBlenderApi {
+object PazWorldGen {
 
-    override fun onTerraBlenderInitialized() {
+    /** Was the Fabric `terrablender` entrypoint; on NeoForge it runs from FMLCommonSetupEvent.enqueueWork. */
+    fun onTerraBlenderInitialized() {
         Regions.register(OverworldRegion("graveyard"))
         SurfaceRuleManager.addSurfaceRules(SurfaceRuleManager.RuleCategory.OVERWORLD, PazMain.MODID, SurfaceRuleData.makeRules())
     }

@@ -97,7 +97,7 @@ object PazSounds {
                 deathSound   = registerForHolder("entity.gnome.$id.death"),
                 hurtSound    = registerForHolder("entity.gnome.$id.hurt"),
                 jumpSound    = registerForHolder("entity.gnome.$id.jump"),
-                stepSound    = SoundEvents.WOLF_STEP
+                stepSound    = BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.WOLF_STEP)
             )
         }
     }

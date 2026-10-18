@@ -21,7 +21,9 @@ class TimeMachineMenu(
     val batterySlot: Slot = addSlot(Slot(timeMachine, 0, 80, 39))
 
     init {
-        addStandardInventorySlots(inventory, 8, 98)
+        // 26.1 addStandardInventorySlots(inventory, 8, 98): main inventory rows, then the hotbar 58px below
+        for (row in 0..2) for (col in 0..8) addSlot(Slot(inventory, col + row * 9 + 9, 8 + col * 18, 98 + row * 18))
+        for (col in 0..8) addSlot(Slot(inventory, col, 8 + col * 18, 98 + 58))
     }
 
     override fun quickMoveStack(player: Player, slotIndex: Int): ItemStack {

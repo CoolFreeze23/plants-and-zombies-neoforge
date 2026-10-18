@@ -1,0 +1,13 @@
+{
+  "type": "plantz:add_spawns",
+  "biomes": "#plantz:zombie/has_imp",
+  "category": "monster",
+  "spawners": [
+    {
+      "type": "plantz:imp",
+      "weight": 7,
+      "minCount": 1,
+      "maxCount": 1
+    }
+  ]
+}

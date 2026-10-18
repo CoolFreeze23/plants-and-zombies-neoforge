@@ -4,8 +4,9 @@ import joshxviii.plantz.MailboxData
 import joshxviii.plantz.block.entity.MailCollectionBoxEntity
 import joshxviii.plantz.inventory.MailCollectionBoxMenu
 import joshxviii.plantz.pazResource
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
-import net.fabricmc.fabric.api.networking.v1.context.PacketContext
+import net.minecraft.server.level.ServerPlayer
+import net.neoforged.neoforge.network.PacketDistributor
+import net.neoforged.neoforge.network.handling.IPayloadContext
 import net.minecraft.core.BlockPos
 import net.minecraft.core.registries.Registries
 import net.minecraft.network.RegistryFriendlyByteBuf
@@ -32,9 +33,9 @@ data class UpdateCollectionBoxPayload(
                 { pos, targetPos -> UpdateCollectionBoxPayload(pos, targetPos.getOrNull()) }
             )
 
-        fun handleUpdateCollectionBoxPacket(payload: UpdateCollectionBoxPayload, context: ServerPlayNetworking.Context) {
-            val player = context.player()
-            val level = player.level()
+        fun handleUpdateCollectionBoxPacket(payload: UpdateCollectionBoxPayload, context: IPayloadContext) {
+            val player = context.player() as? ServerPlayer ?: return
+            val level = player.serverLevel()
 
             val be = level.getBlockEntity(payload.collectionBoxPos) as? MailCollectionBoxEntity ?: return
             if (player.containerMenu !is MailCollectionBoxMenu) return

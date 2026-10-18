@@ -1,0 +1,13 @@
+{
+  "type": "plantz:add_spawns",
+  "biomes": "#plantz:plant/has_grave_buster",
+  "category": "ambient",
+  "spawners": [
+    {
+      "type": "plantz:grave_buster",
+      "weight": 15,
+      "minCount": 1,
+      "maxCount": 3
+    }
+  ]
+}

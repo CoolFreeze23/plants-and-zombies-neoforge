@@ -2,7 +2,6 @@ package joshxviii.plantz
 
 import joshxviii.plantz.PazMain.MODID
 import joshxviii.plantz.entity.plant.Plant
-import joshxviii.plantz.entity.plant.saveAsCompoundTag
 import joshxviii.plantz.networking.ZombieRaidClientData
 import joshxviii.plantz.raid.WaveType
 import joshxviii.plantz.raid.ZombieRaid
@@ -11,10 +10,10 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.Vec3i
 import net.minecraft.core.component.DataComponents
 import net.minecraft.nbt.CompoundTag
+import net.minecraft.nbt.NbtUtils
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.resources.ResourceKey
-import net.minecraft.server.level.ServerEntityGetter
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
@@ -36,7 +35,6 @@ import net.minecraft.world.item.DyeColor
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
-import net.minecraft.world.item.component.TypedEntityData
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.pathfinder.Path
@@ -86,13 +84,13 @@ interface PlantHeadAttachment {
                 val placePos = pos.above()
 
                 if (level.getEntitiesOfClass(Plant::class.java, AABB(placePos)).isNotEmpty()) {
-                    player.sendOverlayMessage(Component.translatable("message.plantz.already_planted").withStyle(ChatFormatting.RED))
+                    player.displayClientMessage(Component.translatable("message.plantz.already_planted").withStyle(ChatFormatting.RED), true)
                     return InteractionResult.FAIL
                 }
 
                 plant.detachFromEntity()
                 plant.setPos(placePos.x.toDouble(), placePos.y.toDouble(), placePos.z.toDouble())
-                plant.playSound(SoundEvents.HARNESS_UNEQUIP)// TODO custom sounds
+                plant.playSound(SoundEvents.ARMOR_EQUIP_GENERIC.value())// TODO custom sounds (26.1 used HARNESS_UNEQUIP, which 1.21.1 lacks)
                 return InteractionResult.SUCCESS
             }
             return InteractionResult.PASS
@@ -158,10 +156,10 @@ data class HSV(
 }
 
 fun createFallingBlock(level: Level, pos: Vec3, blockState: BlockState): FallingBlockEntity? {
-    val block = EntityType.FALLING_BLOCK.create(level, MobSpawnType.SPAWN_EGG)?: return null
-    val tag = block.saveAsCompoundTag()
-    tag.store("BlockState", BlockState.CODEC, blockState);
-    TypedEntityData.of(block.type, tag).loadInto(block)
+    val block = EntityType.FALLING_BLOCK.create(level)?: return null
+    val tag = block.saveWithoutId(CompoundTag())
+    tag.put("BlockState", NbtUtils.writeBlockState(blockState))
+    block.load(tag)
     block.setPos(pos)
     level.addFreshEntity(block)
     return block
@@ -254,8 +252,8 @@ fun Player.removeSunFromStorageAndInventory(amount:Int = 1): Int {
 
 fun Player.getTotalSun(): Int {
     var count: Int = getItemCount(PazItems.SUN)
-    inventory.forEach { itemStack ->
-        count += itemStack.get(PazComponents.STORED_SUN)?.storedSun ?: 0
+    for (i in 0 until inventory.containerSize) {
+        count += inventory.getItem(i).get(PazComponents.STORED_SUN)?.storedSun ?: 0
     }
     return count
 }
@@ -302,8 +300,22 @@ fun DamageSource.isZombieFireworkExplosion(): Boolean {
     val hurtBy = entity ?: return false
     if (hurtBy.isHypnotized()) return false
     val isFirework = typeHolder().`is`(DamageTypes.FIREWORKS)
-    return isFirework && hurtBy.`is`(PazTags.EntityTypes.ZOMBIE_RAIDERS)
+    return isFirework && hurtBy.type.`is`(PazTags.EntityTypes.ZOMBIE_RAIDERS)
 }
+
+/** 26.1's OwnableEntity.getRootOwner(): follow the owner chain to the first owner that isn't itself owned. */
+val OwnableEntity.rootOwner: LivingEntity?
+    get() {
+        val seen = mutableSetOf<Any?>(this)
+        var owner: LivingEntity? = this.owner
+        while (owner is OwnableEntity) {
+            val ownersOwner = owner.owner
+            if (ownersOwner in seen) return null
+            seen.add(owner)
+            owner = ownersOwner
+        }
+        return owner
+    }
 
 fun extractRootOwner(entity: Entity): Entity? = when (entity) {
     is OwnableEntity -> entity.rootOwner
@@ -321,13 +333,13 @@ fun Entity.applyImpulse(xd: Double = 0.0, yd: Double = 1.0, zd: Double = 0.0, po
         )
         .scale(pow.toDouble() * (1f - knockbackResistance))
     this.addDeltaMovement(impulse)
-    this.needsSync = true
+    this.hurtMarked = true
 }
 
 fun Entity.applyImpulse(vec3: Vec3, pow: Float = 1f, uncertainty: Float = 0f, ignoreResistance: Boolean = false) = applyImpulse(vec3.x, vec3.y, vec3.z, pow, uncertainty, ignoreResistance)
 
 // AI/PATHFINDING
-fun <T : LivingEntity?> ServerEntityGetter.getFurthestEntities(
+fun <T : LivingEntity?> ServerLevel.getFurthestEntities(
     entities: MutableList<out T>,
     targetConditions: TargetingConditions,
     source: LivingEntity?,
@@ -339,7 +351,7 @@ fun <T : LivingEntity?> ServerEntityGetter.getFurthestEntities(
     var result: T? = null
 
     for (entity in entities) {
-        if (targetConditions.test(this.level, source, entity!!)) {
+        if (targetConditions.test(source, entity!!)) {
             val dist = entity.distanceToSqr(x, y, z)
             if (best == -1.0 || dist > best) {
                 best = dist
@@ -365,7 +377,8 @@ fun Path?.canReachTarget(target: BlockPos?): Boolean {
 fun LivingEntity.attackRange(): Double {
     val DEFAULT = sqrt(2.04) - 0.6;
     val interactionRange = this.getAttribute(Attributes.ENTITY_INTERACTION_RANGE)?.value?: 0.0
-    val attackRange = Mth.absMax(this.activeItem.get(DataComponents.ATTACK_RANGE)?.effectiveMaxRange(this)?.toDouble() ?: DEFAULT, interactionRange)
+    // 1.21.1 has no ATTACK_RANGE item component, so use the default reach
+    val attackRange = Mth.absMax(DEFAULT, interactionRange)
     val hitboxWidth = (this.boundingBox.xsize + this.boundingBox.ysize) / 2.0
     return hitboxWidth + attackRange
 }

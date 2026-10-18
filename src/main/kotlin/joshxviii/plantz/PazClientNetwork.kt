@@ -8,58 +8,47 @@ import joshxviii.plantz.networking.SendMailResponsePayload
 import joshxviii.plantz.networking.ServerConfigResponsePayload
 import joshxviii.plantz.networking.ZombieRaidResponsePayload
 import joshxviii.plantz.raid.ZombieRaid
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
+import net.neoforged.neoforge.network.handling.IPayloadContext
 
 object PazClientNetwork {
-    fun initialize() {
-        ZombieRaidClientCache.clear()
+    private var initialized = false
 
-        ClientTickEvents.START_CLIENT_TICK.register { client ->
-            RaidMusicManager.tick()
+    fun onClientTick() {
+        if (!initialized) {
+            ZombieRaidClientCache.clear()
+            initialized = true
         }
+        RaidMusicManager.tick()
+    }
 
-        ClientPlayNetworking.registerGlobalReceiver(ZombieRaidResponsePayload.ID) { payload, context ->
-            if (ZombieRaidClientCache.get(payload.data.id) == null) RaidMusicManager.start()
-            ZombieRaidClientCache.put(payload.data)
-            if (payload.data.status == ZombieRaid.ZombieRaidStatus.TERMINATE) ZombieRaidClientCache.remove(payload.data.id)
+    fun handleZombieRaid(payload: ZombieRaidResponsePayload, context: IPayloadContext) {
+        if (ZombieRaidClientCache.get(payload.data.id) == null) RaidMusicManager.start()
+        ZombieRaidClientCache.put(payload.data)
+        if (payload.data.status == ZombieRaid.ZombieRaidStatus.TERMINATE) ZombieRaidClientCache.remove(payload.data.id)
+    }
+
+    fun handleSendMailResponse(payload: SendMailResponsePayload, context: IPayloadContext) {
+        val menu = context.player().containerMenu as? AbstractMailboxMenu ?: return
+        menu.responseMessage = payload.message
+        menu.responseTimeout = 30
+    }
+
+    fun handleMailboxList(payload: MailboxListResponsePayload, context: IPayloadContext) {
+        val menu = context.player().containerMenu as? AbstractMailboxMenu ?: return
+        if (menu is MailCollectionBoxMenu) {
+            menu.selectedMailboxPos = menu.data.selectedMailbox
         }
+        // Rebuild list from positions
+        menu.availableMailboxes = payload.mailboxes
+        menu.updateFilteredMailboxes()
+    }
 
-        ClientPlayNetworking.registerGlobalReceiver(SendMailResponsePayload.ID) { payload, context ->
-            context.client().execute {
-                val mc = context.client()
-                val player = mc.player ?: return@execute
-                val menu = player.containerMenu as? AbstractMailboxMenu ?: return@execute
-                menu.responseMessage = payload.message
-                menu.responseTimeout = 30
-            }
+    fun handleServerConfig(payload: ServerConfigResponsePayload, context: IPayloadContext) {
+        try {
+            PazConfig.server = PazConfig.GSON.fromJson(payload.json, ServerConfig::class.java)
+            PazMain.LOGGER.info("Server config synced!")
+        } catch (e: Exception) {
+            PazMain.LOGGER.error("Failed to parse server config", e)
         }
-
-        ClientPlayNetworking.registerGlobalReceiver(MailboxListResponsePayload.ID) { payload, context ->
-            context.client().execute {
-                val player = context.player()
-                val menu = player.containerMenu as? AbstractMailboxMenu ?: return@execute
-
-                if (menu is MailCollectionBoxMenu) {
-                    menu.selectedMailboxPos = menu.data.selectedMailbox
-                }
-                // Rebuild list from positions
-                menu.availableMailboxes = payload.mailboxes
-                menu.updateFilteredMailboxes()
-            }
-
-        }
-
-        ClientPlayNetworking.registerGlobalReceiver(ServerConfigResponsePayload.ID) { payload, context ->
-            context.client().execute {
-                try {
-                    PazConfig.server = PazConfig.GSON.fromJson(payload.json, ServerConfig::class.java)
-                    PazMain.LOGGER.info("Server config synced!")
-                } catch (e: Exception) {
-                    PazMain.LOGGER.error("Failed to parse server config", e)
-                }
-            }
-        }
-
     }
 }

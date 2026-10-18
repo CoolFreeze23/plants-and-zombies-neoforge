@@ -1,0 +1,13 @@
+{
+  "type": "plantz:add_spawns",
+  "biomes": "#plantz:plant/has_iceshroom",
+  "category": "ambient",
+  "spawners": [
+    {
+      "type": "plantz:iceshroom",
+      "weight": 8,
+      "minCount": 1,
+      "maxCount": 2
+    }
+  ]
+}

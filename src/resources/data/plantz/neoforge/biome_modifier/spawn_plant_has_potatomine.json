@@ -1,0 +1,13 @@
+{
+  "type": "plantz:add_spawns",
+  "biomes": "#plantz:plant/has_potatomine",
+  "category": "ambient",
+  "spawners": [
+    {
+      "type": "plantz:potatomine",
+      "weight": 3,
+      "minCount": 1,
+      "maxCount": 1
+    }
+  ]
+}

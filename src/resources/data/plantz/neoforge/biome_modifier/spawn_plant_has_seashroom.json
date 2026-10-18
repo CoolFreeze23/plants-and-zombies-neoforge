@@ -1,0 +1,13 @@
+{
+  "type": "plantz:add_spawns",
+  "biomes": "#plantz:plant/has_seashroom",
+  "category": "ambient",
+  "spawners": [
+    {
+      "type": "plantz:seashroom",
+      "weight": 2,
+      "minCount": 1,
+      "maxCount": 3
+    }
+  ]
+}

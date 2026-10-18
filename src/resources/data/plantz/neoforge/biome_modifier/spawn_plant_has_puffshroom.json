@@ -1,0 +1,13 @@
+{
+  "type": "plantz:add_spawns",
+  "biomes": "#plantz:plant/has_puffshroom",
+  "category": "ambient",
+  "spawners": [
+    {
+      "type": "plantz:puffshroom",
+      "weight": 12,
+      "minCount": 1,
+      "maxCount": 4
+    }
+  ]
+}

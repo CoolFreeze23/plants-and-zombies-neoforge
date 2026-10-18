@@ -1,0 +1,13 @@
+{
+  "type": "plantz:add_spawns",
+  "biomes": "#plantz:zombie/has_zombie_yeti_alt",
+  "category": "monster",
+  "spawners": [
+    {
+      "type": "plantz:zombie_yeti",
+      "weight": 20,
+      "minCount": 1,
+      "maxCount": 2
+    }
+  ]
+}

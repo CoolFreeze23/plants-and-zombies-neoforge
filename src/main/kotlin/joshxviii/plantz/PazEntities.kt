@@ -16,19 +16,14 @@ import joshxviii.plantz.entity.gnome.Gnome
 import joshxviii.plantz.entity.plant.*
 import joshxviii.plantz.entity.projectile.*
 import joshxviii.plantz.entity.zombie.*
-import joshxviii.plantz.mixin.MobAccessor
 import joshxviii.plantz.raid.ZombieRaid
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents
-import net.fabricmc.fabric.api.`object`.builder.v1.entity.FabricDefaultAttributeRegistry
-import net.fabricmc.fabric.mixin.networking.client.accessor.MinecraftAccessor
-import net.minecraft.commands.arguments.TeamArgument
 import net.minecraft.core.Registry
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.registries.Registries
 import net.minecraft.resources.ResourceKey
-import net.minecraft.server.commands.TeamCommand
-import net.minecraft.server.jsonrpc.internalapi.MinecraftApi
 import net.minecraft.world.entity.*
+import net.minecraft.world.level.Level
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent
 import net.minecraft.world.entity.Mob.createMobAttributes
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier
 import net.minecraft.world.entity.ai.attributes.Attributes
@@ -40,24 +35,34 @@ import net.minecraft.world.scores.Team
 
 object PazEntities {
 
-    fun initialize() {
+    fun initialize() {}
 
-        ServerEntityEvents.ENTITY_LOAD.register { entity, level ->
+    /** Fabric's ServerEntityEvents.ENTITY_LOAD → NeoForge EntityJoinLevelEvent (server side only). */
+    fun onEntityLoad(entity: Entity, level: Level) {
+        if (entity is Zombie) entity.targetSelector.addGoal(4, NearestAttackableTargetGoal(entity, Gnome::class.java, 5, true, false, null))
 
-            if (entity is Zombie) (entity as MobAccessor).targetSelector.addGoal(4, NearestAttackableTargetGoal(entity, Gnome::class.java, 5, true, false, null))
-
-            if (entity is PathfinderMob && entity.`is`(ZOMBIE_RAIDERS)) {
-                (entity as MobAccessor).goalSelector.addGoal(0, PathfindToFlagGoal(entity, minimumDistance = ZombieRaid.SPAWN_DISTANCE * 1.5))
-                (entity as MobAccessor).goalSelector.addGoal(2, DestroyFlagGoal(entity))
-                (entity as MobAccessor).goalSelector.addGoal(3, PathfindToFlagGoal(entity))
-            }
-
-            if (entity is Mob && entity.`is`(ATTACKS_PLANTS) && entity !is ZombifiedPiglin) {
-                (entity as MobAccessor).targetSelector.addGoal(2, NearestAttackableTargetGoal(entity, WallNut::class.java, 6, true, true) { target, level -> ((target as? WallNut)?.let { it.distanceToSqr(entity) < 3.5 } ?: false)})
-                (entity as MobAccessor).targetSelector.addGoal(3, NearestAttackableTargetGoal(entity, Plant::class.java, 5, true, false) { target, level ->
-                    target !is WallNut && !target.`is`(IGNORED_BY_PLANT_ATTACKERS) })
-            }
+        if (entity is PathfinderMob && entity.type.`is`(ZOMBIE_RAIDERS)) {
+            entity.goalSelector.addGoal(0, PathfindToFlagGoal(entity, minimumDistance = ZombieRaid.SPAWN_DISTANCE * 1.5))
+            entity.goalSelector.addGoal(2, DestroyFlagGoal(entity))
+            entity.goalSelector.addGoal(3, PathfindToFlagGoal(entity))
         }
+
+        if (entity is Mob && entity.type.`is`(ATTACKS_PLANTS) && entity !is ZombifiedPiglin) {
+            entity.targetSelector.addGoal(2, NearestAttackableTargetGoal(entity, WallNut::class.java, 6, true, true) { target -> ((target as? WallNut)?.let { it.distanceToSqr(entity) < 3.5 } ?: false)})
+            entity.targetSelector.addGoal(3, NearestAttackableTargetGoal(entity, Plant::class.java, 5, true, false) { target ->
+                target !is WallNut && !target.type.`is`(IGNORED_BY_PLANT_ATTACKERS) })
+        }
+    }
+
+    /** Fabric's FabricDefaultAttributeRegistry → NeoForge EntityAttributeCreationEvent. */
+    private val DEFAULT_ATTRIBUTES = mutableListOf<Pair<EntityType<out LivingEntity>, AttributeSupplier.Builder>>()
+
+    fun registerAttributes(event: EntityAttributeCreationEvent) {
+        DEFAULT_ATTRIBUTES.forEach { (type, builder) -> event.put(type, builder.build()) }
+    }
+
+    private fun registerDefaultAttributes(type: EntityType<out LivingEntity>, builder: AttributeSupplier.Builder) {
+        DEFAULT_ATTRIBUTES += type to builder
     }
 
     // region Plants
@@ -642,7 +647,7 @@ object PazEntities {
     @JvmField val PLANT_POT_MINECART: EntityType<PlantPotMinecart> = register(
         "plant_pot_minecart",
         EntityType.Builder.of(::PlantPotMinecart, MobCategory.MISC)
-            .noLootTable()
+            // .noLootTable() (26.1 only; 1.21.1 entity types just get no loot table file)
             .sized(0.98F, 0.7F)
             .passengerAttachments(0.75F)
             .clientTrackingRange(8)
@@ -650,7 +655,7 @@ object PazEntities {
     @JvmField val BALLOON: EntityType<Balloon> = register(
         "balloon",
         EntityType.Builder.of(::Balloon, MobCategory.MISC)
-            .noLootTable()
+            // .noLootTable() (26.1 only; 1.21.1 entity types just get no loot table file)
             .sized(0.6f, 0.7f)
             .clientTrackingRange(8)
     )
@@ -658,7 +663,7 @@ object PazEntities {
         "sun",
         EntityType.Builder.of(::Sun, MobCategory.MISC)
             .fireImmune()
-            .noLootTable()
+            // .noLootTable() (26.1 only; 1.21.1 entity types just get no loot table file)
             .sized(0.3F, 0.3F)
             .clientTrackingRange(6)
             .updateInterval(20)
@@ -675,7 +680,7 @@ object PazEntities {
     ): EntityType<T> {
         builder.sized(width, height).eyeHeight(eyeHeight)
         val type = register(name, builder)
-        FabricDefaultAttributeRegistry.register(type, attributes.apply(createMobAttributes()))
+        registerDefaultAttributes(type, attributes.apply(createMobAttributes()))
         return type
     }
 
@@ -686,8 +691,8 @@ object PazEntities {
     ): EntityType<T> {
         val type = register(name, builder
             .ridingOffset(-0.7f)
-            .notInPeaceful())
-        FabricDefaultAttributeRegistry.register(type, attributes.apply(createMobAttributes()))
+            )  // .notInPeaceful() is 26.1 only; zombies are Monsters, which already despawn in peaceful
+        registerDefaultAttributes(type, attributes.apply(createMobAttributes()))
         return type
     }
 
@@ -697,7 +702,7 @@ object PazEntities {
         attributes: AttributeSupplier.Builder = createMobAttributes()
     ): EntityType<T> {
         val type = register(name, builder)
-        FabricDefaultAttributeRegistry.register(type, attributes)
+        registerDefaultAttributes(type, attributes)
         return type
     }
 
@@ -717,7 +722,7 @@ object PazEntities {
         attributes: AttributeSupplier.Builder = createMobAttributes()
     ): EntityType<T> {
         val type = register(name, builder)
-        FabricDefaultAttributeRegistry.register(type, attributes)
+        registerDefaultAttributes(type, attributes)
         return type
     }
 
@@ -725,8 +730,8 @@ object PazEntities {
         name : String,
         builder: EntityType.Builder<T>
     ): EntityType<T> {
-        val id = ResourceKey.create(Registries.ENTITY_TYPE, pazResource(name))
-        return Registry.register(BuiltInRegistries.ENTITY_TYPE, id, builder.build(id))
+        val id = pazResource(name)
+        return Registry.register(BuiltInRegistries.ENTITY_TYPE, id, builder.build(id.toString()))
     }
 
     val MAGIC_NAMES = mapOf<EntityType<*>, String>(

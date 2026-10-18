@@ -1,0 +1,13 @@
+{
+  "type": "plantz:add_spawns",
+  "biomes": "#plantz:plant/has_coffeebean",
+  "category": "ambient",
+  "spawners": [
+    {
+      "type": "plantz:coffeebean",
+      "weight": 5,
+      "minCount": 2,
+      "maxCount": 5
+    }
+  ]
+}

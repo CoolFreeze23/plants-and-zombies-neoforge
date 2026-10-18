@@ -1,0 +1,13 @@
+{
+  "type": "plantz:add_spawns",
+  "biomes": "#plantz:plant/has_sunshroom",
+  "category": "ambient",
+  "spawners": [
+    {
+      "type": "plantz:sunshroom",
+      "weight": 16,
+      "minCount": 1,
+      "maxCount": 3
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "type": "plantz:add_spawns",
+  "biomes": "#plantz:plant/has_cactus",
+  "category": "ambient",
+  "spawners": [
+    {
+      "type": "plantz:cactus",
+      "weight": 6,
+      "minCount": 1,
+      "maxCount": 3
+    }
+  ]
+}
