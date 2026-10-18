@@ -10,7 +10,14 @@ import joshxviii.plantz.item.GardeningGloveItem
 import joshxviii.plantz.item.PlantPotHelmetItem
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
+import joshxviii.plantz.item.SeedPacketCooldowns
+import joshxviii.plantz.item.SeedPacketItem
+import net.minecraft.client.renderer.RenderType
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
+import net.minecraft.util.Mth
+import net.neoforged.neoforge.client.IItemDecorator
+import net.neoforged.neoforge.client.event.RegisterItemDecorationsEvent
 import net.neoforged.bus.api.IEventBus
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent
 import net.neoforged.neoforge.client.event.ClientTickEvent
@@ -32,6 +39,7 @@ object PazClient {
 		modBus.addListener { event: RegisterMenuScreensEvent -> PazScreens.registerScreens(event) }
 		modBus.addListener { event: RegisterGuiLayersEvent -> PazScreens.registerGuiLayers(event) }
 		modBus.addListener { event: RegisterShadersEvent -> PazRenderPipelines.registerShaders(event) }
+		modBus.addListener { event: RegisterItemDecorationsEvent -> registerSeedPacketCooldownOverlay(event) }
 		modBus.addListener { event: FMLClientSetupEvent -> event.enqueueWork { PazClientHooks.clientSetup() } }
 		PazClientHooks.registerModBus(modBus)
 
@@ -42,6 +50,8 @@ object PazClient {
 		bus.addListener { event: ItemTooltipEvent ->
 			val stack = event.itemStack
 			val lines = event.toolTip
+			// Fabric rendered these component tooltips through its ItemComponentTooltipProviderRegistry
+			PazComponents.addComponentTooltips(stack, event.context, lines, event.flags)
 			val minecraft = Minecraft.getInstance()
 			val sneakKey = keybindFormat(minecraft.options.keyShift)
 			val sprintKey = keybindFormat(minecraft.options.keySprint)
@@ -52,6 +62,21 @@ object PazClient {
 			if (stack.`is`(FOOTBALL_HELMET)) FootballHelmetItem.addToTooltip(lines, sprintKey)
 		}
 		PazClientHooks.registerGameBus(bus)
+	}
+
+	/** The hotbar cooldown overlay vanilla drew for 26.1 cooldown groups, now driven by SeedPacketCooldowns. */
+	private fun registerSeedPacketCooldownOverlay(event: RegisterItemDecorationsEvent) {
+		val decorator = IItemDecorator { graphics, _, stack, x, y ->
+			val player = Minecraft.getInstance().player ?: return@IItemDecorator false
+			val percent = SeedPacketCooldowns.getCooldownPercent(player, stack, Minecraft.getInstance().timer.getGameTimeDeltaPartialTick(true))
+			if (percent > 0f) {
+				val top = y + Mth.floor(16.0f * (1.0f - percent))
+				val bottom = top + Mth.ceil(16.0f * percent)
+				graphics.fill(RenderType.guiOverlay(), x, top, x + 16, bottom, Int.MAX_VALUE)
+			}
+			false
+		}
+		BuiltInRegistries.ITEM.filterIsInstance<SeedPacketItem>().forEach { event.register(it, decorator) }
 	}
 
 	fun keybindFormat(keybind: KeyMapping): Component {

@@ -3,7 +3,9 @@ package joshxviii.plantz
 import joshxviii.plantz.PazNetwork.ZombieRaidClientCache
 import joshxviii.plantz.inventory.AbstractMailboxMenu
 import joshxviii.plantz.inventory.MailCollectionBoxMenu
+import joshxviii.plantz.item.SeedPacketCooldowns
 import joshxviii.plantz.networking.MailboxListResponsePayload
+import joshxviii.plantz.networking.SeedPacketCooldownPayload
 import joshxviii.plantz.networking.SendMailResponsePayload
 import joshxviii.plantz.networking.ServerConfigResponsePayload
 import joshxviii.plantz.networking.ZombieRaidResponsePayload
@@ -41,6 +43,10 @@ object PazClientNetwork {
         // Rebuild list from positions
         menu.availableMailboxes = payload.mailboxes
         menu.updateFilteredMailboxes()
+    }
+
+    fun handleSeedPacketCooldown(payload: SeedPacketCooldownPayload, context: IPayloadContext) {
+        SeedPacketCooldowns.addCooldown(context.player(), payload.group, payload.ticks)
     }
 
     fun handleServerConfig(payload: ServerConfigResponsePayload, context: IPayloadContext) {

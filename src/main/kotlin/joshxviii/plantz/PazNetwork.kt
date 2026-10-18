@@ -1,6 +1,8 @@
 package joshxviii.plantz
 
 import joshxviii.plantz.networking.MailboxListResponsePayload
+import joshxviii.plantz.item.SeedPacketCooldowns
+import joshxviii.plantz.networking.SeedPacketCooldownPayload
 import joshxviii.plantz.networking.SendMailRequestPayload
 import joshxviii.plantz.networking.SendMailRequestPayload.Companion.handleSendMailPacket
 import joshxviii.plantz.networking.SendMailResponsePayload
@@ -9,6 +11,7 @@ import joshxviii.plantz.networking.UpdateCollectionBoxPayload
 import joshxviii.plantz.networking.UpdateCollectionBoxPayload.Companion.handleUpdateCollectionBoxPacket
 import joshxviii.plantz.networking.ZombieRaidClientData
 import joshxviii.plantz.networking.ZombieRaidResponsePayload
+import net.neoforged.neoforge.network.PacketDistributor
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent
 import java.util.UUID
 
@@ -31,6 +34,7 @@ object PazNetwork {
      * Client handlers live in [PazClientNetwork] and are only reached on the physical client.
      */
     fun register(event: RegisterPayloadHandlersEvent) {
+        SeedPacketCooldowns.syncListener = { player, group, ticks -> PacketDistributor.sendToPlayer(player, SeedPacketCooldownPayload(group, ticks)) }
         val registrar = event.registrar("1")
 
         // serverbound
@@ -41,6 +45,7 @@ object PazNetwork {
         registrar.playToClient(SendMailResponsePayload.ID, SendMailResponsePayload.STREAM_CODEC) { payload, context -> PazClientNetwork.handleSendMailResponse(payload, context) }
         registrar.playToClient(MailboxListResponsePayload.ID, MailboxListResponsePayload.STREAM_CODEC) { payload, context -> PazClientNetwork.handleMailboxList(payload, context) }
         registrar.playToClient(ServerConfigResponsePayload.ID, ServerConfigResponsePayload.STREAM_CODEC) { payload, context -> PazClientNetwork.handleServerConfig(payload, context) }
+        registrar.playToClient(SeedPacketCooldownPayload.ID, SeedPacketCooldownPayload.STREAM_CODEC) { payload, context -> PazClientNetwork.handleSeedPacketCooldown(payload, context) }
         registrar.playToClient(ZombieRaidResponsePayload.ID, ZombieRaidResponsePayload.STREAM_CODEC) { payload, context -> PazClientNetwork.handleZombieRaid(payload, context) }
     }
 }
