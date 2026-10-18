@@ -67,6 +67,12 @@ neoForge {
             client()
             programArguments.addAll('--quickPlaySingleplayer', 'smoke', '--username', 'Dev', '--width', '1280', '--height', '720')
         }
+        // joins the dev server on localhost (separate game dir so it can run next to runServer)
+        clientMp {
+            client()
+            gameDirectory = project.file('run-client')
+            programArguments.addAll('--quickPlayMultiplayer', 'localhost:25565', '--username', 'Dev', '--width', '1280', '--height', '720')
+        }
         server {
             server()
             programArgument '--nogui'
