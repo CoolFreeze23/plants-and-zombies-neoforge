@@ -5,13 +5,11 @@ import joshxviii.plantz.PazConfig
 import joshxviii.plantz.block.entity.FlagBlockEntity
 import joshxviii.plantz.pazResource
 import joshxviii.plantz.raid.ZombieRaid
-import joshxviii.plantz.renderer.outlineText
 import joshxviii.plantz.tickTimeFormat
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.components.LerpingBossEvent
-import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.util.Mth
@@ -32,7 +30,7 @@ object ZombieRaidOverlay {
     val HEALTH_BAR_ZOMBIES: ResourceLocation = pazResource("textures/gui/raid/zombie_health.png")
 
     fun extractRenderState(
-        graphics: GuiGraphicsExtractor,
+        graphics: GuiGraphics,
         deltaTracker: DeltaTracker
     ) {
         val bgWidth = 256
@@ -46,7 +44,7 @@ object ZombieRaidOverlay {
         val y = 0
 
         // tombstone bg
-        graphics.blit(RenderPipelines.GUI_TEXTURED, if (credits) BACKGROUND_CREDITS else BACKGROUND, x, y, 0f, 0f, bgWidth, bgHeight, bgWidth, bgHeight)
+        graphics.pazBlit(if (credits) BACKGROUND_CREDITS else BACKGROUND, x, y, 0f, 0f, bgWidth, bgHeight, bgWidth, bgHeight)
 
         // flag health
         val barWidth = 98
@@ -57,8 +55,8 @@ object ZombieRaidOverlay {
         val flagHealthX = x + 17 + (barWidth - flagBarWidth)
         val flagHealthY = y + 15
         val flagFrame = if (raidEvent.activeTime % 30 > 15) 1 else 0
-        graphics.blit(RenderPipelines.GUI_TEXTURED, HEALTH_BAR_FLAG, flagHealthX, flagHealthY, 0f, 0f, flagBarWidth, barHeight, barWidth, barHeight)
-        graphics.blit(RenderPipelines.GUI_TEXTURED, PLANT_FLAG_SPRITE, flagHealthX-7, flagHealthY-5, 7f*flagFrame, 0f, 7, 10, 14, 10)
+        graphics.pazBlit(HEALTH_BAR_FLAG, flagHealthX, flagHealthY, 0f, 0f, flagBarWidth, barHeight, barWidth, barHeight)
+        graphics.pazBlit(PLANT_FLAG_SPRITE, flagHealthX-7, flagHealthY-5, 7f*flagFrame, 0f, 7, 10, 14, 10)
 
         // zombie health
         val zombieHealthPercent = (raidEvent.zombieHealth / raidEvent.zombieHealthMax).coerceIn(0f, 1f)
@@ -66,14 +64,14 @@ object ZombieRaidOverlay {
             val zombieBarWidth = Mth.floor(barWidth * zombieHealthPercent)
             val zombieHealthX = x + (bgWidth-barWidth) - 17
             val zombieHealthY = y + 15
-            graphics.blit(RenderPipelines.GUI_TEXTURED, HEALTH_BAR_ZOMBIES, zombieHealthX, zombieHealthY, 0f, 0f, zombieBarWidth, barHeight, barWidth, barHeight)
+            graphics.pazBlit(HEALTH_BAR_ZOMBIES, zombieHealthX, zombieHealthY, 0f, 0f, zombieBarWidth, barHeight, barWidth, barHeight)
             val headWidth = 10
             val headCount = zombieBarWidth / 8
             if (raidEvent.status != ZombieRaid.ZombieRaidStatus.NEXT_WAVE) for (i in 0..headCount) {
                 val headX = zombieHealthX + (i * 8)
                 val headY = zombieHealthY - if (i % 2 == 0) 3 else 0
                 val headFrame = i % 4f
-                graphics.blit(RenderPipelines.GUI_TEXTURED, if (credits) ZOMBIE_HEAD_CREDITS_SPRITE else  ZOMBIE_HEAD_SPRITE, headX, headY, headWidth*headFrame, 0f, headWidth, 11, headWidth*4, 11)
+                graphics.pazBlit(if (credits) ZOMBIE_HEAD_CREDITS_SPRITE else  ZOMBIE_HEAD_SPRITE, headX, headY, headWidth*headFrame, 0f, headWidth, 11, headWidth*4, 11)
             }
         }
 
@@ -92,10 +90,10 @@ object ZombieRaidOverlay {
 
         val waveText = "${raidEvent.wavesSpawned} / ${raidEvent.numWaves}"
         val waveX = screenWidth / 2 - font.width(waveText) / 2
-        graphics.text(font, waveText, waveX, textY+14, -1)
+        graphics.drawString(font, waveText, waveX, textY+14, -1)
         if (PazConfig.SHOW_DEBUG_INFO) {
             val textX = screenWidth / 2 - font.width(raidEvent.status.name) / 2
-            graphics.text(font, raidEvent.status.name, textX, textY+30, -1)
+            graphics.drawString(font, raidEvent.status.name, textX, textY+30, -1)
         }
 
     }

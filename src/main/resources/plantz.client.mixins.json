@@ -9,10 +9,11 @@
     "AvatarRendererMixin",
     "BossHealthOverlayAccessor",
     "BossHealthOverlayMixin",
+    "GameRendererAccessor",
     "GuiMixin",
     "HumanoidModelMixin",
     "LivingEntityRendererMixin",
-    "NowPlayingToastMixin",
+    "LivingEntityRendererVanillaMixin",
     "SoundManagerMixin"
   ]
 }

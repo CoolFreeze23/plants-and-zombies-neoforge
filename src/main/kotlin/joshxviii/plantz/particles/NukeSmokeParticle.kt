@@ -4,16 +4,17 @@ import joshxviii.plantz.NukeSmokeParticleOptions
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.particle.Particle
 import net.minecraft.client.particle.ParticleProvider
-import net.minecraft.client.particle.SingleQuadParticle
+import net.minecraft.client.particle.ParticleRenderType
+import net.minecraft.client.particle.TextureSheetParticle
 import net.minecraft.client.particle.SpriteSet
-import net.minecraft.util.RandomSource
 import kotlin.math.floor
 
 class NukeSmokeParticle(
     level: ClientLevel, x: Double, y: Double, z: Double, xa: Double, ya: Double, za: Double,
     private val scale: Float,
     private val sprites: SpriteSet
-) : SingleQuadParticle(level, x, y, z, 0.0, 0.0, 0.0, sprites.first()) {
+) : TextureSheetParticle(level, x, y, z, 0.0, 0.0, 0.0) {
+    init { setSprite(sprites.first()) }
     var rotSpeed = Math.toRadians(if (this.random.nextBoolean()) -30.0 else 30.0)
     init {
         this.quadSize = (random.nextFloat() * scale) + scale / 2.0f
@@ -28,7 +29,7 @@ class NukeSmokeParticle(
         this.roll += this.rotSpeed.toFloat() / 10.0f
     }
 
-    public override fun getLayer(): Layer = Layer.TRANSLUCENT
+    override fun getRenderType(): ParticleRenderType = ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT
 
     class Provider(private val sprite: SpriteSet) : ParticleProvider<NukeSmokeParticleOptions> {
         override fun createParticle(
@@ -39,8 +40,7 @@ class NukeSmokeParticle(
             z: Double,
             xAux: Double,
             yAux: Double,
-            zAux: Double,
-            random: RandomSource
+            zAux: Double
         ): Particle {
             val particle = NukeSmokeParticle(level, x, y, z, xAux, yAux, zAux, options.scale, sprite)
             val color = options.getColor()
