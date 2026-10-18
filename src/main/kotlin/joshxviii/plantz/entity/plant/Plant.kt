@@ -1,5 +1,6 @@
 package joshxviii.plantz.entity.plant
 
+import joshxviii.plantz.compat.AnimationState
 import joshxviii.plantz.*
 import joshxviii.plantz.PazDataSerializers.DATA_PLANT_STATE
 import joshxviii.plantz.PazTags.BlockTags.PLANTABLE
