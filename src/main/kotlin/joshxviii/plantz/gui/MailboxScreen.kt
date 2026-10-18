@@ -3,6 +3,7 @@ package joshxviii.plantz.gui
 import joshxviii.plantz.inventory.MailboxMenu
 import joshxviii.plantz.networking.SendMailRequestPayload
 import joshxviii.plantz.pazResource
+import joshxviii.plantz.renderer.outlineText
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.components.Button
@@ -55,6 +56,7 @@ class MailboxScreen(
         txt.setTextColor(-1)
         txt.setTextColorUneditable(-1)
         txt.setTextShadow(false)
+        txt.setInvertHighlightedTextColor(false)
         txt.setBordered(false)
         txt.setMaxLength(40)
         txt.setResponder(this::onSearchUpdated)
@@ -126,6 +128,7 @@ class MailboxScreen(
     override fun render(graphics: GuiGraphics, mouseX: Int, mouseY: Int, a: Float) {
         super.render(graphics, mouseX, mouseY, a)
         renderTooltip(graphics, mouseX, mouseY)
+        GuiCursor.applyRequestedCursor()
         val xo = leftPos
         val yo = topPos
         if (menu.responseTimeout>0) {
@@ -159,9 +162,16 @@ class MailboxScreen(
         val scrollerX = xo+152
         val scrollerY = yo+28 + sy
         graphics.pazBlit(sprite, scrollerX, scrollerY, 0f, 0f, 12, 15, 12, 15)
-        // 26.1 requestCursor (pointer/resize cursor over the scroller) has no 1.21.1 equivalent
+        if (xm >= scrollerX && xm < scrollerX + 12 && ym >= scrollerY && ym < scrollerY + 15) {
+            graphics.requestCursor(if (scrolling) CursorTypes.RESIZE_NS else CursorTypes.POINTING_HAND)
+        }
         // show message when no addresses are available
         if (addressButtons.isEmpty()) graphics.drawWordWrap(font, Component.translatable("container.plantz.no_address").withColor(0x777777), xo+53, yo+29, 96, -1)
+    }
+
+    override fun removed() {
+        super.removed()
+        GuiCursor.resetCursor()
     }
 
     override fun containerTick() {
@@ -174,6 +184,7 @@ class MailboxScreen(
         val yo = topPos + 28
         if (mouseX >= xo && mouseX < xo + 12 && mouseY >= yo && mouseY < yo + 54) scrolling = true
 
+        if (clickPazButton(mouseX, mouseY, button)) return true
         return super.mouseClicked(mouseX, mouseY, button)
     }
 

@@ -10,8 +10,7 @@ import java.util.UUID;
 
 /**
  * @author Josh
- * Port: an @Accessor on the vanilla field instead of an @Invoker of the method BossHealthOverlayMixin adds
- * (an invoker must not depend on another mixin having been applied first).
+ * An @Accessor on the vanilla field (upstream invoked a method its BossHealthOverlayMixin added).
  */
 @Mixin(BossHealthOverlay.class)
 public interface BossHealthOverlayAccessor {

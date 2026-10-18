@@ -3,6 +3,7 @@ package joshxviii.plantz.gui
 import joshxviii.plantz.inventory.MailCollectionBoxMenu
 import joshxviii.plantz.networking.UpdateCollectionBoxPayload
 import joshxviii.plantz.pazResource
+import joshxviii.plantz.renderer.outlineText
 import net.minecraft.ChatFormatting
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphics
@@ -56,6 +57,7 @@ class MailCollectionBoxScreen(
         txt.setTextColor(-1)
         txt.setTextColorUneditable(-1)
         txt.setTextShadow(false)
+        txt.setInvertHighlightedTextColor(false)
         txt.setBordered(false)
         txt.setMaxLength(40)
         txt.setResponder(this::onSearchUpdated)
@@ -110,6 +112,7 @@ class MailCollectionBoxScreen(
     override fun render(graphics: GuiGraphics, mouseX: Int, mouseY: Int, a: Float) {
         super.render(graphics, mouseX, mouseY, a)
         renderTooltip(graphics, mouseX, mouseY)
+        GuiCursor.applyRequestedCursor()
         val xo = leftPos
         val yo = topPos
     }
@@ -124,7 +127,9 @@ class MailCollectionBoxScreen(
         val scrollerX = xo+152
         val scrollerY = yo+17 + sy
         graphics.pazBlit(sprite, scrollerX, scrollerY, 0f, 0f, 12, 15, 12, 15)
-        // 26.1 requestCursor (pointer/resize cursor over the scroller) has no 1.21.1 equivalent
+        if (xm >= scrollerX && xm < scrollerX + 12 && ym >= scrollerY && ym < scrollerY + 15) {
+            graphics.requestCursor(if (scrolling) CursorTypes.RESIZE_NS else CursorTypes.POINTING_HAND)
+        }
 
         menu.availableMailboxes.find { it.blockPos == menu.selectedMailboxPos }?.let { mailbox ->
             val color = ARGB.addRgb(mailbox.color, 0x333333)
@@ -143,6 +148,11 @@ class MailCollectionBoxScreen(
         }
     }
 
+    override fun removed() {
+        super.removed()
+        GuiCursor.resetCursor()
+    }
+
     override fun containerTick() {
         super.containerTick()
     }
@@ -151,6 +161,7 @@ class MailCollectionBoxScreen(
         val xo = leftPos + 152
         val yo = topPos + 18
         if (mouseX >= xo && mouseX < xo + 12 && mouseY >= yo && mouseY < yo + 64) scrolling = true
+        if (clickPazButton(mouseX, mouseY, button)) return true
         return super.mouseClicked(mouseX, mouseY, button)
     }
 

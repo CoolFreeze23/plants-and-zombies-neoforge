@@ -5,7 +5,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-/** Port helper: 26.1 Camera.fov does not exist in 1.21.1; the HUD markers use GameRenderer.getFov instead. */
+/** ZombieHudMarkers: 1.21.1 has no Camera.fov, so the FOV comes from GameRenderer.getFov. */
 @Mixin(GameRenderer.class)
 public interface GameRendererAccessor {
     @Invoker("getFov")

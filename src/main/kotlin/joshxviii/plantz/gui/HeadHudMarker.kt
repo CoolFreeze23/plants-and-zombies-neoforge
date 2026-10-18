@@ -16,9 +16,8 @@ import net.minecraft.world.item.ItemStack
 import org.joml.Vector3f
 
 /**
- * Zombie head icon on the HUD. 26.1 queued this as a GuiElementRenderState drawn with the HEAD_MARKER_BAKE
- * pipeline (entity snippet, cutout, no cull, no cardinal lighting); 1.21.1 draws it immediately with
- * entityCutoutNoCull, lit head-on so the visible face is full bright.
+ * 26.1 queued this as a GuiElementRenderState for the HEAD_MARKER_BAKE pipeline (cutout, no cull, no cardinal
+ * lighting, emissive); 1.21.1 draws it right away with entityCutoutNoCull, full bright and lit from the front and back.
  */
 class HeadHudMarker(
     val zombie: Zombie,
@@ -44,7 +43,7 @@ class HeadHudMarker(
         model.head.setPos(0f, 0f, 0f)
 
         graphics.flush()
-        RenderSystem.setShaderLights(LIGHT_TOWARDS_VIEWER, LIGHT_TOWARDS_VIEWER)
+        RenderSystem.setShaderLights(LIGHT_FRONT, LIGHT_BACK)
         model.head.render(pose, graphics.bufferSource().getBuffer(RenderType.entityCutoutNoCull(texture)), LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY)
         graphics.flush()
         Lighting.setupFor3DItems()
@@ -54,6 +53,7 @@ class HeadHudMarker(
     }
 
     companion object {
-        private val LIGHT_TOWARDS_VIEWER = Vector3f(0f, 0f, 1f)
+        private val LIGHT_FRONT = Vector3f(0f, 0f, 1f)
+        private val LIGHT_BACK = Vector3f(0f, 0f, -1f)
     }
 }
