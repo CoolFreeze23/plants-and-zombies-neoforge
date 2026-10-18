@@ -73,14 +73,15 @@ Optional, detected automatically:
   unchanged. 26.1's `on_shelf` display context is `plantz:on_shelf` (NeoForge requires a namespaced name), falling
   back to `fixed`; 1.21.1 only has shelves through Copper Age Backport.
 
-Upstream quirks kept: the raid's "vanish" wither sound is played with `playLocalSound` on the server level, which plays
-nothing (in 26.1 too); the gnome voice jump sounds and the snowchunk hit sound are registered without a sound
-definition, so they are silent (in 26.1 too).
+Upstream quirk kept: the raid's "vanish" wither sound is played with `playLocalSound` on the server level, which plays
+nothing (in 26.1 too).
 
 ## Upstream bugs fixed along the way
 Paint vanished on chunk reload (paint colours were saved in a form NBT can't store); zombies breaking a flag never
 dropped the Brainz flag; the lime mailbox recipe made a red mailbox; picking a sun battery block shared its stored sun
 with the placed block; balloons dropped a lead when their holder died; 66 missing English strings (subtitles, death
-messages, biome/entity/block names) and the three death sounds with a broken subtitle key.
+messages, biome/entity/block names) and the three death sounds with a broken subtitle key. Sound events registered without a
+definition: the zombie yeti's snow chunk burst was silent (now vanilla's powder snow break, with a subtitle) and the
+per-variant gnome jump events logged "missing sound" warnings (now the shared gnome jump).
 
 Upstream gap kept: the newspaper zombie's `angry_ambient` sound files don't exist upstream.

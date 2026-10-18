@@ -460,6 +460,7 @@
   "plantz.subtitles.music.raid.zomboss": "Raid music plays",
   "plantz.subtitles.music_disc.grassy_groove": "Music disc plays",
   "plantz.subtitles.projectile.electric_zap": "Electricity zaps",
+  "plantz.subtitles.entity.snowchunk": "Snow chunk bursts",
 
   "soundCategory.ui": "UI",
   "subtitles.block.copper_chest.open": "Chest opens",

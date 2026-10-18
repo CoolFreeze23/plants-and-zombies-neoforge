@@ -105,6 +105,9 @@
   "entity.gnome.voice_2.death": {"sounds": [{ "name": "plantz:entity/gnome/voice_2/death", "volume": 1.0 }], "subtitle": "entity.gnome.death"},
 
   "entity.gnome.jump": {"sounds": [{ "name": "plantz:entity/gnome/jump", "volume": 0.2, "pitch": 1.2}], "subtitle": "entity.gnome.jump"},
+  "entity.gnome.voice_1.jump": {"sounds": [{ "name": "plantz:entity.gnome.jump", "type": "event" }]},
+  "entity.gnome.voice_2.jump": {"sounds": [{ "name": "plantz:entity.gnome.jump", "type": "event" }]},
+  "entity.snowchunk": {"sounds": [{ "name": "minecraft:block.powder_snow.break", "type": "event" }], "subtitle": "plantz.subtitles.entity.snowchunk"},
 
   "entity.browncoat.ambient": {
     "sounds": [
