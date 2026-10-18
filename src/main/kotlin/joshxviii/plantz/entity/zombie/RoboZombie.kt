@@ -1,5 +1,7 @@
 package joshxviii.plantz.entity.zombie
 
+import net.minecraft.nbt.CompoundTag
+import joshxviii.plantz.compat.AnimationState
 import joshxviii.plantz.ai.goal.MeleeAttackActionGoal
 import joshxviii.plantz.ai.goal.NavigateToTargetGoal
 import joshxviii.plantz.ai.goal.ProjectileAttackGoal
@@ -68,13 +70,15 @@ class RoboZombie(type: EntityType<out RoboZombie>, level: Level) : PazZombie(typ
         entityData.define(BASH_TIME_ID, 0)
     }
 
-    override fun addAdditionalSaveData(output: ValueOutput) {
-        super.addAdditionalSaveData(output)
+    override fun addAdditionalSaveData(tag: CompoundTag) {
+        super.addAdditionalSaveData(tag)
+        val output = ValueOutput.of(tag, registryAccess())
         output.putBoolean("isTransformed", isTransformed)
     }
 
-    override fun readAdditionalSaveData(input: ValueInput) {
-        super.readAdditionalSaveData(input)
+    override fun readAdditionalSaveData(tag: CompoundTag) {
+        super.readAdditionalSaveData(tag)
+        val input = ValueInput.of(tag, registryAccess())
         isTransformed = input.getBooleanOr("isTransformed", false)
         reassessNavigation()
     }
@@ -172,8 +176,8 @@ class RoboZombie(type: EntityType<out RoboZombie>, level: Level) : PazZombie(typ
         return SoundEvents.EMPTY
     }
 
-    override fun doHurtTarget(level: ServerLevel, target: Entity): Boolean {
-        val result = super.doHurtTarget(level, target)
+    override fun doHurtTarget(target: Entity): Boolean {
+        val result = super.doHurtTarget(target)
         return result
     }
 

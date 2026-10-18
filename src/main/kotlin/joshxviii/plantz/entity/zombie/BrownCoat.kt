@@ -1,5 +1,6 @@
 package joshxviii.plantz.entity.zombie
 
+import net.minecraft.nbt.CompoundTag
 import joshxviii.plantz.PazBlocks
 import joshxviii.plantz.PazDataSerializers.BROWN_COAT_VARIANT
 import joshxviii.plantz.PazTags
@@ -33,8 +34,8 @@ class BrownCoat(type: EntityType<out BrownCoat>, level: Level) : PazZombie(type,
         entityData.define(DATA_VARIANT_ID, BrownCoatVariant.getDefault())
     }
 
-    override fun doHurtTarget(level: ServerLevel, target: Entity): Boolean {
-        val result = super.doHurtTarget(level, target)
+    override fun doHurtTarget(target: Entity): Boolean {
+        val result = super.doHurtTarget(target)
         return result
     }
 
@@ -43,13 +44,15 @@ class BrownCoat(type: EntityType<out BrownCoat>, level: Level) : PazZombie(type,
         randomEquip(random, difficulty)
     }
 
-    override fun addAdditionalSaveData(output: ValueOutput) {
-        super.addAdditionalSaveData(output)
+    override fun addAdditionalSaveData(tag: CompoundTag) {
+        super.addAdditionalSaveData(tag)
+        val output = ValueOutput.of(tag, registryAccess())
         output.store("variant", BrownCoatVariant.CODEC, variant)
     }
 
-    override fun readAdditionalSaveData(input: ValueInput) {
-        super.readAdditionalSaveData(input)
+    override fun readAdditionalSaveData(tag: CompoundTag) {
+        super.readAdditionalSaveData(tag)
+        val input = ValueInput.of(tag, registryAccess())
         variant = input.read<BrownCoatVariant>("variant", BrownCoatVariant.CODEC).getOrDefault(BrownCoatVariant.getDefault())
     }
 

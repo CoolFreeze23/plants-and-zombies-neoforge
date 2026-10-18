@@ -32,7 +32,6 @@ import net.minecraft.world.entity.ai.control.FlyingMoveControl
 import net.minecraft.world.entity.ai.control.LookControl
 import net.minecraft.world.entity.ai.control.MoveControl
 import net.minecraft.world.entity.ai.goal.MoveThroughVillageGoal
-import net.minecraft.world.entity.ai.goal.SpearUseGoal
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal
@@ -51,9 +50,13 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.LevelReader
 import net.minecraft.world.level.ServerLevelAccessor
 import net.minecraft.world.level.material.Fluids
+import joshxviii.plantz.compat.AnimationState
 import joshxviii.plantz.compat.ValueInput
 import joshxviii.plantz.compat.ValueOutput
 import net.minecraft.world.phys.Vec3
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.tags.TagKey
+import net.minecraft.world.item.Item
 import java.util.*
 import kotlin.jvm.optionals.getOrElse
 import kotlin.math.max
@@ -130,8 +133,8 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
                 val pos = BlockPos(x, pos.y, z)
 
                 var spawnY = pos.y
-                while (spawnY > level.minY && level.isEmptyBlock(pos.atY(spawnY - 1))) spawnY--
-                while (spawnY < level.maxY && !level.isEmptyBlock(pos.atY(spawnY))) spawnY++
+                while (spawnY > level.minBuildHeight && level.isEmptyBlock(pos.atY(spawnY - 1))) spawnY--
+                while (spawnY < level.maxBuildHeight - 1 && !level.isEmptyBlock(pos.atY(spawnY))) spawnY++
 
                 val finalPos = BlockPos(x, spawnY, z)
 
@@ -233,16 +236,16 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
         super.onEquipItem(slot, oldStack, stack)
     }
 
-    override fun pickUpItem(level: ServerLevel, entity: ItemEntity) {
-        if (isBaby) return super.pickUpItem(level, entity)
-        val balloonItem = entity.item.item as? BalloonItem ?: return super.pickUpItem(level, entity)
+    override fun pickUpItem(entity: ItemEntity) {
+        if (isBaby) return super.pickUpItem(entity)
+        val balloonItem = entity.item.item as? BalloonItem ?: return super.pickUpItem(entity)
 
         val balloonsMissing = (4 - balloons.size).coerceIn(0, MAX_EQUIPPABLE_BALLOONS)
         val count = entity.item.count.coerceAtMost(balloonsMissing)
         spawnBalloons(count, balloonItem.color)
         entity.item.shrink(count)
 
-        super.pickUpItem(level, entity)
+        super.pickUpItem(entity)
     }
 
     var state: ZombieState
@@ -312,7 +315,7 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
     }
 
     fun addBehaviourGoalsNoMelee() {
-        this.goalSelector.addGoal(2, SpearUseGoal<Zombie>(this, 1.0, 1.0, 10.0f, 2.0f))
+        // 26.1 SpearUseGoal omitted: spears do not exist in 1.21.1
         this.goalSelector.addGoal(6, MoveThroughVillageGoal(this, 1.0, true, 4) { this.canBreakDoors() })
         this.goalSelector.addGoal(7, WaterAvoidingRandomStrollGoal(this, 1.0))
         this.targetSelector.addGoal(1, HurtByTargetGoal(this).setAlertOthers(ZombifiedPiglin::class.java))
@@ -342,9 +345,9 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
             if (waterTime>=250 && canEquipDuckyInWater()) {
                 if(!getItemBySlot(EquipmentSlot.LEGS).isEmpty) {
                     val currentLegs = getItemBySlot(EquipmentSlot.LEGS)
-                    val dropChance = dropChances.byEquipment(EquipmentSlot.LEGS)
+                    val dropChance = getEquipmentDropChance(EquipmentSlot.LEGS)
                     if (!currentLegs.isEmpty && max(this.random.nextFloat() - 0.1f, 0.0f).toDouble() < dropChance) {
-                        if (serverLevel!=null) spawnAtLocation(serverLevel, currentLegs)
+                        if (serverLevel!=null) spawnAtLocation(currentLegs)
                     }
                 }
                 setItemSlot(EquipmentSlot.LEGS, PazItems.DUCKY_TUBE.defaultInstance)
@@ -403,11 +406,11 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
     fun spawnBalloons(count: Int, color: List<DyeColor>) {
         val level = level() as? ServerLevel ?: return
         for (i in 0 until count) {
-            val balloon = PazEntities.BALLOON.create(level, MobSpawnType.TRIGGERED) ?: return
+            val balloon = PazEntities.BALLOON.create(level) ?: return
             balloon.dyeColor = color.random()
             val randomX = (random.nextDouble() - 0.5) * 2 + x
             val randomZ = (random.nextDouble() - 0.5) * 2 + z
-            balloon.snapTo(randomX, eyeY + 1.0, randomZ)
+            balloon.moveTo(randomX, eyeY + 1.0, randomZ)
             level.addFreshEntity(balloon)
             balloon.setLeashedTo(this, true)
             balloons.add(balloon)
@@ -447,39 +450,50 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
         entityData.define(FLYING, false)
     }
 
-    override fun addAdditionalSaveData(output: ValueOutput) {
-        super.addAdditionalSaveData(output)
+    override fun addAdditionalSaveData(tag: CompoundTag) {
+        super.addAdditionalSaveData(tag)
+        val output = ValueOutput.of(tag, registryAccess())
         output.putInt("plantz:State", state.ordinal)
         output.putBoolean("plantz:IsFlying", entityData.get(FLYING))
     }
 
-    override fun readAdditionalSaveData(input: ValueInput) {
-        super.readAdditionalSaveData(input)
+    override fun readAdditionalSaveData(tag: CompoundTag) {
+        super.readAdditionalSaveData(tag)
+        val input = ValueInput.of(tag, registryAccess())
         isFlying = input.getBooleanOr("plantz:IsFlying", false)
         state = ZombieState.entries[input.getInt("plantz:State").getOrElse { 0 }]
     }
 
-    override fun hurtServer(level: ServerLevel, source: DamageSource, damage: Float): Boolean {
-        if (!ignoreZombieDamage()) return super.hurtServer(level, source, damage)
-        return if ((source.`is`(PazTags.DamageTypes.IGNORED_BY_ZOMBIES) || source.isZombieFireworkExplosion()) && !(source.directEntity.isHypnotized())) false else super.hurtServer(level, source, damage)
+    // 26.1 hurtServer + hurtClient (identical filters) -> 1.21.1 hurt, which runs on both sides
+    override fun hurt(source: DamageSource, damage: Float): Boolean {
+        if (!ignoreZombieDamage()) return super.hurt(source, damage)
+        return if ((source.`is`(PazTags.DamageTypes.IGNORED_BY_ZOMBIES) || source.isZombieFireworkExplosion()) && !(source.directEntity.isHypnotized())) false else super.hurt(source, damage)
     }
-    override fun hurtClient(source: DamageSource): Boolean {
-        if (!ignoreZombieDamage()) return super.hurtClient(source)
-        return if ((source.`is`(PazTags.DamageTypes.IGNORED_BY_ZOMBIES) || source.isZombieFireworkExplosion()) && !source.directEntity.isHypnotized()) false else super.hurtClient(source)
-    }
-    override fun actuallyHurt(level: ServerLevel, source: DamageSource, damage: Float) {
-        if (!ignoreZombieDamage()) return super.actuallyHurt(level, source, damage)
+    override fun actuallyHurt(source: DamageSource, damage: Float) {
+        if (!ignoreZombieDamage()) return super.actuallyHurt(source, damage)
         if ((source.`is`(PazTags.DamageTypes.IGNORED_BY_ZOMBIES) || source.isZombieFireworkExplosion()) && !source.directEntity.isHypnotized()) {
             return
         }
-        super.actuallyHurt(level, source, damage)
+        super.actuallyHurt(source, damage)
     }
 
     protected open fun ignoreZombieDamage(): Boolean = true
 
-    override fun wantsToPickUp(level: ServerLevel, itemStack: ItemStack): Boolean {
+    override fun wantsToPickUp(itemStack: ItemStack): Boolean {
         if (itemStack.`is`(PazBlocks.PLANTZ_FLAG.asItem())) return false
-        return super.wantsToPickUp(level, itemStack)
+        return super.wantsToPickUp(itemStack)
+    }
+
+    /** 26.1 Mob.getPreferredWeaponType; 1.21.1 has no such hook, so it is applied in [canReplaceCurrentItem]. */
+    open fun getPreferredWeaponType(): TagKey<Item>? = null
+
+    override fun canReplaceCurrentItem(candidate: ItemStack, existing: ItemStack): Boolean {
+        val preferredWeaponType = getPreferredWeaponType()
+        if (preferredWeaponType != null && !existing.isEmpty) {
+            if (existing.`is`(preferredWeaponType) && !candidate.`is`(preferredWeaponType)) return false
+            if (!existing.`is`(preferredWeaponType) && candidate.`is`(preferredWeaponType)) return true
+        }
+        return super.canReplaceCurrentItem(candidate, existing)
     }
 
     open fun emergingTime(): Int = 40
@@ -489,7 +503,7 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
     override fun maxUpStep(): Float = if (isInWater) 0.5f else super.maxUpStep()
     override fun isSunSensitive(): Boolean = false
     override fun convertsInWater(): Boolean = false
-    override fun canSpawnInLiquids(): Boolean = canEquipDuckyInWater()
+    open fun canSpawnInLiquids(): Boolean = canEquipDuckyInWater()
     override fun checkSpawnObstruction(level: LevelReader): Boolean {
         return if (canSpawnInLiquids()) level.isUnobstructed(this)
         else super.checkSpawnObstruction(level)

@@ -25,7 +25,9 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.ServerLevelAccessor
-import net.minecraft.world.level.entity.UniquelyIdentifyable
+import net.minecraft.nbt.CompoundTag
+import joshxviii.plantz.compat.AnimationState
+import joshxviii.plantz.compat.EntityReference
 import joshxviii.plantz.compat.ValueInput
 import joshxviii.plantz.compat.ValueOutput
 import net.minecraft.world.phys.Vec3
@@ -34,7 +36,7 @@ import java.util.*
 abstract class ZombieRobot(type: EntityType<out ZombieRobot>, level: Level) : PazOwnableZombie(type, level) {
 
     companion object {
-        val DATA_OWNERUUID_ID: EntityDataAccessor<Optional<EntityReference<LivingEntity>>> = SynchedEntityData.defineId(ZombieRobot::class.java, EntityDataSerializers.OPTIONAL_LIVING_ENTITY_REFERENCE)
+        val DATA_OWNERUUID_ID: EntityDataAccessor<Optional<UUID>> = SynchedEntityData.defineId(ZombieRobot::class.java, EntityDataSerializers.OPTIONAL_UUID)
         val ACTION_TIME_ID: EntityDataAccessor<Int> = SynchedEntityData.defineId<Int>(ZombieRobot::class.java, EntityDataSerializers.INT)
     }
 
@@ -70,11 +72,11 @@ abstract class ZombieRobot(type: EntityType<out ZombieRobot>, level: Level) : Pa
     }
 
     fun setOwner(owner: LivingEntity?) {
-        this.entityData.set(DATA_OWNERUUID_ID, Optional.ofNullable(owner).map { EntityReference.of(it) })
+        this.entityData.set(DATA_OWNERUUID_ID, Optional.ofNullable(owner).map { it.uuid })
     }
 
     fun setOwnerReference(owner: EntityReference<LivingEntity>) {
-        this.entityData.set(DATA_OWNERUUID_ID, Optional.ofNullable(owner))
+        this.entityData.set(DATA_OWNERUUID_ID, Optional.ofNullable(owner).map { it.uuid })
     }
 
     override fun defineSynchedData(entityData: SynchedEntityData.Builder) {
@@ -83,14 +85,16 @@ abstract class ZombieRobot(type: EntityType<out ZombieRobot>, level: Level) : Pa
         entityData.define(ACTION_TIME_ID, 0)
     }
 
-    override fun addAdditionalSaveData(output: ValueOutput) {
-        super.addAdditionalSaveData(output)
+    override fun addAdditionalSaveData(tag: CompoundTag) {
+        super.addAdditionalSaveData(tag)
+        val output = ValueOutput.of(tag, registryAccess())
         EntityReference.store(ownerReference, output, "Owner")
         output.putInt("actionTime", actionTime)
     }
 
-    override fun readAdditionalSaveData(input: ValueInput) {
-        super.readAdditionalSaveData(input)
+    override fun readAdditionalSaveData(tag: CompoundTag) {
+        super.readAdditionalSaveData(tag)
+        val input = ValueInput.of(tag, registryAccess())
         val owner = EntityReference.readWithOldOwnerConversion<LivingEntity>(input, "Owner", this.level())
         if (owner != null) {
             try { setOwnerReference(owner) } catch (ignored: Throwable) { }
@@ -98,8 +102,12 @@ abstract class ZombieRobot(type: EntityType<out ZombieRobot>, level: Level) : Pa
         input.getIntOr("actionTime", 0)
     }
 
+    private var cachedOwnerReference: EntityReference<LivingEntity>? = null
+
     override fun getOwnerReference(): EntityReference<LivingEntity>? {
-        return this.entityData.get(DATA_OWNERUUID_ID).orElse(null);
+        val uuid = this.entityData.get(DATA_OWNERUUID_ID).orElse(null) ?: return null
+        cachedOwnerReference?.let { if (it.uuid == uuid) return it }
+        return EntityReference.of<LivingEntity>(uuid).also { cachedOwnerReference = it }
     }
 
     override fun doPush(entity: Entity) {
@@ -130,7 +138,7 @@ abstract class ZombieRobot(type: EntityType<out ZombieRobot>, level: Level) : Pa
         this.goalSelector.addGoal(3, LookAtPlayerGoal(this, Player::class.java, 8.0f))
         // attack owner's target goal
         this.targetSelector.addGoal(2, NearestAttackableTargetGoal(this, LivingEntity::class.java, true
-        ) { entity, level ->
+        ) { entity ->
             return@NearestAttackableTargetGoal entity is Player || entity is Plant
             if (this.owner is Player) (
                 entity !is Plant &&

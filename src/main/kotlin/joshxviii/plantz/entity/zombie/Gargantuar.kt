@@ -1,5 +1,7 @@
 package joshxviii.plantz.entity.zombie
 
+import net.minecraft.nbt.CompoundTag
+import joshxviii.plantz.compat.AnimationState
 import joshxviii.plantz.*
 import joshxviii.plantz.PazDataSerializers.GARGANTUAR_VARIANT
 import joshxviii.plantz.ai.ZombieState
@@ -14,7 +16,6 @@ import net.minecraft.network.syncher.SynchedEntityData
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
-import net.minecraft.util.random.WeightedList
 import net.minecraft.world.DifficultyInstance
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.damagesource.DamageTypes
@@ -25,7 +26,7 @@ import net.minecraft.world.entity.ai.control.MoveControl
 import net.minecraft.world.entity.ai.goal.FloatGoal
 import net.minecraft.world.entity.ai.goal.Goal
 import net.minecraft.world.entity.monster.Zombie
-import net.minecraft.world.entity.vehicle.boat.AbstractBoat
+import net.minecraft.world.entity.vehicle.Boat
 import net.minecraft.world.level.ExplosionDamageCalculator
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.ServerLevelAccessor
@@ -88,14 +89,16 @@ class Gargantuar(type: EntityType<out Gargantuar>, level: Level) : PazZombie(typ
         entityData.define(HAS_IMP_ID, true)
     }
 
-    override fun addAdditionalSaveData(output: ValueOutput) {
-        super.addAdditionalSaveData(output)
+    override fun addAdditionalSaveData(tag: CompoundTag) {
+        super.addAdditionalSaveData(tag)
+        val output = ValueOutput.of(tag, registryAccess())
         output.store("variant", GargantuarVariant.CODEC, variant)
         output.putBoolean("hasImp", hasImp)
     }
 
-    override fun readAdditionalSaveData(input: ValueInput) {
-        super.readAdditionalSaveData(input)
+    override fun readAdditionalSaveData(tag: CompoundTag) {
+        super.readAdditionalSaveData(tag)
+        val input = ValueInput.of(tag, registryAccess())
         variant = input.read("variant", GargantuarVariant.CODEC).getOrDefault(GargantuarVariant.getDefault())
         hasImp = input.getBooleanOr("hasImp", true)
     }
@@ -147,7 +150,6 @@ class Gargantuar(type: EntityType<out Gargantuar>, level: Level) : PazZombie(typ
                     Level.ExplosionInteraction.MOB,
                     ParticleTypes.LARGE_SMOKE,
                     ParticleTypes.EXPLOSION,
-                    WeightedList.of(),
                     SoundEvents.WIND_CHARGE_BURST
                 )
                 if (level is ServerLevel) {
@@ -176,8 +178,8 @@ class Gargantuar(type: EntityType<out Gargantuar>, level: Level) : PazZombie(typ
     }
 
     override fun updateControlFlags() {
-        val noController = this.controllingPassenger !is Mob || this.controllingPassenger?.`is`(PazTags.EntityTypes.ZOMBIE_RAIDERS) == true
-        val notInBoat = this.vehicle !is AbstractBoat
+        val noController = this.controllingPassenger !is Mob || this.controllingPassenger?.type?.`is`(PazTags.EntityTypes.ZOMBIE_RAIDERS) == true
+        val notInBoat = this.vehicle !is Boat
         this.goalSelector.setControlFlag(Goal.Flag.MOVE, noController)
         this.goalSelector.setControlFlag(Goal.Flag.JUMP, noController && notInBoat)
         this.goalSelector.setControlFlag(Goal.Flag.LOOK, noController)
@@ -252,7 +254,7 @@ class Gargantuar(type: EntityType<out Gargantuar>, level: Level) : PazZombie(typ
         if (isPathFinding && this.target!=null) {
             if (entity is LivingEntity && entity !is Zombie) {
                 val level = level() as? ServerLevel?: return
-                entity.hurtServer(level, this.damageSources().source(PazDamageTypes.ZOMBIE_TRAMPLE, this), 2.5f)
+                entity.hurt(this.damageSources().source(PazDamageTypes.ZOMBIE_TRAMPLE, this), 2.5f)
                 entity.knockback(
                     0.2, position().x - entity.position().x, position().z - entity.position().z
                 )
@@ -284,8 +286,8 @@ class Gargantuar(type: EntityType<out Gargantuar>, level: Level) : PazZombie(typ
         return pos.add(direction)
     }
 
-    override fun doHurtTarget(level: ServerLevel, target: Entity): Boolean {
-        val result = super.doHurtTarget(level, target)
+    override fun doHurtTarget(target: Entity): Boolean {
+        val result = super.doHurtTarget(target)
         return result
     }
 
@@ -337,9 +339,9 @@ class Gargantuar(type: EntityType<out Gargantuar>, level: Level) : PazZombie(typ
                 spawnDirection.y + gargantuar.y+2.5f,
                 spawnDirection.z + gargantuar.z
             )
-           PazEntities.IMP.create(level, MobSpawnType.MOB_SUMMONED)?.let { imp ->
+           PazEntities.IMP.create(level)?.let { imp ->
                 val lookDirection = gargantuar.calculateViewVector(0f, gargantuar.yRot)
-                imp.snapTo(spawnPos, gargantuar.yRot, 0.0f)
+                imp.moveTo(spawnPos, gargantuar.yRot, 0.0f)
                 imp.applyImpulse(lookDirection.x, lookDirection.y, lookDirection.z, 1.0f, 0f)
                 if (gargantuar.variant == GargantuarVariant.PIRATE) imp.variant = ImpVariant.PIRATE
                 gargantuar.target.let { if (it!=null) imp.setLastHurtMob(it) }

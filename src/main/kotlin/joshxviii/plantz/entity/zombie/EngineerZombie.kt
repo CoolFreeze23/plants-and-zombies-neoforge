@@ -1,5 +1,6 @@
 package joshxviii.plantz.entity.zombie
 
+import joshxviii.plantz.compat.AnimationState
 import joshxviii.plantz.PazEntities
 import joshxviii.plantz.PazItems
 import joshxviii.plantz.PazSounds
@@ -100,8 +101,8 @@ class EngineerZombie(type: EntityType<out EngineerZombie>, level: Level) : PazZo
         return SoundEvents.ZOMBIE_STEP
     }
 
-    override fun doHurtTarget(level: ServerLevel, target: Entity): Boolean {
-        val result = super.doHurtTarget(level, target)
+    override fun doHurtTarget(target: Entity): Boolean {
+        val result = super.doHurtTarget(target)
         return result
     }
 
@@ -133,7 +134,7 @@ class EngineerZombie(type: EntityType<out EngineerZombie>, level: Level) : PazZo
 
         override fun canUse(): Boolean {
             if (engineerZombie.buildingTime>0) return true
-            val nearbyBots: Int = getServerLevel(engineerZombie.level()).getNearbyEntities(ZombieRobot::class.java, botTargeting, engineerZombie, engineerZombie.boundingBox.inflate(28.0)).size
+            val nearbyBots: Int = (engineerZombie.level() as ServerLevel).getNearbyEntities(ZombieRobot::class.java, botTargeting, engineerZombie, engineerZombie.boundingBox.inflate(28.0)).size
             return engineerZombie.target != null && !engineerZombie.isDeadOrDying && (engineerZombie.target?.isAlive == true) && nearbyBots < 2
         }
 
@@ -157,8 +158,8 @@ class EngineerZombie(type: EntityType<out EngineerZombie>, level: Level) : PazZo
             val a = (2*Mth.PI / amount)
             for(i in 1..amount) {
                 val b = a*i-a*(amount+1)*.5
-                val x = engineerZombie.x + Mth.cos(b+angleToTarget)*BUILD_DISTANCE
-                val z = engineerZombie.z + Mth.sin(b+angleToTarget)*BUILD_DISTANCE
+                val x = engineerZombie.x + Mth.cos((b+angleToTarget).toFloat())*BUILD_DISTANCE
+                val z = engineerZombie.z + Mth.sin((b+angleToTarget).toFloat())*BUILD_DISTANCE
                 tryCreateBot(x, z, minY, maxY, angleToTarget)
             }
         }
@@ -187,8 +188,8 @@ class EngineerZombie(type: EntityType<out EngineerZombie>, level: Level) : PazZo
             } while (pos.y >= Mth.floor(minY) - 1)
 
             if (success) {
-                val bot : ZombieRobot = ZOMBIE_BOTS.random().create(level, MobSpawnType.MOB_SUMMONED)?: return
-                bot.snapTo(BlockPos(Vec3i(x.toInt(),(pos.y+topOffset).toInt(),z.toInt())), angle * Mth.RAD_TO_DEG, 0.0f)
+                val bot : ZombieRobot = ZOMBIE_BOTS.random().create(level)?: return
+                bot.moveTo(BlockPos(Vec3i(x.toInt(),(pos.y+topOffset).toInt(),z.toInt())), angle * Mth.RAD_TO_DEG, 0.0f)
                 bot.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.REINFORCEMENT, PazZombieGroupData(isRaider = false))
                 bot.owner = engineerZombie
                 level.addFreshEntity(bot)

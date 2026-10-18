@@ -351,7 +351,7 @@ enum class WaveType(
             if (zombie is BrownCoat) {
                 zombie.variant = BrownCoatVariant.SNOW
                 val boots = Items.LEATHER_BOOTS.defaultInstance
-                boots.set(DataComponents.DYED_COLOR, DyedItemColor(0xFFFFFF))
+                boots.set(DataComponents.DYED_COLOR, DyedItemColor(0xFFFFFF, true))
                 if (zombie.random.nextFloat() < 0.65f) {
                     val frostWalker = zombie.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.FROST_WALKER)
                     boots.enchant(frostWalker, 2)
