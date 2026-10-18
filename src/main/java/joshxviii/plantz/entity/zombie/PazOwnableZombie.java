@@ -2,7 +2,6 @@ package joshxviii.plantz.entity.zombie;
 
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import joshxviii.plantz.compat.EntityReference;
-import joshxviii.plantz.entity.zombie.PazZombie;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.OwnableEntity;
@@ -12,10 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * 1.21.1 port: vanilla OwnableEntity here only has getOwnerUUID()/getOwner() (and getOwner() only finds players),
- * so the 26.1 contract (getOwnerReference(), owner resolving to any living entity, getRootOwner()) lives on this class.
- */
+/** 1.21.1 OwnableEntity lacks the 26.1 getOwnerReference()/getRootOwner() and only resolves player owners, so they live here. */
 public abstract class PazOwnableZombie extends PazZombie implements OwnableEntity {
     public PazOwnableZombie(EntityType<? extends PazZombie> type, Level level) {
         super(type, level);

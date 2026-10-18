@@ -9,6 +9,7 @@ import joshxviii.plantz.item.BalloonItem
 import joshxviii.plantz.raid.ZombieRaid.Companion.SPAWN_DISTANCE
 import joshxviii.plantz.raid.getZombieRaids
 import net.minecraft.core.BlockPos
+import net.minecraft.core.Holder
 import net.minecraft.core.particles.BlockParticleOption
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.network.syncher.EntityDataAccessor
@@ -24,8 +25,11 @@ import net.minecraft.util.RandomSource
 import net.minecraft.world.Difficulty
 import net.minecraft.world.DifficultyInstance
 import net.minecraft.world.damagesource.DamageSource
+import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.entity.*
+import net.minecraft.world.entity.ai.attributes.Attribute
 import net.minecraft.world.entity.ai.attributes.AttributeInstance
+import net.minecraft.world.entity.ai.attributes.AttributeModifier
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.ai.control.FlyingMoveControl
@@ -46,6 +50,7 @@ import net.minecraft.world.entity.npc.AbstractVillager
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.GameRules
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.LevelReader
 import net.minecraft.world.level.ServerLevelAccessor
@@ -57,6 +62,7 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.tags.TagKey
 import net.minecraft.world.item.Item
+import net.neoforged.neoforge.common.NeoForgeMod
 import java.util.*
 import kotlin.jvm.optionals.getOrElse
 import kotlin.math.max
@@ -92,7 +98,7 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
                 val rainBonus = if (isRaining) 2.75f else 1.25f
                 val spawnChance = if (biome.`is`(PazTags.Biomes.WATER_SPAWNS)) 0.085f else 0.015f
                 return MobSpawnType.isSpawner(spawnReason) ||
-                        (random.nextFloat() < (spawnChance * rainBonus) && pos.y > level.seaLevel - 3)
+                        (random.nextFloat() < (spawnChance * rainBonus) && pos.y > seaLevel(level) - 3)
             }
 
             // land spawning
@@ -152,6 +158,9 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
             return null
         }
 
+        /** 1.21.1 LevelReader.seaLevel is always 63; 26.1 reads the dimension's generator. */
+        fun seaLevel(level: ServerLevelAccessor): Int = level.level.chunkSource.generator.seaLevel
+
         fun isBornLeader(zombie: Zombie): Boolean {
             return Objects.requireNonNull<AttributeInstance>(zombie.getAttribute(Attributes.MAX_HEALTH)).hasModifier(ResourceLocation.withDefaultNamespace(LEADER_MODIFIER_ID))
         }
@@ -168,6 +177,10 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
         const val ZOMBIE_SPEED = 0.23
         const val MAX_EQUIPPABLE_BALLOONS = 4
         const val LEADER_MODIFIER_ID: String = "leader_zombie_bonus"
+        private val REINFORCEMENT_CALLER_CHARGE_ID = ResourceLocation.withDefaultNamespace("reinforcement_caller_charge")
+        private val ZOMBIE_REINFORCEMENT_CALLEE_CHARGE = AttributeModifier(
+            ResourceLocation.withDefaultNamespace("reinforcement_callee_charge"), -0.05f.toDouble(), AttributeModifier.Operation.ADD_VALUE
+        )
 
         data class PazZombieAttributes(
             val maxHealth: Double = 20.0,
@@ -315,7 +328,7 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
     }
 
     fun addBehaviourGoalsNoMelee() {
-        // 26.1 SpearUseGoal omitted: spears do not exist in 1.21.1
+        // no SpearUseGoal: spears do not exist in 1.21.1
         this.goalSelector.addGoal(6, MoveThroughVillageGoal(this, 1.0, true, 4) { this.canBreakDoors() })
         this.goalSelector.addGoal(7, WaterAvoidingRandomStrollGoal(this, 1.0))
         this.targetSelector.addGoal(1, HurtByTargetGoal(this).setAlertOthers(ZombifiedPiglin::class.java))
@@ -340,7 +353,7 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
             if (balloons.isEmpty()) isFlying = false
         }
 
-        if (isEyeInFluid(FluidTags.WATER)) {
+        if (isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) {
             waterTime++
             if (waterTime>=250 && canEquipDuckyInWater()) {
                 if(!getItemBySlot(EquipmentSlot.LEGS).isEmpty) {
@@ -417,6 +430,75 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
         }
     }
 
+    /**
+     * 26.1 `convertTo(type, ConversionParams.single(this, keepEquipment, preserveCanPickUpLoot), afterConversion)`.
+     * 1.21.1 convertTo copies much less state and adds the new mob before the caller can configure it.
+     */
+    fun <T : PazZombie> convertToSingle(type: EntityType<T>, keepEquipment: Boolean, preserveCanPickUpLoot: Boolean, afterConversion: (T) -> Unit): T? {
+        if (isRemoved) return null
+        val converted = type.create(level()) ?: return null
+        copyStateTo(converted, keepEquipment, preserveCanPickUpLoot)
+        afterConversion(converted)
+        (level() as? ServerLevel)?.addFreshEntity(converted)
+        discard()
+        return converted
+    }
+
+    // 26.1 ConversionType.SINGLE.convert (a PazZombie parameter, so protected members are reachable on it)
+    private fun copyStateTo(converted: PazZombie, keepEquipment: Boolean, preserveCanPickUpLoot: Boolean) {
+        val rootPassenger = firstPassenger
+        converted.copyPosition(this)
+        converted.deltaMovement = deltaMovement
+        if (rootPassenger != null) {
+            rootPassenger.stopRiding()
+            for (passenger in converted.passengers) {
+                passenger.stopRiding()
+                passenger.remove(RemovalReason.DISCARDED)
+            }
+            rootPassenger.startRiding(converted, true)
+        }
+        vehicle?.let {
+            stopRiding()
+            converted.startRiding(it, false)
+        }
+        if (keepEquipment) for (slot in EquipmentSlot.entries) {
+            val itemStack = getItemBySlot(slot)
+            if (!itemStack.isEmpty) {
+                converted.setItemSlot(slot, itemStack.copyAndClear())
+                converted.setDropChance(slot, getEquipmentDropChance(slot))
+            }
+        }
+        converted.fallDistance = fallDistance
+        converted.setSharedFlag(FLAG_FALL_FLYING, isFallFlying)
+        converted.lastHurtByPlayerTime = lastHurtByPlayerTime
+        converted.hurtTime = hurtTime
+        converted.yBodyRot = yBodyRot
+        converted.setOnGround(onGround())
+        sleepingPos.ifPresent(converted::setSleepingPos)
+        leashHolder?.let { converted.setLeashedTo(it, true) }
+
+        converted.absorptionAmount = absorptionAmount
+        for (effect in activeEffects) converted.addEffect(MobEffectInstance(effect))
+        if (isBaby) converted.isBaby = true
+        if (preserveCanPickUpLoot) converted.setCanPickUpLoot(canPickUpLoot())
+        converted.isLeftHanded = isLeftHanded
+        converted.isNoAi = isNoAi
+        if (isPersistenceRequired) converted.setPersistenceRequired()
+        converted.isCustomNameVisible = isCustomNameVisible
+        converted.setSharedFlagOnFire(isOnFire)
+        converted.isInvulnerable = isInvulnerable
+        converted.isNoGravity = isNoGravity
+        converted.portalCooldown = portalCooldown
+        converted.isSilent = isSilent
+        tags.forEach(converted::addTag)
+        converted.customName = customName
+        team?.let {
+            level().scoreboard.addPlayerToTeam(converted.stringUUID, it)
+            level().scoreboard.removePlayerFromTeam(stringUUID, it)
+        }
+        if (canBreakDoors()) converted.setCanBreakDoors(true)
+    }
+
     override fun isImmobile(): Boolean {
         return if (state==ZombieState.EMERGING || state==ZombieState.RETREATING) true else super.isImmobile()
     }
@@ -464,11 +546,61 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
         state = ZombieState.entries[input.getInt("plantz:State").getOrElse { 0 }]
     }
 
-    // 26.1 hurtServer + hurtClient (identical filters) -> 1.21.1 hurt, which runs on both sides
     override fun hurt(source: DamageSource, damage: Float): Boolean {
-        if (!ignoreZombieDamage()) return super.hurt(source, damage)
-        return if ((source.`is`(PazTags.DamageTypes.IGNORED_BY_ZOMBIES) || source.isZombieFireworkExplosion()) && !(source.directEntity.isHypnotized())) false else super.hurt(source, damage)
+        if (ignoreZombieDamage() && (source.`is`(PazTags.DamageTypes.IGNORED_BY_ZOMBIES) || source.isZombieFireworkExplosion()) && !(source.directEntity.isHypnotized())) return false
+        muteVanillaReinforcements = true
+        val wasHurt = try { super.hurt(source, damage) } finally { muteVanillaReinforcements = false }
+        if (wasHurt) summonReinforcements(source)
+        return wasHurt
     }
+
+    // 1.21.1 Zombie.hurt always calls a plain Zombie as reinforcement; 26.1 calls one of the zombie's own type,
+    // so the vanilla roll is muted here and redone in summonReinforcements.
+    private var muteVanillaReinforcements = false
+
+    override fun getAttributeValue(attribute: Holder<Attribute>): Double =
+        if (muteVanillaReinforcements && attribute == Attributes.SPAWN_REINFORCEMENTS_CHANCE) 0.0 else super.getAttributeValue(attribute)
+
+    private fun summonReinforcements(source: DamageSource) {
+        val level = level() as? ServerLevel ?: return
+        val target = target ?: source.entity as? LivingEntity
+        if (target == null
+            || level.difficulty != Difficulty.HARD
+            || random.nextFloat() >= getAttributeValue(Attributes.SPAWN_REINFORCEMENTS_CHANCE)
+            || !level.gameRules.getBoolean(GameRules.RULE_DOMOBSPAWNING)) return
+
+        val x = Mth.floor(this.x)
+        val y = Mth.floor(this.y)
+        val z = Mth.floor(this.z)
+        val type = this.type
+        val reinforcement = type.create(level) as? Zombie ?: return
+
+        for (i in 0..<50) {
+            val xt = x + Mth.nextInt(random, 7, 40) * Mth.nextInt(random, -1, 1)
+            val yt = y + Mth.nextInt(random, 7, 40) * Mth.nextInt(random, -1, 1)
+            val zt = z + Mth.nextInt(random, 7, 40) * Mth.nextInt(random, -1, 1)
+            val spawnPos = BlockPos(xt, yt, zt)
+            if (SpawnPlacements.isSpawnPositionOk(type, level, spawnPos)
+                && SpawnPlacements.checkSpawnRules(type, level, MobSpawnType.REINFORCEMENT, spawnPos, level.random)) {
+                reinforcement.setPos(xt.toDouble(), yt.toDouble(), zt.toDouble())
+                if (!level.hasNearbyAlivePlayer(xt.toDouble(), yt.toDouble(), zt.toDouble(), 7.0)
+                    && level.isUnobstructed(reinforcement)
+                    && level.noCollision(reinforcement)
+                    && ((reinforcement as? PazZombie)?.canSpawnInLiquids() == true || !level.containsAnyLiquid(reinforcement.boundingBox))) {
+                    reinforcement.target = target
+                    reinforcement.finalizeSpawn(level, level.getCurrentDifficultyAt(reinforcement.blockPosition()), MobSpawnType.REINFORCEMENT, null)
+                    level.addFreshEntityWithPassengers(reinforcement)
+                    val attribute = getAttribute(Attributes.SPAWN_REINFORCEMENTS_CHANCE)!!
+                    val existingAmount = attribute.getModifier(REINFORCEMENT_CALLER_CHARGE_ID)?.amount() ?: 0.0
+                    attribute.removeModifier(REINFORCEMENT_CALLER_CHARGE_ID)
+                    attribute.addPermanentModifier(AttributeModifier(REINFORCEMENT_CALLER_CHARGE_ID, existingAmount - 0.05, AttributeModifier.Operation.ADD_VALUE))
+                    reinforcement.getAttribute(Attributes.SPAWN_REINFORCEMENTS_CHANCE)!!.addPermanentModifier(ZOMBIE_REINFORCEMENT_CALLEE_CHARGE)
+                    break
+                }
+            }
+        }
+    }
+
     override fun actuallyHurt(source: DamageSource, damage: Float) {
         if (!ignoreZombieDamage()) return super.actuallyHurt(source, damage)
         if ((source.`is`(PazTags.DamageTypes.IGNORED_BY_ZOMBIES) || source.isZombieFireworkExplosion()) && !source.directEntity.isHypnotized()) {
@@ -484,7 +616,7 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
         return super.wantsToPickUp(itemStack)
     }
 
-    /** 26.1 Mob.getPreferredWeaponType; 1.21.1 has no such hook, so it is applied in [canReplaceCurrentItem]. */
+    /** 26.1 Mob.getPreferredWeaponType: 1.21.1 has no such hook, so it is applied in [canReplaceCurrentItem]. */
     open fun getPreferredWeaponType(): TagKey<Item>? = null
 
     override fun canReplaceCurrentItem(candidate: ItemStack, existing: ItemStack): Boolean {
@@ -503,6 +635,7 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
     override fun maxUpStep(): Float = if (isInWater) 0.5f else super.maxUpStep()
     override fun isSunSensitive(): Boolean = false
     override fun convertsInWater(): Boolean = false
+    /** 26.1 Mob.canSpawnInLiquids (not in 1.21.1): used for spawn obstruction and reinforcements. */
     open fun canSpawnInLiquids(): Boolean = canEquipDuckyInWater()
     override fun checkSpawnObstruction(level: LevelReader): Boolean {
         return if (canSpawnInLiquids()) level.isUnobstructed(this)
@@ -533,6 +666,8 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
         }
 
         val data = super.finalizeSpawn(level, difficulty, spawnReason, newData)
+        // 26.1 Zombie.handleAttributes heals a new leader to its raised max health; 1.21.1 does not
+        if (spawnReason != MobSpawnType.CONVERSION && isBornLeader(this)) health = maxHealth
 
         if (spawnReason == MobSpawnType.REINFORCEMENT || spawnReason == MobSpawnType.EVENT) state = ZombieState.EMERGING
 
@@ -541,7 +676,7 @@ abstract class PazZombie(type: EntityType<out PazZombie>, level: Level) : Zombie
             if (spawnReason != MobSpawnType.NATURAL) setDropChance(EquipmentSlot.LEGS, 0.0f)
             else setDropChance(EquipmentSlot.LEGS, 0.15f)
         }
-        
+
         return data
     }
 }

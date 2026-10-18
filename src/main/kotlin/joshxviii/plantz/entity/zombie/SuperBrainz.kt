@@ -4,7 +4,6 @@ import net.minecraft.nbt.CompoundTag
 import joshxviii.plantz.compat.AnimationState
 import joshxviii.plantz.*
 import joshxviii.plantz.PazDataSerializers.SUPER_BRAINZ_VARIANT
-import joshxviii.plantz.ai.ZombieState
 import joshxviii.plantz.ai.goal.BeamAttackGoal
 import joshxviii.plantz.ai.goal.MeleeAttackActionGoal
 import joshxviii.plantz.ai.goal.NavigateToTargetGoal
@@ -57,7 +56,9 @@ class SuperBrainz(type: EntityType<out SuperBrainz>, level: Level) : PazZombie(t
     var yCapeO = 0.0f
     var zCapeO = 0.0f
 
+    @Suppress("PROPERTY_HIDES_JAVA_FIELD") // 1.21.1 Entity still has its own walkDist fields; the cape uses these
     var walkDist = 0f
+    @Suppress("PROPERTY_HIDES_JAVA_FIELD")
     var walkDistO = 0f
 
     val laserAttackAnimation : AnimationState = AnimationState()

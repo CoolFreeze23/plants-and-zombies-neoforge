@@ -35,7 +35,7 @@ class ZombieYeti(type: EntityType<out ZombieYeti>, level: Level) : PazZombie(typ
             return level.difficulty != Difficulty.PEACEFUL
                     && (MobSpawnType.ignoresLightRequirements(spawnReason) || isDarkEnoughToSpawn(level, pos, random))
                     && checkMobSpawnRules(type, level, spawnReason, pos, random) || level.getBlockState(below).`is`(PazTags.BlockTags.YETI_SPAWNABLE_ON)
-                    && pos.y > level.seaLevel
+                    && pos.y > seaLevel(level)
         }
     }
 
@@ -84,7 +84,7 @@ class ZombieYeti(type: EntityType<out ZombieYeti>, level: Level) : PazZombie(typ
         super.doPush(entity)
         if (isPathFinding && this.target!=null) {
             if (entity is LivingEntity && entity !is Zombie) {
-                val level = level() as? ServerLevel?: return
+                if (level() !is ServerLevel) return
                 entity.hurt(this.damageSources().source(PazDamageTypes.ZOMBIE_TRAMPLE, this), 2.5f)
                 entity.knockback(
                     0.2, position().x - entity.position().x, position().z - entity.position().z

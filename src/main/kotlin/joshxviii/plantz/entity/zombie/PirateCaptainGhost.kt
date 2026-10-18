@@ -4,7 +4,6 @@ import net.minecraft.core.BlockPos
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.EntityDataSerializers
 import net.minecraft.network.syncher.SynchedEntityData
-import net.minecraft.server.level.ServerLevel
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.util.Mth
@@ -74,9 +73,32 @@ class PirateCaptainGhost(type: EntityType<out PirateCaptainGhost>, level: Level)
         noPhysics = true
         super.tick()
         noPhysics = false
-        // 26.1 isAffectedByBlocks() = !isRemoved: 1.21.1 skips block effects while noPhysics, so apply them here
-        if (!isRemoved) tryCheckInsideBlocks()
+        applyEffectsFromBlocks()
         isNoGravity = true
+    }
+
+    // 26.1 isAffectedByBlocks() = !isRemoved keeps block effects on while noPhysics; 1.21.1 skips them in move(), so
+    // this mirrors 26.1 Entity.applyEffectsFromBlocks (run server side, like 26.1 LivingEntity.aiStep)
+    private fun applyEffectsFromBlocks() {
+        if (isRemoved || level().isClientSide) return
+        if (onGround()) {
+            @Suppress("DEPRECATION") // same position vanilla stepOn uses
+            val effectPos = onPosLegacy
+            val effectState = level().getBlockState(effectPos)
+            effectState.block.stepOn(level(), effectPos, effectState, this)
+        }
+
+        val wasOnFire = isOnFire
+        val wasFreezing = ticksFrozen > 0
+        val previousRemainingFireTicks = remainingFireTicks
+        tryCheckInsideBlocks()
+        val isInRain = level().isRainingAt(blockPosition()) || level().isRainingAt(BlockPos.containing(x, boundingBox.maxY, z))
+        if (isInRain) clearFire()
+
+        if (wasOnFire && !isOnFire || wasFreezing && ticksFrozen <= 0) playEntityOnFireExtinguishedSound()
+
+        val wasIgnitedThisTick = remainingFireTicks > previousRemainingFireTicks
+        if (!isOnFire && !wasIgnitedThisTick) remainingFireTicks = -fireImmuneTicks
     }
 
     override fun finalizeSpawn(

@@ -89,7 +89,7 @@ class AllStar(type: EntityType<out AllStar>, level: Level) : PazZombie(type, lev
                 0.7, position().x - entity.position().x, position().z - entity.position().z
             )
             else if (entity is LivingEntity) {
-                val level = level() as? ServerLevel?: return
+                if (level() !is ServerLevel) return
                 entity.hurt(this.damageSources().source(PazDamageTypes.ZOMBIE_TRAMPLE, this), 1.5f)
                 entity.knockback(
                     2.0, position().x - entity.position().x, position().z - entity.position().z
