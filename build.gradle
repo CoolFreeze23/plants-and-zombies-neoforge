@@ -33,9 +33,24 @@ repositories {
     }
 }
 
+// Dev-only GameTests (not packaged): src/gametest. Run with ./gradlew runGameTestServer
+sourceSets {
+    gametest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+configurations {
+    gametestImplementation.extendsFrom implementation
+    gametestCompileOnly.extendsFrom compileOnly
+    gametestRuntimeOnly.extendsFrom runtimeOnly
+}
+
 neoForge {
     version = project.neo_version
     accessTransformers = files('src/main/resources/META-INF/accesstransformer.cfg')
+
+    addModdingDependenciesTo(sourceSets.gametest)
 
     parchment {
         mappingsVersion = project.parchment_mappings_version
@@ -59,6 +74,7 @@ neoForge {
         // headless load check: loads mods, registries and datapacks, generates a world, runs (zero) game tests, exits
         gameTestServer {
             type = "gameTestServer"
+            sourceSet = sourceSets.gametest
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
         configureEach {
@@ -69,6 +85,7 @@ neoForge {
     mods {
         "${mod_id}" {
             sourceSet(sourceSets.main)
+            sourceSet(sourceSets.gametest)
         }
     }
 }
