@@ -245,7 +245,7 @@
     ], "subtitle": "plantz.subtitles.entity.zombie_yeti.hurt"
   },
   "entity.zombie_yeti.death": {
-    "sounds": [{ "name": "plantz:entity/zombie_yeti/death", "volume": 1.0 }], "subtitle": "subtitles"
+    "sounds": [{ "name": "plantz:entity/zombie_yeti/death", "volume": 1.0 }], "subtitle": "plantz.subtitles.entity.zombie_yeti.death"
   },
 
   "entity.imp.ambient": {
@@ -288,7 +288,7 @@
     ], "subtitle": "plantz.subtitles.entity.super_brainz.hurt"
   },
   "entity.super_brainz.death": {
-    "sounds": [{ "name": "plantz:entity/super_brainz/death", "volume": 1.0 }], "subtitle": "subtitles"
+    "sounds": [{ "name": "plantz:entity/super_brainz/death", "volume": 1.0 }], "subtitle": "plantz.subtitles.entity.super_brainz.death"
   },
 
   "entity.gargantuar.ambient": {
@@ -306,7 +306,7 @@
     ], "subtitle": "plantz.subtitles.entity.gargantuar.hurt"
   },
   "entity.gargantuar.death": {
-    "sounds": [{ "name": "plantz:entity/gargantuar/death", "volume": 2.0 }], "subtitle": "subtitles"
+    "sounds": [{ "name": "plantz:entity/gargantuar/death", "volume": 2.0 }], "subtitle": "plantz.subtitles.entity.gargantuar.death"
   },
   "entity.gargantuar.dig": {
     "sounds": [{ "name": "plantz:entity/gargantuar/dig", "volume": 1.3 }], "subtitle": "plantz.subtitles.entity.gargantuar.dig"

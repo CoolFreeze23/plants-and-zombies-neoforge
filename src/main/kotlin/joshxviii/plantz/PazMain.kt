@@ -57,6 +57,8 @@ object PazMain {
 		// config sync
 		bus.addListener { event: PlayerEvent.PlayerLoggedInEvent ->
 			val player = event.entity as? ServerPlayer ?: return@addListener
+			// fake/mock players have no client to sync to
+			if (!player.connection.hasChannel(ServerConfigResponsePayload.ID)) return@addListener
 			val json = PazConfig.let { it.GSON.toJson(it.server) }
 			PacketDistributor.sendToPlayer(player, ServerConfigResponsePayload(json))
 			LOGGER.info("Sent server config to ${player.name.string}")
