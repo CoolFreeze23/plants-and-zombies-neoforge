@@ -37,6 +37,8 @@ Optional, detected automatically:
 
 ## What was verified
 - Every upstream source and resource file was compared against the port; differences are restored or listed below.
+- Every Plants & Zombies tag expands to the same blocks, items and entities as upstream does against 26.1's vanilla tags
+  (1.21.1's `#minecraft:dirt` and carver tags hold different blocks, so the port uses 26.1's contents).
 - **All 132 required GameTests pass** (repeated runs): every plant's behaviour, all special zombies and blueprint machines, ownership, a full zombie
   raid (waves, victory, rewards), mailboxes (delivery, queue, full/discard), collection box, sun battery, time machine,
   flags, gravestones, garden gnomes, pots, watering can, gardening glove, seed packets and cooldowns, wearables
@@ -49,20 +51,26 @@ Optional, detected automatically:
   installed (the data tests check the backport content).
 
 ## Differences from the 26.1 original (things 1.21.1 doesn't have)
-- Without Backported Spears there are no spears: no spear goals, and gnomes that would carry a spear get a stone sword.
-  With it, the spear arm pose skips the charge sway (1.21.1 items have no 26.1 kinetic weapon data to drive it).
+- Without Backported Spears there are no spears, and gnomes that would carry a spear get a stone sword.
 - Without Copper Age Backport: gnomes use stone tools instead of copper ones, copper nuggets in loot become an
   equivalent chance of a copper ingot, and the relocation advancement icon is an iron shovel.
 - Sounds missing from 1.21.1 use close vanilla ones unless a backport provides them: mailbox open/close and gnome pose
-  (Copper Age Backport restores them), bubble pop and lead break (no backport has them); raid sounds play on the
-  Master volume slider (no UI category).
-- Raid music shows "Now playing" in the action bar when it starts (1.21.1 has no now-playing toast).
-- Baby zombies wear armor with the adult armor textures (1.21.1 has no baby armor textures).
+  (Copper Age Backport restores them), bubble pop and lead break (no backport has them).
+- 26.1's UI sound category is a "UI" slider the port adds to Music & Sounds (1.21.1's sound categories can't be
+  extended); it scales the raid announcement sounds, which play on top of Master like 26.1's UI sounds.
+- The raid music "Now playing" toast is drawn with 1.21.1's toast background and a note glyph (26.1's
+  `toast/now_playing` and music-note sprites don't exist in 1.21.1).
+- Baby zombies' armor maps the adult armor textures onto the 26.1 baby armor shapes (26.1's baby armor textures don't
+  exist in 1.21.1).
 - Graveyard: without Vanilla Backport it has no pale moss, leaf litter or firefly bushes and dead trees use stripped
   birch. Its sky/fog/cloud/sunrise/light colours (26.1 environment attributes) are applied client-side and blend in at
   biome borders. Undead don't burn in daylight there.
-- Block models: free rotations are rounded to 22.5° steps and the shelf display is dropped.
-- Planting accepts every `#minecraft:dirt` block (26.1's `#grass_blocks`/`#moss_blocks` don't exist), which adds muddy mangrove roots.
+- Block models: 26.1 element rotations (any angle, x/y/z rotations) load through a port mixin, so the upstream models are
+  unchanged. Their `on_shelf` display transforms are dropped (1.21.1 has no shelves; Copper Age Backport's shelves show
+  items with the `fixed` transform).
+
+Upstream quirk kept: the raid's "vanish" wither sound is played with `playLocalSound` on the server level, which plays
+nothing (in 26.1 too).
 
 ## Upstream bugs fixed along the way
 Paint vanished on chunk reload (paint colours were saved in a form NBT can't store); zombies breaking a flag never

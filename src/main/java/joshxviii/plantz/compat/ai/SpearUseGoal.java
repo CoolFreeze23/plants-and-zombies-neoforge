@@ -1,10 +1,7 @@
 package joshxviii.plantz.compat.ai;
 
-import java.lang.reflect.Method;
 import java.util.EnumSet;
-import net.minecraft.core.component.DataComponentType;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import joshxviii.plantz.compat.KineticWeapon;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
@@ -23,12 +20,11 @@ import org.jetbrains.annotations.Nullable;
  * but that copy never resets after its first charge (the mob then stands still for as long as it has a target), so
  * the mod's mobs use this one.
  * <p>
- * Differences from 26.1: the use duration is read reflectively from the backport's component ({@code getUseTicks()},
- * 26.1 {@code computeDamageUseDuration()}); 1.21.1's {@code LandRandomPos.getPosAway} has no minimum distance; the
- * mount speed uses 26.1's {@code chargeSpeedModifier} value for zombie horses directly.
+ * Differences from 26.1: the kinetic weapon data is read from the backport ({@link KineticWeapon}); 1.21.1's
+ * {@code LandRandomPos.getPosAway} has no minimum distance; the mount speed uses 26.1's {@code chargeSpeedModifier}
+ * value for zombie horses directly.
  */
 public class SpearUseGoal<T extends Monster> extends Goal {
-    private static final ResourceLocation KINETIC_WEAPON_ID = ResourceLocation.withDefaultNamespace("kinetic_weapon");
     private static final double MAX_FLEEING_TIME = reducedTickDelay(100);
     private final T mob;
     @Nullable
@@ -53,18 +49,12 @@ public class SpearUseGoal<T extends Monster> extends Goal {
     }
 
     private boolean ableToAttack() {
-        return this.mob.getTarget() != null && this.kineticWeapon() != null;
-    }
-
-    @Nullable
-    private Object kineticWeapon() {
-        DataComponentType<?> type = KineticWeapon.TYPE;
-        return type == null ? null : this.mob.getMainHandItem().get(type);
+        return this.mob.getTarget() != null && KineticWeapon.of(this.mob.getMainHandItem()) != null;
     }
 
     private int getKineticWeaponUseDuration() {
-        Object kineticWeapon = this.kineticWeapon();
-        return reducedTickDelay(kineticWeapon == null ? 0 : KineticWeapon.useTicks(kineticWeapon));
+        KineticWeapon kineticWeapon = KineticWeapon.of(this.mob.getMainHandItem());
+        return reducedTickDelay(kineticWeapon == null ? 0 : kineticWeapon.computeDamageUseDuration());
     }
 
     @Override
@@ -178,23 +168,6 @@ public class SpearUseGoal<T extends Monster> extends Goal {
             }
 
             return false;
-        }
-    }
-
-    /** The backport's {@code minecraft:kinetic_weapon} component; loaded on first use, after registration. */
-    private static final class KineticWeapon {
-        @Nullable
-        static final DataComponentType<?> TYPE = BuiltInRegistries.DATA_COMPONENT_TYPE.get(KINETIC_WEAPON_ID);
-        @Nullable
-        private static Method useTicks;
-
-        static int useTicks(Object kineticWeapon) {
-            try {
-                if (useTicks == null) useTicks = kineticWeapon.getClass().getMethod("getUseTicks");
-                return (Integer) useTicks.invoke(kineticWeapon);
-            } catch (ReflectiveOperationException | ClassCastException e) {
-                return 0;
-            }
         }
     }
 }

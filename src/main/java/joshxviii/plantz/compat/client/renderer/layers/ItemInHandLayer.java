@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import joshxviii.plantz.compat.client.model.ArmedModel;
 import joshxviii.plantz.compat.client.model.EntityModel;
+import joshxviii.plantz.compat.client.model.SpearAnimations;
 import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector;
 import joshxviii.plantz.compat.client.state.ArmedEntityRenderState;
 import net.minecraft.client.Minecraft;
@@ -13,7 +14,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 
-/** 26.1 {@code ItemInHandLayer} (without the spear animations, which 1.21.1 does not have). */
+/** 26.1 {@code ItemInHandLayer}; the spear animations use a spear backport's kinetic weapon data. */
 public class ItemInHandLayer<S extends ArmedEntityRenderState, M extends EntityModel<S> & ArmedModel<S>> extends RenderLayer<S, M> {
     public ItemInHandLayer(RenderLayerParent<S, M> renderer) {
         super(renderer);
@@ -36,6 +37,15 @@ public class ItemInHandLayer<S extends ArmedEntityRenderState, M extends EntityM
         float offsetY = this.useBabyOffset(state) ? 1.0F : 2.0F;
         float offsetZ = this.useBabyOffset(state) ? -4.5F : -10.0F;
         poseStack.translate((float) (isLeftHand ? -1 : 1) * offsetX / 16.0F, offsetY / 16.0F, offsetZ / 16.0F);
+        if (state.attackTime > 0.0F && state.attackArm == arm && state.stabSwing) {
+            SpearAnimations.thirdPersonAttackItem(state, poseStack);
+        }
+
+        float ticksUsingItem = state.ticksUsingItem(arm);
+        // 26.1 ArmPose.SPEAR.animateUseItem (the only pose with a use-item animation)
+        if (ticksUsingItem != 0.0F && (arm == HumanoidArm.RIGHT ? state.rightArmSpear : state.leftArmSpear)) {
+            SpearAnimations.thirdPersonUseItem(state, poseStack, ticksUsingItem, arm, itemStack);
+        }
         ItemDisplayContext context = isLeftHand ? ItemDisplayContext.THIRD_PERSON_LEFT_HAND : ItemDisplayContext.THIRD_PERSON_RIGHT_HAND;
         Minecraft.getInstance().getEntityRenderDispatcher().getItemInHandRenderer()
             .renderItem(entity, itemStack, context, isLeftHand, poseStack, submitNodeCollector.bufferSource(), lightCoords);

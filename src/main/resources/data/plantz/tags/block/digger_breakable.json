@@ -6,12 +6,18 @@
     "minecraft:bricks",
     "#minecraft:stone_bricks",
     "#minecraft:rails",
-    "#minecraft:dirt",
+    "#plantz:dirt",
     "#minecraft:sand",
     "#minecraft:terracotta",
     "#minecraft:sculk_replaceable",
     "#minecraft:overworld_carver_replaceables",
     "#minecraft:nether_carver_replaceables",
+    "minecraft:snow_block",
+    "minecraft:powder_snow",
+    {
+      "id": "minecraft:pale_moss_block",
+      "required": false
+    },
     {
       "id": "#c:glass_blocks",
       "required": false

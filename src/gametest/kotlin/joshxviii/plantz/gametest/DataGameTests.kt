@@ -435,7 +435,11 @@ object DataGameTests {
                 "minecraft:rooted_dirt", "minecraft:moss_block", "minecraft:mud", "minecraft:farmland", "minecraft:clay", "minecraft:dirt_path",
                 "minecraft:lily_pad", "minecraft:soul_soil", "minecraft:moss_carpet", "minecraft:crimson_nylium", "plantz:plant_pot", "plantz:zen_plant_pot"))
             expect(blockIs(soil, PazTags.BlockTags.PLANTABLE), "$soil not plantable")
-        for (no in listOf("minecraft:stone", "minecraft:sand", "minecraft:oak_planks")) expect(!blockIs(no, PazTags.BlockTags.PLANTABLE), "$no plantable")
+        // 26.1's #minecraft:dirt doesn't hold muddy mangrove roots (1.21.1's does)
+        for (no in listOf("minecraft:stone", "minecraft:sand", "minecraft:oak_planks", "minecraft:muddy_mangrove_roots")) expect(!blockIs(no, PazTags.BlockTags.PLANTABLE), "$no plantable")
+        // diggers break what 26.1's tags give them (its carver tag holds snow blocks and, via substrate, grass and mud)
+        for (b in listOf("minecraft:dirt", "minecraft:grass_block", "minecraft:mud", "minecraft:snow_block", "minecraft:powder_snow", "minecraft:glass", "minecraft:cobblestone"))
+            expect(blockIs(b, PazTags.BlockTags.DIGGER_BREAKABLE), "$b not digger-breakable")
         if (vanillaBackport) for (pale in listOf("minecraft:pale_moss_block", "minecraft:pale_moss_carpet")) expect(blockIs(pale, PazTags.BlockTags.PLANTABLE), "$pale not plantable")
         expect(blockIs("minecraft:farmland", PazTags.BlockTags.FARMABLE) && blockIs("plantz:zen_plant_pot", PazTags.BlockTags.FARMABLE), "farmable")
         expect(blockIs("plantz:gravestone", BlockTags.MINEABLE_WITH_PICKAXE), "gravestone not pickaxe-mineable")

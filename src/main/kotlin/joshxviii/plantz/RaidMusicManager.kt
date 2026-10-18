@@ -11,6 +11,7 @@ import joshxviii.plantz.PazSounds.RAID_MUSIC_MEDIUM
 import joshxviii.plantz.PazSounds.RAID_MUSIC_PIRATE
 import joshxviii.plantz.PazSounds.RAID_MUSIC_WINTER
 import joshxviii.plantz.PazSounds.RAID_MUSIC_ZOMBOSS
+import joshxviii.plantz.client.NowPlayingToast
 import joshxviii.plantz.mixin.client.MusicManagerAccessor
 import joshxviii.plantz.networking.ZombieRaidClientData
 import joshxviii.plantz.raid.WaveType
@@ -110,21 +111,19 @@ object RaidMusicManager {
             layer.stopLayer()
         }
         nowPlayingPending = false
+        NowPlayingToast.hide()
         activeLayers.clear()
         targetMusicLayer = null
     }
 
     private var nowPlayingPending = false
 
-    /**
-     * 26.1 showed the NowPlayingToast once when the layers started (NowPlayingToastMixin named the raid layer);
-     * 1.21.1 has no music toast, so the jukebox "Now playing" line names the first layer instead.
-     */
+    /** 26.1 showed the NowPlayingToast once when the layers started (NowPlayingToastMixin named the raid layer). */
     private fun showNowPlaying() {
         val layer = targetMusicLayer ?: return
         if (!nowPlayingPending) return
         nowPlayingPending = false
-        minecraft.gui.setNowPlaying(Component.translatable("music.plantz.raid." + layer.musicName))
+        NowPlayingToast.show(Component.translatable("music.plantz.raid." + layer.musicName))
     }
 
     /** 26.1 MusicManager.setMinutesBetweenSongs(MusicFrequency.DEFAULT): a fresh between-songs delay, capped at 20 minutes. */

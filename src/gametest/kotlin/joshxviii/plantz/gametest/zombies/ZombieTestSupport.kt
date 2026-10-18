@@ -6,6 +6,7 @@ import joshxviii.plantz.networking.MailboxListResponsePayload
 import joshxviii.plantz.networking.SeedPacketCooldownPayload
 import joshxviii.plantz.networking.SendMailResponsePayload
 import joshxviii.plantz.networking.ServerConfigResponsePayload
+import joshxviii.plantz.networking.UiSoundPayload
 import joshxviii.plantz.networking.ZombieRaidResponsePayload
 import net.minecraft.gametest.framework.GameTestHelper
 import net.minecraft.network.Connection
@@ -60,7 +61,7 @@ fun LivingEntity.wasHurt(): Boolean = !isAlive || health < maxHealth
 
 private val MOD_PAYLOADS = listOf(
     ZombieRaidResponsePayload.ID, ServerConfigResponsePayload.ID, SeedPacketCooldownPayload.ID,
-    SendMailResponsePayload.ID, MailboxListResponsePayload.ID,
+    SendMailResponsePayload.ID, MailboxListResponsePayload.ID, UiSoundPayload.ID,
 ).map { it.id() }
 
 /**

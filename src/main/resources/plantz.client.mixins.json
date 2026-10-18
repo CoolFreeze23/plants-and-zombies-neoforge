@@ -17,8 +17,13 @@
     "LivingEntityRendererVanillaMixin",
     "MusicManagerAccessor",
     "SoundManagerMixin",
+    "SoundOptionsScreenMixin",
+    "ToastComponentMixin",
     "ambience.ClientLevelGraveyardMixin",
     "ambience.DimensionSpecialEffectsGraveyardMixin",
-    "ambience.LightTextureGraveyardMixin"
+    "ambience.LightTextureGraveyardMixin",
+    "model.BlockElementDeserializerMixin",
+    "model.BlockElementRotationMixin",
+    "model.FaceBakeryMixin"
   ]
 }

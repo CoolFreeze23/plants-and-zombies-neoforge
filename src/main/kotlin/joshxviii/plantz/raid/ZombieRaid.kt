@@ -10,6 +10,7 @@ import joshxviii.plantz.*
 import joshxviii.plantz.ai.ZombieState
 import joshxviii.plantz.block.entity.FlagBlockEntity
 import joshxviii.plantz.entity.zombie.PazZombie
+import joshxviii.plantz.networking.UiSoundPayload
 import joshxviii.plantz.networking.ZombieRaidClientData
 import joshxviii.plantz.networking.ZombieRaidResponsePayload
 import net.minecraft.SharedConstants
@@ -396,7 +397,7 @@ class ZombieRaid(
     }
 
     private fun vanishAllZombies(level: ServerLevel) {
-        // 26.1 SoundSource.UI: 1.21.1 has no UI category and plays UI sounds on MASTER
+        // 26.1 SoundSource.UI (1.21.1 has none). Like upstream, playLocalSound on a server level plays nothing.
         level.playLocalSound(center, SoundEvents.WITHER_DEATH, SoundSource.MASTER, 1f, 0.4f, false)
         waveZombieMap.values.forEach { zombies ->
             zombies.forEach { zombie ->
@@ -491,8 +492,9 @@ class ZombieRaid(
     }
 
     private fun showTitleMessage(title: Component, subtitle: Component = Component.empty(), sound: Holder.Reference<SoundEvent> = PazSounds.SPECIAL_WAVE) {
-        zombieRaidEvent.players.forEach {// SoundSource.MASTER: see vanishAllZombies
-            it.connection.send(ClientboundSoundPacket(sound, SoundSource.MASTER, it.x, it.y, it.z, 1.0f, 1.0f, random.nextLong()))
+        zombieRaidEvent.players.forEach {// 26.1 SoundSource.UI (1.21.1 has none): see UiSoundPayload
+            if (it.connection.hasChannel(UiSoundPayload.ID)) PacketDistributor.sendToPlayer(it, UiSoundPayload(sound, 1.0f, 1.0f, random.nextLong()))
+            else it.connection.send(ClientboundSoundPacket(sound, SoundSource.MASTER, it.x, it.y, it.z, 1.0f, 1.0f, random.nextLong()))
             it.connection.send(ClientboundSetTitleTextPacket(title))
             it.connection.send(ClientboundSetSubtitleTextPacket(subtitle))
         }

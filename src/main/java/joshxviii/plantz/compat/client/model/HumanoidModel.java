@@ -160,7 +160,7 @@ public class HumanoidModel<T extends HumanoidRenderState> extends EntityModel<T>
 
     private void poseRightArm(T state) {
         if (state.rightArmSpear) {
-            this.poseSpearArm(this.rightArm, true, state);
+            SpearAnimations.thirdPersonHandUse(this.rightArm, this.head, true, state.rightHandItemStack, state);
             return;
         }
         switch (state.rightArmPose) {
@@ -202,7 +202,7 @@ public class HumanoidModel<T extends HumanoidRenderState> extends EntityModel<T>
 
     private void poseLeftArm(T state) {
         if (state.leftArmSpear) {
-            this.poseSpearArm(this.leftArm, false, state);
+            SpearAnimations.thirdPersonHandUse(this.leftArm, this.head, false, state.leftHandItemStack, state);
             return;
         }
         switch (state.leftArmPose) {
@@ -242,18 +242,6 @@ public class HumanoidModel<T extends HumanoidRenderState> extends EntityModel<T>
         }
     }
 
-    /** 26.1 ArmPose.SPEAR: SpearAnimations.thirdPersonHandUse without the kinetic-charge sway (no KineticWeapon component on 1.21.1). */
-    private void poseSpearArm(ModelPart arm, boolean right, T state) {
-        int invert = right ? 1 : -1;
-        arm.yRot = -0.1F * (float) invert + this.head.yRot;
-        arm.xRot = (float) (-Math.PI / 2) + this.head.xRot + 0.8F;
-        if (state.isFallFlying || state.swimAmount > 0.0F) {
-            arm.xRot -= 0.9599311F;
-        }
-        arm.yRot = (float) (Math.PI / 180.0) * Mth.clamp((180.0F / (float) Math.PI) * arm.yRot, -60.0F, 60.0F);
-        arm.xRot = (float) (Math.PI / 180.0) * Mth.clamp((180.0F / (float) Math.PI) * arm.xRot, -120.0F, 30.0F);
-    }
-
     private void poseBlockingArm(ModelPart arm, boolean right) {
         arm.xRot = arm.xRot * 0.5F - 0.9424779F + Mth.clamp(this.head.xRot, (float) (-Math.PI * 4.0 / 9.0), 0.43633232F);
         arm.yRot = (right ? -30.0F : 30.0F) * (float) (Math.PI / 180.0) + Mth.clamp(this.head.yRot, (float) (-Math.PI / 6), (float) (Math.PI / 6));
@@ -274,6 +262,10 @@ public class HumanoidModel<T extends HumanoidRenderState> extends EntityModel<T>
             this.rightArm.yRot = this.rightArm.yRot + this.body.yRot;
             this.leftArm.yRot = this.leftArm.yRot + this.body.yRot;
             this.leftArm.xRot = this.leftArm.xRot + this.body.yRot;
+            if (state.stabSwing) {
+                SpearAnimations.thirdPersonAttackHand(this, state);
+                return;
+            }
             float swing = 1.0F - attackTime;
             swing *= swing;
             swing *= swing;

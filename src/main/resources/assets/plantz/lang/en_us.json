@@ -459,5 +459,7 @@
   "plantz.subtitles.music.raid.winter": "Raid music plays",
   "plantz.subtitles.music.raid.zomboss": "Raid music plays",
   "plantz.subtitles.music_disc.grassy_groove": "Music disc plays",
-  "plantz.subtitles.projectile.electric_zap": "Electricity zaps"
+  "plantz.subtitles.projectile.electric_zap": "Electricity zaps",
+
+  "soundCategory.ui": "UI"
 }

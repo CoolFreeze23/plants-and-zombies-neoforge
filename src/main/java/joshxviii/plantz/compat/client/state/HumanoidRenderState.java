@@ -18,4 +18,9 @@ public class HumanoidRenderState extends ArmedEntityRenderState {
     public ItemStack chestEquipment = ItemStack.EMPTY;
     public ItemStack legsEquipment = ItemStack.EMPTY;
     public ItemStack feetEquipment = ItemStack.EMPTY;
+
+    @Override
+    public float ticksUsingItem(net.minecraft.world.entity.HumanoidArm arm) {
+        return this.isUsingItem && this.useItemHand == InteractionHand.MAIN_HAND == (arm == this.mainArm) ? this.ticksUsingItem : 0.0F;
+    }
 }

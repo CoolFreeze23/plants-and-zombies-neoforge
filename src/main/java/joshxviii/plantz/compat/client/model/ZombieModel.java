@@ -4,8 +4,6 @@ import joshxviii.plantz.compat.client.state.ZombieRenderState;
 import net.minecraft.client.model.AnimationUtils;
 import net.minecraft.client.model.geom.ModelPart;
 
-import static joshxviii.plantz.compat.client.state.ArmedEntityRenderState.SPEARS;
-
 /** Backport of the 1.21.2+ state-driven zombie model (AbstractZombieModel + ZombieModel). */
 public class ZombieModel<S extends ZombieRenderState> extends HumanoidModel<S> {
     public ZombieModel(ModelPart root) {
@@ -17,7 +15,7 @@ public class ZombieModel<S extends ZombieRenderState> extends HumanoidModel<S> {
         super.setupAnim(state);
         if (!state.isBaby || state.getMainHandItemStack().isEmpty()) {
             // 26.1 skips the raised zombie arms for stabbing (spear) items and keeps their spear pose
-            if (state.getMainHandItemStack().is(SPEARS)) AnimationUtils.bobArms(this.rightArm, this.leftArm, state.ageInTicks);
+            if (state.stabSwing) AnimationUtils.bobArms(this.rightArm, this.leftArm, state.ageInTicks);
             else AnimationUtils.animateZombieArms(this.leftArm, this.rightArm, state.isAggressive, state.attackTime, state.ageInTicks);
         }
     }

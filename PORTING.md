@@ -34,8 +34,12 @@ Mirrors 26.1 names and semantics, so upstream code ports with import changes:
   `val output = ValueOutput.of(tag, registryAccess())`, then run upstream's body.
 - `EntityReference`: UUID + cached lookup; synced as `OPTIONAL_UUID`.
 - `menu.ExtendedMenuType` / `ExtendedMenuProvider`: Fabric's extended menus on NeoForge's `IContainerFactory`.
-- `ai.SpearUseGoal`: 26.1's spear charge goal, driven by the `minecraft:kinetic_weapon` component a spear backport
-  provides (inert without one).
+- `ai.SpearUseGoal`: 26.1's spear charge goal; `KineticWeapon` reads the `minecraft:kinetic_weapon` /
+  `minecraft:swing_animation` components a spear backport registers (reflectively; inert without one); `Ease`: 26.1 easings.
+- `client.model.CuboidRotation` + `mixin.client.model.*`: 26.1 model element rotations (any angle, x/y/z) on 1.21.1's
+  block model loader. `client.model.SpearAnimations`: 26.1 third-person spear hold/charge/stab animations.
+- `client/NowPlayingToast.kt`: 26.1's music toast as a GUI layer; `networking/UiSoundPayload` + `SoundOptionsScreenMixin`:
+  26.1's UI sound category as a port volume option.
 - `client.*`: the 26.1 render-state pipeline running immediate-mode on 1.21.1:
   - `state.*` render states (26.1 fields, plus `compatEntity`/`compatPartialTick` for the frame being drawn, and
     Fabric-style `setData/getData` keyed by `RenderStateDataKey`).

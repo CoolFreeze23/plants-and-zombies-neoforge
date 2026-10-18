@@ -78,6 +78,8 @@ data class ClientConfig(
     var showDebugInfo: Boolean = false,
     var alwaysShowHeadMarkers: Boolean = false,
     var showHiddenItemsInCreativeTab: Boolean = false,
+    /** Port: volume of 26.1's UI sound category (raid announcements), which 1.21.1 doesn't have; set in Music & Sounds. */
+    var uiVolume: Double = 1.0,
 )
 
 object PazConfig {
@@ -117,6 +119,8 @@ object PazConfig {
         } else default.also { saveConfig(path, it) }
     }
 
+    fun saveClient() = saveConfig(clientConfigPath, client)
+
     private inline fun <reified T> saveConfig(path: Path, config: T) {
         try {
             Files.createDirectories(path.parent)
@@ -134,6 +138,9 @@ object PazConfig {
 
     val SHOW_HIDDEN_ITEMS: Boolean
         get() = client.showHiddenItemsInCreativeTab
+
+    val UI_VOLUME: Float
+        get() = client.uiVolume.coerceIn(0.0, 1.0).toFloat()
 
     val COFFEE_BUFF_DURATION: Int
         get() = server.coffeeBuffDuration.coerceAtLeast(0)
