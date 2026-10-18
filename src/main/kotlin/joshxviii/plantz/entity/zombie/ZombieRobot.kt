@@ -1,6 +1,5 @@
 package joshxviii.plantz.entity.zombie
 
-import PazOwnableZombie
 import joshxviii.plantz.entity.plant.Plant
 import joshxviii.plantz.hasSameRootOwner
 import joshxviii.plantz.item.BlueprintItem

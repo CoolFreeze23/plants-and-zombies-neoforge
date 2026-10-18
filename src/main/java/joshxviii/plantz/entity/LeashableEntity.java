@@ -1,3 +1,5 @@
+package joshxviii.plantz.entity;
+
 import com.google.common.collect.ImmutableList;
 import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket;
 import net.minecraft.server.level.ServerLevel;

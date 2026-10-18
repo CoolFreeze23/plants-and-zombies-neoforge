@@ -5,6 +5,7 @@ import joshxviii.plantz.block.entity.MailboxManager
 import joshxviii.plantz.block.entity.getMailboxMailQueue
 import joshxviii.plantz.networking.ServerConfigResponsePayload
 import joshxviii.plantz.raid.getZombieRaids
+import net.minecraft.core.registries.Registries
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.block.entity.BlockEntity
@@ -85,11 +86,13 @@ object PazMain {
 
 	/**
 	 * Upstream registered everything eagerly from its Fabric initializer. NeoForge unfreezes every registry for the
-	 * whole RegisterEvent phase, so running the same initializers during the first RegisterEvent keeps the eager
+	 * whole RegisterEvent phase, so running the same initializers during one RegisterEvent keeps the eager
 	 * `Registry.register(...)` style intact.
 	 */
 	private fun onRegister(event: RegisterEvent) {
-		if (registered) return
+		// Wait for the entity type event: by then NeoForge's own attributes (swim_speed, ...) are bound, which
+		// createMobAttributes() reads while the entity types register their default attributes.
+		if (registered || event.registryKey != Registries.ENTITY_TYPE) return
 		registered = true
 		PazServerParticles.initialize()
 		PazBlocks.initialize()

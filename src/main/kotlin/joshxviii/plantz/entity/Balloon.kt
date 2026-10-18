@@ -1,6 +1,5 @@
 package joshxviii.plantz.entity
 
-import LeashableEntity
 import joshxviii.plantz.PazDataSerializers.DATA_DYE_COLOR
 import joshxviii.plantz.PazEntities
 import joshxviii.plantz.PazServerParticles

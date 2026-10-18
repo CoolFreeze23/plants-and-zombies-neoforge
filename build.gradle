@@ -47,6 +47,11 @@ neoForge {
             server()
             programArgument '--nogui'
         }
+        // headless load check: loads mods, registries and datapacks, generates a world, runs (zero) game tests, exits
+        gameTestServer {
+            type = "gameTestServer"
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
         configureEach {
             logLevel = org.slf4j.event.Level.INFO
         }

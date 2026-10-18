@@ -1,3 +1,5 @@
+package joshxviii.plantz.entity.zombie;
+
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import joshxviii.plantz.compat.EntityReference;
 import joshxviii.plantz.entity.zombie.PazZombie;

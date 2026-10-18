@@ -13,7 +13,7 @@ import net.minecraft.world.item.TooltipFlag
 import net.minecraft.world.item.ItemStack
 import java.util.function.Consumer
 
-class BlocksProjectileDamage(
+data class BlocksProjectileDamage(
     val slot: EquipmentSlotGroup = EquipmentSlotGroup.HEAD,
     val breakChance: Float = 0.15f,
     val mustBeUsing: Boolean = false
