@@ -1,27 +1,16 @@
 package joshxviii.plantz.block.entity
 
 import joshxviii.plantz.PazBlocks
-import joshxviii.plantz.PazEntities.ALL_STAR
-import joshxviii.plantz.PazEntities.BROWN_COAT
-import joshxviii.plantz.PazEntities.DIGGER_ZOMBIE
-import joshxviii.plantz.PazEntities.DISCO_ZOMBIE
-import joshxviii.plantz.PazEntities.IMP
-import joshxviii.plantz.PazEntities.NEWSPAPER_ZOMBIE
 import joshxviii.plantz.PazServerParticles
 import joshxviii.plantz.PazSounds
 import joshxviii.plantz.PazTags
-import joshxviii.plantz.entity.zombie.PazZombie.Companion.SPAWN_TABLE_WEIGHTS
 import joshxviii.plantz.entity.zombie.PazZombie.Companion.findSpawnPosition
 import joshxviii.plantz.entity.zombie.PazZombie.Companion.rollZombieType
 import net.minecraft.core.BlockPos
-import net.minecraft.core.HolderLookup
-import net.minecraft.nbt.CompoundTag
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.sounds.SoundSource
 import net.minecraft.util.Mth
-import net.minecraft.util.RandomSource
 import net.minecraft.world.entity.MobSpawnType
-import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.monster.Zombie
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.LightLayer

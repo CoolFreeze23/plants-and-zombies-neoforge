@@ -6,6 +6,7 @@ import joshxviii.plantz.entity.plant.GraveBuster
 import joshxviii.plantz.entity.plant.PacketInteractionResult
 import joshxviii.plantz.entity.plant.Plant
 import joshxviii.plantz.entity.plant.processSeedPacketInteraction
+import joshxviii.plantz.item.component.UseCooldown
 import net.minecraft.ChatFormatting
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -35,7 +36,6 @@ import net.minecraft.world.level.gameevent.GameEvent
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
 import java.util.*
-import kotlin.compareTo
 import kotlin.jvm.optionals.getOrNull
 
 class SeedPacketItem(properties: Properties) : Item(properties) {
@@ -58,8 +58,12 @@ class SeedPacketItem(properties: Properties) : Item(properties) {
 
     override fun use(level: Level, player: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
         val stack = player.getItemInHand(hand)
+        val stackBeforeUse = stack.copy()
         return when (Companion.use(level, player, hand)) {
-            InteractionResult.SUCCESS -> InteractionResultHolder.sidedSuccess(stack, level.isClientSide)
+            InteractionResult.SUCCESS -> {
+                SeedPacketCooldowns.applyUseCooldown(player, stackBeforeUse) // 26.1 ItemStack.applyAfterUseComponentSideEffects
+                InteractionResultHolder.sidedSuccess(stack, level.isClientSide)
+            }
             InteractionResult.CONSUME -> InteractionResultHolder.consume(stack)
             InteractionResult.FAIL -> InteractionResultHolder.fail(stack)
             else -> InteractionResultHolder.pass(stack)
@@ -287,9 +291,11 @@ class SeedPacketItem(properties: Properties) : Item(properties) {
             val group = SeedPacketCooldowns.groupFor(entityType)
             if (PazConfig.PLANT_COOLDOWN_ENABLED) {
                 val cooldownTime = PazConfig.getCooldownTime(PazConfig.getSunCost(entityType))
+                itemStack.set(PazComponents.USE_COOLDOWN, UseCooldown(cooldownTime, Optional.of(group)))
                 SeedPacketCooldowns.addCooldown(player, group, (cooldownTime*20).toInt())
             } else {
                 SeedPacketCooldowns.removeCooldown(player, group)
+                itemStack.set(PazComponents.USE_COOLDOWN, UseCooldown(0f))
             }
         }
 

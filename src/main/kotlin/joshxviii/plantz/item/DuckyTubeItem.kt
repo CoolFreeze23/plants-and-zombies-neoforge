@@ -10,12 +10,11 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.Level
 
-/** 26.1 EQUIPPABLE(LEGS) + repairable(phantom membrane). */
 class DuckyTubeItem(properties: Properties) : Item(properties), Equipable {
     override fun getEquipmentSlot(): EquipmentSlot = EquipmentSlot.LEGS
 
     override fun use(level: Level, player: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> =
-        swapWithEquipmentSlot(this, level, player, hand)
+        swapWithEquipmentSlot(level, player, hand, EquipmentSlot.LEGS)
 
     override fun isValidRepairItem(stack: ItemStack, repairCandidate: ItemStack): Boolean = repairCandidate.`is`(Items.PHANTOM_MEMBRANE)
 }

@@ -7,7 +7,6 @@ import joshxviii.plantz.PazItems
 import joshxviii.plantz.item.component.StoredWater
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
-import net.minecraft.util.RandomSource
 import net.minecraft.Util
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.context.BlockPlaceContext
@@ -90,9 +89,8 @@ class WateringCanBlock(properties: Properties) : HorizontalDirectionalBlock(prop
         pos: BlockPos,
         neighbourPos: BlockPos
     ): BlockState {
-        val ticks = level
         if (state.getValue(WATERLOGGED)) {
-            ticks.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level))
+            level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level))
         }
 
         return if (!state.canSurvive(level, pos)) Blocks.AIR.defaultBlockState()

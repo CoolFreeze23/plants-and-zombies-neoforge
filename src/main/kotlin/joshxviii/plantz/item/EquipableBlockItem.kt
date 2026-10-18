@@ -14,7 +14,7 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
 
 /**
- * 1.21.1 stand-in for a block item carrying a 26.1 `EQUIPPABLE` component (cone on the head, flags in the off hand).
+ * A block item with a 26.1 `EQUIPPABLE` component (cone on the head, flags in the off hand).
  * [swappable] mirrors 26.1 `Equippable.swappable`: when true, using the item in the air equips it.
  */
 class EquipableBlockItem(
@@ -27,7 +27,6 @@ class EquipableBlockItem(
     override fun getEquipmentSlot(): EquipmentSlot = slot
     override fun getEquipSound(): Holder<SoundEvent> = equipSound
 
-    override fun use(level: Level, player: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        return if (swappable) swapWithEquipmentSlot(this, level, player, hand) else super.use(level, player, hand)
-    }
+    override fun use(level: Level, player: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> =
+        if (swappable) swapWithEquipmentSlot(level, player, hand, slot) else super.use(level, player, hand)
 }

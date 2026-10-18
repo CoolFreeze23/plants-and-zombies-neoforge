@@ -5,7 +5,6 @@ import joshxviii.plantz.PazBlocks
 import joshxviii.plantz.block.entity.FlagBlockEntity
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
-import net.minecraft.util.RandomSource
 import net.minecraft.world.item.context.BlockPlaceContext
 import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.Level
@@ -79,7 +78,6 @@ class FlagBlock(properties: Properties) : BaseEntityBlock(properties) {
         pos: BlockPos,
         neighbourPos: BlockPos
     ): BlockState {
-        val ticks = level
         return if (directionToNeighbour == Direction.DOWN && !state.canSurvive(level, pos))
             Blocks.AIR.defaultBlockState()
         else

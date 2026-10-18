@@ -4,19 +4,12 @@ import com.mojang.math.OctahedralGroup
 import net.minecraft.world.Containers
 import net.minecraft.world.ItemInteractionResult
 import com.mojang.serialization.MapCodec
-import joshxviii.plantz.PazBlocks
 import joshxviii.plantz.PazComponents
-import joshxviii.plantz.PazConfig
 import joshxviii.plantz.PazItems
 import joshxviii.plantz.block.entity.SunBatteryBlockEntity
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
-import net.minecraft.util.Mth
-import net.minecraft.util.RandomSource
-import net.minecraft.Util
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.InteractionResult
-import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.context.BlockPlaceContext
@@ -38,8 +31,8 @@ import net.minecraft.world.level.material.FluidState
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.level.pathfinder.PathComputationType
 import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.shapes.CollisionContext
-import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
 import java.util.function.ToIntFunction
 
@@ -93,7 +86,7 @@ class SunBatteryBlock(properties: Properties) : BaseEntityBlock(properties), Sim
     }
 
     override fun mirror(state: BlockState, mirror: Mirror): BlockState {
-        return state.rotate(mirror.getRotation(state.getValue(FACING)))
+        return rotate(state, mirror.getRotation(state.getValue(FACING)))
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
@@ -159,8 +152,7 @@ class SunBatteryBlock(properties: Properties) : BaseEntityBlock(properties), Sim
         pos: BlockPos,
         neighbourPos: BlockPos
     ): BlockState {
-        val ticks = level
-        if (state.getValue(WATERLOGGED)) ticks.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level))
+        if (state.getValue(WATERLOGGED)) level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level))
         return if (getConnectedDirection(state).opposite == directionToNeighbour && !state.canSurvive(level, pos)) {
             Blocks.AIR.defaultBlockState()
         } else
@@ -189,9 +181,10 @@ class SunBatteryBlock(properties: Properties) : BaseEntityBlock(properties), Sim
         return state.getValue(LEVEL)
     }
 
-    override fun getCloneItemStack(level: LevelReader, pos: BlockPos, state: BlockState): ItemStack {
-        return (level.getBlockEntity(pos) as? SunBatteryBlockEntity)?.theItem?:
-        super.getCloneItemStack(level, pos, state)
+    override fun getCloneItemStack(state: BlockState, target: HitResult, level: LevelReader, pos: BlockPos, player: Player): ItemStack {
+        // copy: upstream handed out the block entity's own stack, so the picked item and the block shared their sun
+        return (level.getBlockEntity(pos) as? SunBatteryBlockEntity)?.theItem?.copy()?:
+        super.getCloneItemStack(state, target, level, pos, player)
     }
 
     override fun codec(): MapCodec<out SunBatteryBlock> { return CODEC }

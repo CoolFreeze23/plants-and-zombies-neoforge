@@ -19,6 +19,7 @@ import joshxviii.plantz.PazEntities.ZOMBIE_YETI
 import joshxviii.plantz.entity.zombie.PazZombie
 import joshxviii.plantz.item.*
 import joshxviii.plantz.item.component.*
+import joshxviii.plantz.item.crafting.TransmuteRecipe
 import net.minecraft.core.Direction
 import net.minecraft.core.Registry
 import net.minecraft.core.component.DataComponents
@@ -36,10 +37,10 @@ import net.minecraft.world.item.Item.BASE_ATTACK_DAMAGE_ID
 import net.minecraft.world.item.Item.BASE_ATTACK_SPEED_ID
 import net.minecraft.world.item.Items.GLASS_BOTTLE
 import net.minecraft.world.item.component.ItemAttributeModifiers
-import net.minecraft.world.level.block.ComposterBlock
 import net.minecraft.world.level.block.DispenserBlock
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import net.neoforged.neoforge.common.DeferredSpawnEggItem
 import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent
 import java.util.function.Function
 
@@ -71,7 +72,7 @@ object PazItems {
     )
     @JvmField
     val GARDENING_GLOVE: Item = registerItem(
-        "gardening_glove", ::GardeningGloveItem, // repairable with leather: GardeningGloveItem.isValidRepairItem
+        "gardening_glove", ::GardeningGloveItem, // 26.1 repairable(LEATHER): GardeningGloveItem.isValidRepairItem
         properties = Item.Properties()
             .stacksTo(1)
             .rarity(Rarity.UNCOMMON)
@@ -104,7 +105,7 @@ object PazItems {
                 breakChance = 0.1f,
                 mustBeUsing = true
             )
-            ) // 26.1 BREAK_SOUND (shield break) has no 1.21.1 component; the newspaper has no durability anyway
+            ) // 26.1 BREAK_SOUND (shield break): NewspaperItem.getBreakingSound
     )
     @JvmField
     val TACO: Item = registerItem(
@@ -114,7 +115,7 @@ object PazItems {
     const val DUCKY_TUBE_DAMAGE_INTERVAL = 45
     @JvmField
     val DUCKY_TUBE: Item = registerItem(
-        "ducky_tube", ::DuckyTubeItem, // equips to LEGS (Equipable), repairable with phantom membrane
+        "ducky_tube", ::DuckyTubeItem, // 26.1 EQUIPPABLE(LEGS) + repairable(PHANTOM_MEMBRANE): see DuckyTubeItem
         properties = Item.Properties()
             .durability(200)
             .attributes(
@@ -162,14 +163,14 @@ object PazItems {
 
     @JvmField
     val DYE_BLASTER: Item = registerItem(
-        "dye_blaster", ::DyeBlasterItem, // repairable with brainz alloy: DyeBlasterItem.isValidRepairItem
+        "dye_blaster", ::DyeBlasterItem, // 26.1 repairable(BRAINZ_ALLOY): DyeBlasterItem.isValidRepairItem
         properties = Item.Properties()
             .durability(435)
             .stacksTo(1)
     )
     @JvmField
     val FOOTBALL_HELMET: Item = registerItem(
-        "football_helmet", ::FootballHelmetItem, // head Equipable; 26.1 humanoidArmor(CHAINMAIL, HELMET) durability/enchantability/repair kept
+        "football_helmet", ::FootballHelmetItem, // 26.1 humanoidArmor(CHAINMAIL, HELMET) + EQUIPPABLE(HEAD): see FootballHelmetItem
         properties = Item.Properties()
             .durability(FootballHelmetItem.DURABILITY)
             .component(PazComponents.BLOCKS_PROJECTILE_DAMAGE, BlocksProjectileDamage(
@@ -190,7 +191,7 @@ object PazItems {
     )
     @JvmField
     val BLUEPRINT: Item = registerItem(
-        "blueprint", ::BlueprintItem, // break sound (wolf armor) played by BlueprintItem itself
+        "blueprint", ::BlueprintItem, // 26.1 BREAK_SOUND (wolf armor break): BlueprintItem.getBreakingSound
         properties = Item.Properties()
             .stacksTo(1)
             .durability(20)
@@ -203,9 +204,10 @@ object PazItems {
     )
     @JvmField
     val SEED_PACKET: Item = registerItem(
-        "seed_packet", ::SeedPacketItem, // per-plant cooldowns: SeedPacketCooldowns (no USE_COOLDOWN component in 1.21.1)
+        "seed_packet", ::SeedPacketItem,
         properties = Item.Properties()
             .component(PazComponents.SUN_COST, SunCost())
+            .component(PazComponents.USE_COOLDOWN, UseCooldown(0f))
     )
     @JvmField
     val PLANT_POT_MINECART: Item = registerItem(
@@ -214,7 +216,7 @@ object PazItems {
     )
     @JvmField
     val PLANT_POT_HELMET: Item = registerItem(
-        "plant_pot_helmet", ::PlantPotHelmetItem, // head Equipable, repairable with brick
+        "plant_pot_helmet", ::PlantPotHelmetItem, // 26.1 EQUIPPABLE(HEAD) + repairable(BRICK): see PlantPotHelmetItem
         properties = Item.Properties()
             .durability(185)
             .rarity(Rarity.UNCOMMON)
@@ -225,23 +227,23 @@ object PazItems {
         properties = Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON).jukeboxPlayable(PazJukeboxSongs.GRASSY_GROOVE)
     )
 
-    @JvmField val BROWN_COAT_SPAWN_EGG: Item = registerSpawnEgg(BROWN_COAT, 0x7A5230, 0x799C65)
-    @JvmField val NEWSPAPER_ZOMBIE_SPAWN_EGG: Item = registerSpawnEgg(NEWSPAPER_ZOMBIE, 0xD8D2C4, 0x799C65)
-    @JvmField val DIGGER_ZOMBIE_SPAWN_EGG: Item = registerSpawnEgg(DIGGER_ZOMBIE, 0x8A6A3B, 0xF2C230)
-    @JvmField val ENGINEER_ZOMBIE_SPAWN_EGG: Item = registerSpawnEgg(ENGINEER_ZOMBIE, 0xE0A526, 0x4F6E8F)
-    @JvmField val ZOMBIE_YETI_SPAWN_EGG: Item = registerSpawnEgg(ZOMBIE_YETI, 0xEFF4F7, 0x8FB6D9)
-    @JvmField val DISCO_ZOMBIE_SPAWN_EGG: Item = registerSpawnEgg(DISCO_ZOMBIE, 0x5B2A86, 0xF2D33A)
-    @JvmField val BACKUP_DANCER_SPAWN_EGG: Item = registerSpawnEgg(BACKUP_DANCER, 0xC23B3B, 0x799C65)
-    @JvmField val ALL_STAR_SPAWN_EGG: Item = registerSpawnEgg(ALL_STAR, 0xB22222, 0xF0F0F0)
-    @JvmField val GRAVE_DIGGER_SPAWN_EGG: Item = registerSpawnEgg(GRAVE_DIGGER, 0x4B4B4B, 0x8A7356)
-    @JvmField val SOLDIER_ZOMBIE_SPAWN_EGG: Item = registerSpawnEgg(SOLDIER_ZOMBIE, 0x556B2F, 0x799C65)
-    @JvmField val ROBO_ZOMBIE_SPAWN_EGG: Item = registerSpawnEgg(ROBO_ZOMBIE, 0x9AA3AB, 0xD94A2B)
-    @JvmField val PIRATE_CAPTAIN_SPAWN_EGG: Item = registerSpawnEgg(PIRATE_CAPTAIN, 0x2B2B2B, 0xC9A23F)
-    @JvmField val SUPER_BRAINZ_SPAWN_EGG: Item = registerSpawnEgg(SUPER_BRAINZ, 0x2E5AAC, 0xD62828)
-    @JvmField val IMP_SPAWN_EGG: Item = registerSpawnEgg(IMP, 0x8DB06A, 0xC94C4C)
-    @JvmField val GARGANTUAR_SPAWN_EGG: Item = registerSpawnEgg(GARGANTUAR, 0x6E5A44, 0x799C65)
+    @JvmField val BROWN_COAT_SPAWN_EGG: Item = registerSpawnEgg(BROWN_COAT)
+    @JvmField val NEWSPAPER_ZOMBIE_SPAWN_EGG: Item = registerSpawnEgg(NEWSPAPER_ZOMBIE)
+    @JvmField val DIGGER_ZOMBIE_SPAWN_EGG: Item = registerSpawnEgg(DIGGER_ZOMBIE)
+    @JvmField val ENGINEER_ZOMBIE_SPAWN_EGG: Item = registerSpawnEgg(ENGINEER_ZOMBIE)
+    @JvmField val ZOMBIE_YETI_SPAWN_EGG: Item = registerSpawnEgg(ZOMBIE_YETI)
+    @JvmField val DISCO_ZOMBIE_SPAWN_EGG: Item = registerSpawnEgg(DISCO_ZOMBIE)
+    @JvmField val BACKUP_DANCER_SPAWN_EGG: Item = registerSpawnEgg(BACKUP_DANCER)
+    @JvmField val ALL_STAR_SPAWN_EGG: Item = registerSpawnEgg(ALL_STAR)
+    @JvmField val GRAVE_DIGGER_SPAWN_EGG: Item = registerSpawnEgg(GRAVE_DIGGER)
+    @JvmField val SOLDIER_ZOMBIE_SPAWN_EGG: Item = registerSpawnEgg(SOLDIER_ZOMBIE)
+    @JvmField val ROBO_ZOMBIE_SPAWN_EGG: Item = registerSpawnEgg(ROBO_ZOMBIE)
+    @JvmField val PIRATE_CAPTAIN_SPAWN_EGG: Item = registerSpawnEgg(PIRATE_CAPTAIN)
+    @JvmField val SUPER_BRAINZ_SPAWN_EGG: Item = registerSpawnEgg(SUPER_BRAINZ)
+    @JvmField val IMP_SPAWN_EGG: Item = registerSpawnEgg(IMP)
+    @JvmField val GARGANTUAR_SPAWN_EGG: Item = registerSpawnEgg(GARGANTUAR)
 
-    @JvmField val GNOME_SPAWN_EGG: Item = registerSpawnEgg(GNOME, 0x2F6FD0, 0xE9D8B4)
+    @JvmField val GNOME_SPAWN_EGG: Item = registerSpawnEgg(GNOME)
 
     private fun registerItem(
         name: String,
@@ -254,18 +256,19 @@ object PazItems {
         return item
     }
 
-    private fun registerSpawnEgg(type: EntityType<out Mob>, backgroundColor: Int, highlightColor: Int): Item {
+    private fun registerSpawnEgg(type: EntityType<out Mob>): Item {
         val entityId = EntityType.getKey(type).path
+        // 26.1 eggs have full-colour textures (white keeps the 1.21.1 egg tint off them) and dispense like vanilla ones
         return registerItem(
-           "${entityId}_spawn_egg", { SpawnEggItem(type, backgroundColor, highlightColor, it) },
+           "${entityId}_spawn_egg", { DeferredSpawnEggItem({ type }, 0xFFFFFF, 0xFFFFFF, it) },
             Item.Properties()
         )
     }
 
     /**
-     * Replaces Fabric's `DefaultItemComponentEvents.MODIFY`. Lead: call from the mod-bus `ModifyDefaultComponentsEvent`.
-     * 26.1 also made the bucket head-equippable (EQUIPPABLE); 1.21.1 cannot give a vanilla item an equipment slot via
-     * components, so mobs can still wear it (setItemSlot) and get these attributes, but players cannot right-click equip it.
+     * Fabric's `DefaultItemComponentEvents.MODIFY`, called from the mod-bus `ModifyDefaultComponentsEvent`.
+     * 26.1 also gave the bucket EQUIPPABLE(HEAD, iron equip sound): on 1.21.1 that is BucketItemHelmetMixin (head slot)
+     * and LivingEntityBucketEquipSoundMixin (equip sound).
      */
     @JvmStatic
     fun modifyDefaultComponents(event: ModifyDefaultComponentsEvent) {
@@ -289,11 +292,9 @@ object PazItems {
 
     fun initialize() {
         // Fuel (Fabric FuelValueEvents): SunItem / NewspaperItem override getBurnTime.
+        TransmuteRecipe.initialize()
 
-        ComposterBlock.COMPOSTABLES.put(SEED_PACKET.asItem(), 1.0f)
-
-        // Component tooltips (Fabric ItemComponentTooltipProviderRegistry): PazComponents.addComponentTooltips, wired by the lead.
-        // Default components (Fabric DefaultItemComponentEvents): modifyDefaultComponents, wired by the lead.
+        // Composting (26.1 ComposterBlock.COMPOSTABLES): NeoForge's compostables data map, data/neoforge/data_maps/item/compostables.json
 
         // Dispenser behavior
         DispenserBlock.registerBehavior(
@@ -372,7 +373,7 @@ object PazItems {
         DispenserBlock.registerBehavior(PLANT_POT_MINECART, PlantPotMinecartItem.DISPENSE_ITEM_BEHAVIOR)
 
         // 26.1 Equippable items are dispensable onto mobs/players by default
-        listOf(FOOTBALL_HELMET, PLANT_POT_HELMET, DUCKY_TUBE, PazBlocks.CONE.asItem()).forEach {
+        listOf(FOOTBALL_HELMET, PLANT_POT_HELMET, DUCKY_TUBE, PazBlocks.CONE.asItem(), PazBlocks.BRAINZ_FLAG.asItem(), PazBlocks.PLANTZ_FLAG.asItem()).forEach {
             DispenserBlock.registerBehavior(it, ArmorItem.DISPENSE_ITEM_BEHAVIOR)
         }
     }

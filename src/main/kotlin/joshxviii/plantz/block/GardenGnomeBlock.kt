@@ -7,11 +7,9 @@ import net.minecraft.core.Direction
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.util.ByIdMap
-import net.minecraft.util.RandomSource
 import net.minecraft.util.StringRepresentable
 import net.minecraft.Util
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.InteractionResult
 import net.minecraft.world.ItemInteractionResult
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
@@ -89,7 +87,7 @@ class GardenGnomeBlock(
     }
 
     fun updatePose(level: Level, state: BlockState, pos: BlockPos, player: Player) {
-        level.playSound(null, pos, SoundEvents.DECORATED_POT_INSERT /* 26.1 COPPER_GOLEM_BECOME_STATUE */, SoundSource.BLOCKS)
+        level.playSound(null, pos, SoundEvents.DECORATED_POT_INSERT /* 26.1 COPPER_GOLEM_BECOME_STATUE: not in 1.21.1 or Vanilla Backport */, SoundSource.BLOCKS)
         level.setBlock(pos, state.setValue(POSE, state.getValue(POSE).getNextPose()), 3)
         level.gameEvent(player as Entity, GameEvent.BLOCK_CHANGE, pos)
     }
@@ -115,8 +113,7 @@ class GardenGnomeBlock(
         pos: BlockPos,
         neighbourPos: BlockPos
     ): BlockState {
-        val ticks = level
-        if (state.getValue(WATERLOGGED)) ticks.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level))
+        if (state.getValue(WATERLOGGED)) level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level))
         return if (!state.canSurvive(level, pos)) Blocks.AIR.defaultBlockState()
         else super.updateShape(state, directionToNeighbour, neighbourState, level, pos, neighbourPos)
     }

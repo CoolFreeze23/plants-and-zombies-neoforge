@@ -90,7 +90,7 @@ class FlagBlockEntity(
         setChanged()
         syncToClient()
         val l = level?: return
-        l.playSound(null, blockPos, blockState.soundType.hitSound, SoundSource.BLOCKS, 1.0f, l.random.nextFloat() * 0.2f + 0.6f)
+        l.playSound(null, blockPos, blockState.getSoundType(l, blockPos, null).hitSound, SoundSource.BLOCKS, 1.0f, l.random.nextFloat() * 0.2f + 0.6f)
     }
 
     private fun healthToDestroyProgress(): Int = floor((1f - (health / MAX_HEALTH)) * 10f).toInt()

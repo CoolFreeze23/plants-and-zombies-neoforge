@@ -15,6 +15,7 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerLevel
+import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
@@ -115,8 +116,6 @@ class BlueprintItem(
             return InteractionResult.FAIL
         }
 
-        // 26.1 BREAK_SOUND component (wolf armor break) has no 1.21.1 equivalent: play it alongside the vanilla break sound
-        if (itemStack.nextDamageWillBreak() && !player.hasInfiniteMaterials()) level.playSound(null, player.x, player.y, player.z, SoundEvents.WOLF_ARMOR_BREAK, player.soundSource, 1.0f, 1.0f)
         itemStack.hurtAndBreak(1, player, hand)
         if (!player.hasInfiniteMaterials()) {
             player.removeItemFromInventory(PazItems.BRAINZ_ALLOY, alloyCost)
@@ -132,6 +131,9 @@ class BlueprintItem(
         return InteractionResult.SUCCESS
     }
 
+
+    // 26.1 BREAK_SOUND component
+    override fun getBreakingSound(): SoundEvent = SoundEvents.WOLF_ARMOR_BREAK
 
     companion object {
         fun stackFor(type: EntityType<*>): ItemStack {

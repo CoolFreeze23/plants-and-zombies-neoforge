@@ -52,7 +52,7 @@ class MailCollectionBoxEntity(
     private val openersCounter: ContainerOpenersCounter = object : ContainerOpenersCounter() {
         override fun onOpen(level: Level, pos: BlockPos, blockState: BlockState) {
             updateCollectionBoxState(CollectionBoxState.OPEN)
-            playSound(SoundEvents.COPPER_TRAPDOOR_OPEN /* 26.1 COPPER_CHEST_OPEN */, 0.3f, 1.2f)
+            playSound(SoundEvents.COPPER_TRAPDOOR_OPEN /* 26.1 COPPER_CHEST_OPEN: not in 1.21.1 or Vanilla Backport */, 0.3f, 1.2f)
         }
         override fun onClose(level: Level, pos: BlockPos, blockState: BlockState) {
             updateCollectionBoxState(CollectionBoxState.CLOSED)

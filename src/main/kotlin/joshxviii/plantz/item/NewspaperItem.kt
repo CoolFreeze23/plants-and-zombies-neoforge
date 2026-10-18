@@ -1,5 +1,6 @@
 package joshxviii.plantz.item
 
+import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResultHolder
@@ -21,6 +22,9 @@ class NewspaperItem(properties: Properties) : Item(properties) {
 
     // Fabric FuelValueEvents: builder.add(NEWSPAPER, baseSmeltTime)
     override fun getBurnTime(itemStack: ItemStack, recipeType: RecipeType<*>?): Int = 200
+
+    // 26.1 BREAK_SOUND component
+    override fun getBreakingSound(): SoundEvent = SoundEvents.SHIELD_BREAK
 
     override fun releaseUsing(
         itemStack: ItemStack,

@@ -1,10 +1,8 @@
 package joshxviii.plantz.block
 
 import com.mojang.serialization.MapCodec
-import joshxviii.plantz.PlantHeadAttachment
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
-import net.minecraft.util.RandomSource
 import net.minecraft.Util
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.player.Player
@@ -90,8 +88,7 @@ class LawnFlamingo(properties: Properties) : HorizontalDirectionalBlock(properti
         pos: BlockPos,
         neighbourPos: BlockPos
     ): BlockState {
-        val ticks = level
-        if (state.getValue(WATERLOGGED)) ticks.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level))
+        if (state.getValue(WATERLOGGED)) level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level))
         return if (!state.canSurvive(level, pos)) Blocks.AIR.defaultBlockState()
         else super.updateShape(state, directionToNeighbour, neighbourState, level, pos, neighbourPos)
     }
