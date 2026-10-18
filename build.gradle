@@ -99,3 +99,10 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
 jar {
     from("LICENSE") { rename { "${it}_plants-and-zombies" } }
 }
+
+// Writes the main compile classpath to build/compile-classpath.txt (for checking Java sources with plain javac)
+tasks.register('writeCompileClasspath') {
+    def out = layout.buildDirectory.file('compile-classpath.txt')
+    outputs.file(out)
+    doLast { out.get().asFile.text = sourceSets.main.compileClasspath.asPath }
+}
