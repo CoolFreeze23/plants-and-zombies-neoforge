@@ -1,0 +1,6 @@
+{
+  "parent": "plantz:item/seed_packet",
+  "textures": {
+    "layer1": "plantz:item/plant_icon/hypnoshroom"
+  }
+}

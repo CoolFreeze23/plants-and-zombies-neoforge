@@ -3,15 +3,33 @@
   "group": "balloon_dye",
   "category": "misc",
   "ingredients": [
-    "#plantz:balloons",
-    "#plantz:balloons",
-    "#plantz:balloons",
-    "#plantz:balloons",
-    "minecraft:orange_dye",
-    "#plantz:balloons",
-    "#plantz:balloons",
-    "#plantz:balloons",
-    "#plantz:balloons"
+    {
+      "tag": "plantz:balloons"
+    },
+    {
+      "tag": "plantz:balloons"
+    },
+    {
+      "tag": "plantz:balloons"
+    },
+    {
+      "tag": "plantz:balloons"
+    },
+    {
+      "item": "minecraft:orange_dye"
+    },
+    {
+      "tag": "plantz:balloons"
+    },
+    {
+      "tag": "plantz:balloons"
+    },
+    {
+      "tag": "plantz:balloons"
+    },
+    {
+      "tag": "plantz:balloons"
+    }
   ],
   "result": {
     "count": 8,

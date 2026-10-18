@@ -2,12 +2,12 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "#": [
-      "plantz:brainz_flag"
-    ],
-    "*": [
-      "plantz:sun"
-    ]
+    "#": {
+      "item": "plantz:brainz_flag"
+    },
+    "*": {
+      "item": "plantz:sun"
+    }
   },
   "pattern": [
     "***",

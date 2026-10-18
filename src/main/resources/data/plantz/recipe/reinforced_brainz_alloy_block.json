@@ -2,8 +2,12 @@
   "type": "minecraft:crafting_shaped",
   "category": "building",
   "key": {
-    "@": "plantz:brainz_alloy_block",
-    "#": "minecraft:iron_ingot"
+    "@": {
+      "item": "plantz:brainz_alloy_block"
+    },
+    "#": {
+      "item": "minecraft:iron_ingot"
+    }
   },
   "pattern": [
     "###",

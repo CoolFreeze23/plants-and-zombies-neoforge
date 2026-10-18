@@ -1,6 +1,29 @@
 {
-  "parent": "minecraft:item/handheld",
+  "loader": "neoforge:separate_transforms",
+  "gui_light": "front",
   "textures": {
-    "layer0": "plantz:item/watering_can"
-  }
+    "particle": "plantz:item/watering_can"
+  },
+  "base": {
+    "parent": "minecraft:item/handheld",
+    "textures": {
+      "layer0": "plantz:item/watering_can"
+    }
+  },
+  "perspectives": {
+    "thirdperson_righthand": {
+      "parent": "plantz:block/watering_can"
+    },
+    "thirdperson_lefthand": {
+      "parent": "plantz:block/watering_can"
+    }
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "plantz:has_stored_water": 1
+      },
+      "model": "plantz:item/watering_can/filled"
+    }
+  ]
 }

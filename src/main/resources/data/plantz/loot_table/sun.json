@@ -1,5 +1,5 @@
 {
-  "type": "minecraft:entity_interact",
+  "type": "minecraft:generic",
   "pools": [
     {
       "bonus_rolls": 0.0,

@@ -1,0 +1,24 @@
+{
+  "loader": "neoforge:separate_transforms",
+  "gui_light": "front",
+  "textures": {
+    "particle": "plantz:item/newspaper/item"
+  },
+  "base": {
+    "parent": "plantz:item/newspaper/item"
+  },
+  "perspectives": {
+    "firstperson_righthand": {
+      "parent": "plantz:item/newspaper/article_7"
+    },
+    "firstperson_lefthand": {
+      "parent": "plantz:item/newspaper/article_7"
+    },
+    "thirdperson_righthand": {
+      "parent": "plantz:item/newspaper/newspaper"
+    },
+    "thirdperson_lefthand": {
+      "parent": "plantz:item/newspaper/newspaper"
+    }
+  }
+}

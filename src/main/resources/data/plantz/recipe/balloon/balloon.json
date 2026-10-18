@@ -2,15 +2,15 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "/": [
-      "minecraft:string"
-    ],
-    "@": [
-      "minecraft:wind_charge"
-    ],
-    "#": [
-      "minecraft:phantom_membrane"
-    ]
+    "/": {
+      "item": "minecraft:string"
+    },
+    "@": {
+      "item": "minecraft:wind_charge"
+    },
+    "#": {
+      "item": "minecraft:phantom_membrane"
+    }
   },
   "pattern": [
     " # ",

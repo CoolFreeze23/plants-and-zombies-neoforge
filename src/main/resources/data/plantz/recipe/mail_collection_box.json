@@ -2,16 +2,18 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "@": "#plantz:mailboxes",
-    "#": [
-      "plantz:brainz_alloy"
-    ],
-    "+": [
-      "plantz:newspaper"
-    ],
-    "*": [
-      "minecraft:redstone"
-    ]
+    "@": {
+      "tag": "plantz:mailboxes"
+    },
+    "#": {
+      "item": "plantz:brainz_alloy"
+    },
+    "+": {
+      "item": "plantz:newspaper"
+    },
+    "*": {
+      "item": "minecraft:redstone"
+    }
   },
   "pattern": [
     "###",

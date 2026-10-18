@@ -1,6 +1,9 @@
 {
   "values": [
     "plantz:graveyard",
-    "minecraft:pale_garden"
+    {
+      "id": "minecraft:pale_garden",
+      "required": false
+    }
   ]
 }

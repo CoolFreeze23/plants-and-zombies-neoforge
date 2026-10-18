@@ -1,6 +1,18 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "neoforge:separate_transforms",
+  "gui_light": "front",
   "textures": {
-    "layer0": "plantz:item/ducky_tube"
+    "particle": "plantz:item/ducky_tube"
+  },
+  "base": {
+    "parent": "minecraft:item/generated",
+    "textures": {
+      "layer0": "plantz:item/ducky_tube"
+    }
+  },
+  "perspectives": {
+    "head": {
+      "parent": "plantz:block/ducky_tube"
+    }
   }
 }

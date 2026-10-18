@@ -3,6 +3,9 @@
     "minecraft:bow",
     "minecraft:mace",
     "#minecraft:axes",
-    "#minecraft:spears"
+    {
+      "id": "#minecraft:spears",
+      "required": false
+    }
   ]
 }

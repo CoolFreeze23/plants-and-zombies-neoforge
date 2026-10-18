@@ -12,7 +12,10 @@
     "minecraft:ghast",
     "minecraft:giant",
     "minecraft:camel",
-    "minecraft:camel_husk",
+    {
+      "id": "minecraft:camel_husk",
+      "required": false
+    },
     "plantz:zombie_yeti",
     "plantz:robo_zombie",
     "plantz:super_brainz",

@@ -1,6 +1,11 @@
 {
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "plantz:item/sun_battery"
-  }
+  "parent": "plantz:item/sun_battery_empty",
+  "overrides": [
+    {
+      "predicate": {
+        "plantz:has_stored_sun": 1
+      },
+      "model": "plantz:item/sun_battery_full"
+    }
+  ]
 }

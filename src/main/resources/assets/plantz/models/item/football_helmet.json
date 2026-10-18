@@ -1,6 +1,18 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "neoforge:separate_transforms",
+  "gui_light": "front",
   "textures": {
-    "layer0": "plantz:item/football_helmet_item"
+    "particle": "plantz:item/football_helmet_item"
+  },
+  "base": {
+    "parent": "minecraft:item/generated",
+    "textures": {
+      "layer0": "plantz:item/football_helmet_item"
+    }
+  },
+  "perspectives": {
+    "head": {
+      "parent": "plantz:block/football_helmet"
+    }
   }
 }

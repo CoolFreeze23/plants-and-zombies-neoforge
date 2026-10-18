@@ -19,7 +19,7 @@
               "include": [
                 "minecraft:custom_name",
                 "minecraft:item_name",
-                "minecraft:tooltip_display",
+                "minecraft:hide_additional_tooltip",
                 "minecraft:rarity"
               ]
             }

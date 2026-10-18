@@ -1,0 +1,29 @@
+{
+  "parent": "plantz:item/blueprint/blueprint",
+  "overrides": [
+    {
+      "predicate": {
+        "plantz:blueprint_type": 0.125
+      },
+      "model": "plantz:item/blueprint/zombie_turret"
+    },
+    {
+      "predicate": {
+        "plantz:blueprint_type": 0.25
+      },
+      "model": "plantz:item/blueprint/zombie_drone"
+    },
+    {
+      "predicate": {
+        "plantz:blueprint_type": 0.375
+      },
+      "model": "plantz:item/blueprint/electro_turret"
+    },
+    {
+      "predicate": {
+        "plantz:blueprint_type": 0.5
+      },
+      "model": "plantz:item/blueprint/lawn_mower"
+    }
+  ]
+}

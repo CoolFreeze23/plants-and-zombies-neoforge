@@ -46,8 +46,7 @@
           {
             "type": "minecraft:matching_blocks",
             "blocks": [
-              "minecraft:mycelium",
-              "minecraft:pale_moss_block"
+              "minecraft:mycelium"
             ],
             "offset": [
               0,

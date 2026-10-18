@@ -2,12 +2,12 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    [
-      "plantz:plant_pot"
-    ],
-    [
-      "minecraft:minecart"
-    ]
+    {
+      "item": "plantz:plant_pot"
+    },
+    {
+      "item": "minecraft:minecart"
+    }
   ],
   "result": {
     "count": 1,

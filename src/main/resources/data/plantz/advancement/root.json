@@ -9,7 +9,7 @@
     "description": {
       "translate": "advancements.plantz.root.description"
     },
-    "background": "plantz:gui/advancements/background"
+    "background": "plantz:textures/gui/advancements/background.png"
   },
   "criteria": {
     "has_sun": {

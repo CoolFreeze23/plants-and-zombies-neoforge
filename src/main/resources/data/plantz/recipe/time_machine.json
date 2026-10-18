@@ -2,21 +2,21 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "@": [
-      "minecraft:amethyst_shard"
-    ],
-    "#": [
-      "plantz:brainz_alloy"
-    ],
-    "+": [
-      "plantz:brainzium"
-    ],
-    "*": [
-      "minecraft:redstone"
-    ],
-    "=": [
-      "plantz:reinforced_brainz_alloy_block"
-    ]
+    "@": {
+      "item": "minecraft:amethyst_shard"
+    },
+    "#": {
+      "item": "plantz:brainz_alloy"
+    },
+    "+": {
+      "item": "plantz:brainzium"
+    },
+    "*": {
+      "item": "minecraft:redstone"
+    },
+    "=": {
+      "item": "plantz:reinforced_brainz_alloy_block"
+    }
   },
   "pattern": [
     "#@#",

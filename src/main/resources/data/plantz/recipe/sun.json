@@ -2,7 +2,9 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    "plantz:sun_bottle"
+    {
+      "item": "plantz:sun_bottle"
+    }
   ],
   "result": {
     "count": 8,

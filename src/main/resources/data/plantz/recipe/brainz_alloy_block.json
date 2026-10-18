@@ -2,7 +2,9 @@
   "type": "minecraft:crafting_shaped",
   "category": "building",
   "key": {
-    "#": "plantz:brainz_alloy"
+    "#": {
+      "item": "plantz:brainz_alloy"
+    }
   },
   "pattern": [
     "###",

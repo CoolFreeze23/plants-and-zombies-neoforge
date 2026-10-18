@@ -1,0 +1,22 @@
+{
+  "loader": "neoforge:separate_transforms",
+  "gui_light": "front",
+  "textures": {
+    "particle": "plantz:item/gardening_glove/grab"
+  },
+  "base": {
+    "parent": "plantz:item/gardening_glove/grab",
+    "textures": {
+      "layer1": "plantz:item/plant_icon/chomper",
+      "layer2": "plantz:item/gardening_glove/grab_overlay"
+    }
+  },
+  "perspectives": {
+    "thirdperson_righthand": {
+      "parent": "plantz:item/gardening_glove/thirdperson"
+    },
+    "thirdperson_lefthand": {
+      "parent": "plantz:item/gardening_glove/thirdperson"
+    }
+  }
+}

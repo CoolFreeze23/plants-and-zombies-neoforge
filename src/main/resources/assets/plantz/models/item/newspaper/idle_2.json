@@ -1,0 +1,15 @@
+{
+  "loader": "neoforge:separate_transforms",
+  "gui_light": "front",
+  "textures": {
+    "particle": "plantz:item/newspaper/item"
+  },
+  "base": {
+    "parent": "plantz:item/newspaper/item"
+  },
+  "perspectives": {
+    "fixed": {
+      "parent": "plantz:item/newspaper/article_2"
+    }
+  }
+}
