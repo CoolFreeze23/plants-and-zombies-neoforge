@@ -20,7 +20,7 @@ public class FlagBlockModel extends Model<FlagRenderState> {
     private final ModelPart flag;
 
     public FlagBlockModel(final ModelPart root) {
-        super(root, RenderTypes::entitySolid);
+        super(root, RenderType::entitySolid);
         this.flag = root.getChild("flag");
     }
 

@@ -28,13 +28,17 @@ public class PazZombieModel<S extends PazZombieRenderState> extends ZombieModel<
             @Nullable AnimationDefinition initAnimationOverride,
             final ModelPart root
     ) {
-        var mainRoot = root.hasChild("root") ? root.getChild("root") : root;
-        super(mainRoot);
+        super(mainRoot(root));
+        var mainRoot = this.root();
 
         this.emergeAnimation = KeyframeAnimation.bake(Objects.requireNonNullElse(initAnimationOverride, PazZombieAnimations.emerge), mainRoot);
         this.retreatAnimation = KeyframeAnimation.bake(PazZombieAnimations.retreat, mainRoot);
         this.floatAnimation = KeyframeAnimation.bake(PazZombieAnimations.balloon_float, mainRoot);
 
+    }
+
+    private static ModelPart mainRoot(ModelPart root) {
+        return root.hasChild("root") ? root.getChild("root") : root;
     }
 
     /**

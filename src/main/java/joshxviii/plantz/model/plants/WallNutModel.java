@@ -13,6 +13,7 @@ import net.minecraft.client.model.geom.builders.*;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
+import joshxviii.plantz.renderer.ModelCompatUtils;
 
 import static joshxviii.plantz.UtilsKt.pazResource;
 
@@ -63,7 +64,7 @@ public class WallNutModel extends PlantModel {
 
 		Quaternionf q = wallNutState.getRollRotation();
 
-		if (wallNutState.isRolling()) roll.rotateBy(q);
+		if (wallNutState.isRolling()) ModelCompatUtils.rotateBy(roll, q);
 
 		body.yRot = wallNutState.yRot * Mth.DEG_TO_RAD;
 	}

@@ -77,7 +77,7 @@ open class PlantRenderer(
     override fun scale(state: PlantRenderState, poseStack: PoseStack) {
         super.scale(state, poseStack)
         var g = state.swelling
-        val wobble = 1.0f + Mth.sin((g * 100.0f).toDouble()) * g * 0.01f
+        val wobble = 1.0f + Mth.sin(g * 100.0f) * g * 0.01f
         g = Mth.clamp(g, 0.0f, 1.0f)
         val s = (1.0f + g.pow(6) * 0.4f) * wobble
         val hs = (1.0f + g.pow(6) * 0.1f) / wobble

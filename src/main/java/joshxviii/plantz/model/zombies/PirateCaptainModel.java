@@ -4,6 +4,7 @@ import joshxviii.plantz.animation.zombies.PirateCaptainAnimation;
 import joshxviii.plantz.renderer.entity.zombie.PazZombieRenderState;
 import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 import net.minecraft.client.model.AnimationUtils;
+import joshxviii.plantz.renderer.ModelCompatUtils;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -75,8 +76,8 @@ public class PirateCaptainModel<S extends PazZombieRenderState> extends PazZombi
         this.head.yRot = state.yRot * (float) (Math.PI / 180.0);
 
         AnimationUtils.animateCrossbowHold(this.leftArm, this.rightArm, this.head, true);
-        if (state.ticksUsingItem > 0 && state.ticksUsingItem < 50) AnimationUtils.animateCrossbowCharge(this.rightArm, this.leftArm, 60, state.ticksUsingItem, true);
-        else AnimationUtils.animateZombieArms(this.leftArm, this.rightArm, false, state);
+        if (state.ticksUsingItem > 0 && state.ticksUsingItem < 50) ModelCompatUtils.animateCrossbowCharge(this.rightArm, this.leftArm, 60, state.ticksUsingItem, true);
+        else ModelCompatUtils.animateZombieArms(this.leftArm, this.rightArm, false, state);
         float animationPos = state.walkAnimationPos;
         float animationSpeed = state.walkAnimationSpeed;
         walkAnimation.applyWalk(animationPos, animationSpeed, 2.5f, 1.0f);

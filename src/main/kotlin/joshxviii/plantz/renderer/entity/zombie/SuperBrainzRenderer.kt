@@ -51,8 +51,8 @@ class SuperBrainzRenderer(
 
         val yBodyRot = Mth.rotLerp(partialTicks, entity.yBodyRotO, entity.yBodyRot)
 
-        val forwardX = Mth.sin(yBodyRot * (Math.PI / 180f))
-        val forwardZ = -Mth.cos(yBodyRot * (Math.PI / 180f))
+        val forwardX = Mth.sin(yBodyRot * Mth.DEG_TO_RAD)
+        val forwardZ = -Mth.cos(yBodyRot * Mth.DEG_TO_RAD)
 
         var capeFlap = (deltaY * 20.0f)
         capeFlap = Mth.clamp(capeFlap, -6f, 32f)
@@ -64,7 +64,7 @@ class SuperBrainzRenderer(
         capeLean2 = Mth.clamp(capeLean2, -20f, 20f)
 
         val walkDistance = Mth.lerp(partialTicks, entity.walkDistO, entity.walkDist)
-        capeFlap += Mth.sin(walkDistance * 2.0) * 32f * 0.3f
+        capeFlap += Mth.sin(walkDistance * 2.0f) * 32f * 0.3f
 
         state.capeFlap = capeFlap
         state.capeLean = capeLean

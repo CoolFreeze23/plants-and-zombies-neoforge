@@ -8,8 +8,8 @@ import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
+import org.jetbrains.annotations.NotNull;
 import net.minecraft.util.Mth;
-import org.jspecify.annotations.NonNull;
 
 import static joshxviii.plantz.UtilsKt.pazResource;
 
@@ -65,7 +65,7 @@ public class ZombieDroneModel<T extends BlueprintMachineRenderState> extends Ent
 	}
 
 	@Override
-	public void setupAnim(@NonNull T state) {
+	public void setupAnim(@NotNull T state) {
 		super.setupAnim(state);
 		this.body.xRot = state.xRot * Mth.DEG_TO_RAD * .25f;
 

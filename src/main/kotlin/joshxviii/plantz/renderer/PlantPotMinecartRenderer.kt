@@ -3,30 +3,28 @@ package joshxviii.plantz.renderer
 import com.mojang.blaze3d.vertex.PoseStack
 import joshxviii.plantz.entity.PlantPotMinecart
 import net.minecraft.client.model.geom.ModelLayerLocation
-import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector
-import net.minecraft.client.renderer.block.BlockModelRenderState
-import net.minecraft.client.renderer.entity.AbstractMinecartRenderer
+import net.minecraft.client.renderer.MultiBufferSource
 import net.minecraft.client.renderer.entity.EntityRendererProvider
-import net.minecraft.client.renderer.entity.state.MinecartRenderState
+import net.minecraft.client.renderer.entity.MinecartRenderer
+import net.minecraft.world.level.block.state.BlockState
 
 class PlantPotMinecartRenderer(
     context: EntityRendererProvider.Context,
     model: ModelLayerLocation,
-): AbstractMinecartRenderer<PlantPotMinecart, MinecartRenderState>(
+): MinecartRenderer<PlantPotMinecart>(
     context,
     model
 ) {
-    override fun submitMinecartContents(
-        state: MinecartRenderState,
-        blockModel: BlockModelRenderState,
+    override fun renderMinecartContents(
+        entity: PlantPotMinecart,
+        partialTicks: Float,
+        state: BlockState,
         poseStack: PoseStack,
-        submitNodeCollector: SubmitNodeCollector,
-        lightCoords: Int
+        buffer: MultiBufferSource,
+        packedLight: Int
     ) {
         poseStack.translate(-0.5 * 1/3, 0.15, -0.5 * 1/3)
         poseStack.scale(4/3f, 4/3f, 4/3f)
-        super.submitMinecartContents(state, blockModel, poseStack, submitNodeCollector, lightCoords)
+        super.renderMinecartContents(entity, partialTicks, state, poseStack, buffer, packedLight)
     }
-
-    override fun createRenderState(): MinecartRenderState = MinecartRenderState()
 }

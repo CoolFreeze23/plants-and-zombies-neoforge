@@ -11,7 +11,8 @@ import joshxviii.plantz.compat.client.state.BlockEntityRenderState
 import joshxviii.plantz.compat.client.renderer.ModelFeatureRenderer
 import joshxviii.plantz.compat.client.CameraRenderState
 import net.minecraft.core.particles.ParticleTypes
-import net.minecraft.core.particles.SpellParticleOption
+import net.minecraft.core.particles.ColorParticleOption
+import joshxviii.plantz.compat.ARGB
 import net.minecraft.world.level.Level
 import net.minecraft.world.phys.Vec3
 
@@ -55,7 +56,7 @@ class MailboxRenderer() : BlockEntityRenderer<MailboxBlockEntity, MailboxRenderS
             val x = state.blockPos.x + 0.5 + direction.scale(distance).x
             val y = state.blockPos.y + 0.33 + direction.scale(distance).y
             val z = state.blockPos.z + 0.5 + direction.scale(distance).z
-            it.addParticle(SpellParticleOption.create(ParticleTypes.EFFECT, GardenHeroEffect.EFFECT_COLOR, 0f), x, y, z, xd, yd + .1, zd)
+            it.addParticle(ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, ARGB.opaque(GardenHeroEffect.EFFECT_COLOR)), x, y, z, xd, yd + .1, zd)
             doParticles = false
         }
     }

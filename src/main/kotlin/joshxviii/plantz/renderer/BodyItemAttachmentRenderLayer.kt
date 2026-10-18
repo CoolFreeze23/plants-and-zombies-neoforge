@@ -6,22 +6,19 @@ import joshxviii.plantz.PazEntities
 import joshxviii.plantz.PazItems
 import joshxviii.plantz.PazModels.HAS_BUTTER_KEY
 import joshxviii.plantz.PazModels.PAINT_COLORS_KEY
-import joshxviii.plantz.PazRenderPipelines.PAINT_OVERLAY
+import joshxviii.plantz.PazRenderPipelines
 import joshxviii.plantz.model.projectiles.ButterModel
 import joshxviii.plantz.pazResource
 import joshxviii.plantz.renderer.entity.ProjectileRenderState
 import net.minecraft.client.Minecraft
 import joshxviii.plantz.compat.client.model.EntityModel
-import net.minecraft.client.model.HumanoidModel
+import joshxviii.plantz.compat.client.model.HumanoidModel
 import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector
 import joshxviii.plantz.compat.client.renderer.LivingEntityRenderer
 import joshxviii.plantz.compat.client.renderer.layers.RenderLayerParent
 import joshxviii.plantz.compat.client.renderer.layers.RenderLayer
 import joshxviii.plantz.compat.client.state.HumanoidRenderState
 import joshxviii.plantz.compat.client.state.LivingEntityRenderState
-import net.minecraft.client.renderer.item.ItemStackRenderState
-import net.minecraft.client.renderer.rendertype.LayeringTransform
-import net.minecraft.client.renderer.rendertype.RenderSetup
 import net.minecraft.client.renderer.RenderType
 import net.minecraft.client.renderer.texture.OverlayTexture
 import net.minecraft.resources.ResourceLocation
@@ -36,19 +33,11 @@ class SpecialEffectsLayer<S : LivingEntityRenderState, M : EntityModel<in S>>(pr
 ) {
     companion object {
         private val NOISE_TEXTURE = pazResource("textures/entity/paint_overlay.png")
-        fun paintOverlay(entityTexture: ResourceLocation, amplifier: Int = 0, color: Int = 0): RenderType {
-            return RenderType.create(
-                "paint_overlay_${amplifier}",
-                RenderSetup.builder(PAINT_OVERLAY)
-                    .withTexture("Sampler0", entityTexture)
-                    .withTexture("Sampler1", NOISE_TEXTURE)
-                    .setLayeringTransform(LayeringTransform.VIEW_OFFSET_Z_LAYERING)
-                    .useOverlay()
-                    .sortOnUpload()
-                    .createRenderSetup()
-            )
-        }
-        val BUTTER_MODEL = ButterModel(Minecraft.getInstance().modelManager.entityModels().get().bakeLayer(ButterModel.LAYER_LOCATION))
+        // amplifier/color only named the 26.1 render type; the paint tint comes from the vertex colour
+        @Suppress("UNUSED_PARAMETER")
+        fun paintOverlay(entityTexture: ResourceLocation, amplifier: Int = 0, color: Int = 0): RenderType =
+            PazRenderPipelines.paintOverlay(entityTexture, NOISE_TEXTURE)
+        val BUTTER_MODEL by lazy { ButterModel(Minecraft.getInstance().entityModels.bakeLayer(ButterModel.LAYER_LOCATION)) }
     }
 
     override fun submit(
@@ -171,8 +160,6 @@ abstract class BodyItemAttachmentRenderLayer<S : LivingEntityRenderState, M : En
     private val stackSelector: (HumanoidRenderState) -> ItemStack,
 ) : RenderLayer<S, M>(parent) {
 
-    private val itemRenderState = ItemStackRenderState()
-
     override fun submit(
         poseStack: PoseStack,
         collector: SubmitNodeCollector,
@@ -199,20 +186,14 @@ abstract class BodyItemAttachmentRenderLayer<S : LivingEntityRenderState, M : En
         }
 
         val minecraft = Minecraft.getInstance()
-        itemRenderState.clear()
-        minecraft.itemModelResolver.updateForTopItem(
-            itemRenderState,
+        minecraft.itemRenderer.renderStatic(
             itemStack,
             ItemDisplayContext.HEAD,
-            minecraft.level,
-            null,
-            0
-        )
-        itemRenderState.submit(
-            poseStack,
-            collector,
             lightCoords,
             OverlayTexture.NO_OVERLAY,
+            poseStack,
+            collector.bufferSource(),
+            minecraft.level,
             0
         )
 

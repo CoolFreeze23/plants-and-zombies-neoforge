@@ -9,11 +9,8 @@ import joshxviii.plantz.renderer.getEmissiveTextureLocation
 import joshxviii.plantz.renderer.getTextureLocation
 import joshxviii.plantz.renderer.isMagicName
 import joshxviii.plantz.compat.client.model.EntityModel
-import net.minecraft.client.model.geom.ModelLayerLocation
-import net.minecraft.client.model.geom.ModelLayers
 import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector
 import joshxviii.plantz.compat.client.renderer.AbstractZombieRenderer
-import net.minecraft.client.renderer.entity.ArmorModelSet
 import net.minecraft.client.renderer.entity.EntityRendererProvider
 import joshxviii.plantz.compat.client.renderer.layers.RenderLayerParent
 import joshxviii.plantz.compat.client.renderer.layers.EyesLayer
@@ -30,15 +27,13 @@ import net.minecraft.world.phys.Vec3
 open class PazZombieRenderer(
     context: EntityRendererProvider.Context,
     val defaultModel: PazZombieModel<PazZombieRenderState> = PazZombieModel(null, context.bakeLayer(PazZombieModel.LAYER_LOCATION)),
-    val babyModel: PazZombieModel<PazZombieRenderState> = PazZombieModel(null, context.bakeLayer(ModelLayers.ZOMBIE_BABY)),
-    armorSet: ArmorModelSet<ModelLayerLocation> = ModelLayers.ZOMBIE_ARMOR,
-    babyArmorSet: ArmorModelSet<ModelLayerLocation> = ModelLayers.ZOMBIE_BABY_ARMOR
+    // 1.21.1 has no baby zombie mesh (ModelLayers.ZOMBIE_BABY); the compat HumanoidModel scales babies itself
+    val babyModel: PazZombieModel<PazZombieRenderState> = PazZombieModel(null, context.bakeLayer(PazZombieModel.LAYER_LOCATION)),
 ) : AbstractZombieRenderer<PazZombie, PazZombieRenderState, PazZombieModel<PazZombieRenderState>>(
     context,
     defaultModel,
-    babyModel,
-    ArmorModelSet.bake(armorSet, context.modelSet) { defaultModel.forArmor(it) },
-    ArmorModelSet.bake(babyArmorSet, context.modelSet) { babyModel.forArmor(it) }
+    babyModel
+    // armor: vanilla zombie inner/outer armor layers via compat VanillaHumanoidLayers (26.1 ArmorModelSet + forArmor dropped)
 ) {
 
     init {
@@ -80,7 +75,7 @@ open class PazZombieRenderer(
         state.emergeAnimationState.copyFrom(entity.emergeAnimation)
         state.retreatAnimationState.copyFrom(entity.retreatAnimation)
         state.floatAnimationState.copyFrom(entity.floatAnimation)
-        state.movementDirection = Mth.lerp(partialTicks.toDouble() * .5, entity.moveDirO, entity.moveDir)
+        state.movementDirection = entity.moveDirO.lerp(entity.moveDir, partialTicks.toDouble() * .5)
         if (entity is DiscoZombie) state.actionAnimationState.copyFrom(entity.summonAnimation)
         if (entity is EngineerZombie) state.actionAnimationState.copyFrom(entity.buildAnimation)
         if (entity is GraveDigger) state.actionAnimationState.copyFrom(entity.digAnimation)
