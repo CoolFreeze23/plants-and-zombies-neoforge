@@ -10,7 +10,9 @@ import joshxviii.plantz.item.GardeningGloveItem
 import joshxviii.plantz.item.PlantPotHelmetItem
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
+import joshxviii.plantz.client.GraveyardAmbience
 import joshxviii.plantz.item.SeedPacketCooldowns
+import net.neoforged.neoforge.client.event.ViewportEvent
 import joshxviii.plantz.item.SeedPacketItem
 import net.minecraft.client.renderer.RenderType
 import net.minecraft.core.registries.BuiltInRegistries
@@ -47,6 +49,8 @@ object PazClient {
 
 		val bus = NeoForge.EVENT_BUS
 		bus.addListener { _: ClientTickEvent.Pre -> PazClientNetwork.onClientTick() }
+		bus.addListener { _: ClientTickEvent.Post -> GraveyardAmbience.tick() }
+		bus.addListener { event: ViewportEvent.RenderFog -> GraveyardAmbience.onRenderFog(event) }
 
 		// custom tooltips
 		bus.addListener { event: ItemTooltipEvent ->

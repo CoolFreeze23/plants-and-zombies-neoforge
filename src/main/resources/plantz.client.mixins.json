@@ -14,6 +14,9 @@
     "HumanoidModelMixin",
     "LivingEntityRendererMixin",
     "LivingEntityRendererVanillaMixin",
-    "SoundManagerMixin"
+    "SoundManagerMixin",
+    "ambience.ClientLevelGraveyardMixin",
+    "ambience.DimensionSpecialEffectsGraveyardMixin",
+    "ambience.LightTextureGraveyardMixin"
   ]
 }
