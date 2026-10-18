@@ -34,7 +34,7 @@ import net.minecraft.util.RandomSource
 import net.minecraft.util.StringRepresentable
 import net.minecraft.world.BossEvent
 import net.minecraft.world.Difficulty
-import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket
+import net.neoforged.neoforge.network.PacketDistributor
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.entity.MobSpawnType
@@ -135,7 +135,7 @@ class ZombieRaid(
 
     private val waveToLeaderMap: MutableMap<Int, Zombie> = Maps.newHashMap<Int, Zombie>()
     val random: RandomSource = RandomSource.create()
-    val zombieRaidEvent = ServerBossEvent(Mth.createInsecureUUID(random), ZOMBIE_RAID_BAR_START, BossEvent.BossBarColor.GREEN, BossEvent.BossBarOverlay.NOTCHED_10)
+    val zombieRaidEvent = ServerBossEvent(ZOMBIE_RAID_BAR_START, BossEvent.BossBarColor.GREEN, BossEvent.BossBarOverlay.NOTCHED_10)
     // TODO either save the wave map or save the raid ID on the zombie. needed for vanishing zombies and loading in the raid's health
     private val waveZombieMap: MutableMap<Int, MutableSet<Zombie>> = Maps.newHashMap<Int, MutableSet<Zombie>>()
     var waveSpawnPos : BlockPos? = null
@@ -199,7 +199,7 @@ class ZombieRaid(
             if (status == ZombieRaidStatus.VICTORY) {
                 if (ticksActive % 20L == 0L) {
                     val firework = getVictoryFirework()
-                    Projectile.spawnProjectile(FireworkRocketEntity(level, firework, center.x.toDouble(), center.y.toDouble(), center.z.toDouble(), false), level, firework)
+                    level.addFreshEntity(FireworkRocketEntity(level, firework, center.x.toDouble(), center.y.toDouble(), center.z.toDouble(), false)) // 26.1 Projectile.spawnProjectile
                 }
             }
             return
@@ -271,7 +271,7 @@ class ZombieRaid(
     private fun validPlayer(): Predicate<ServerPlayer> {
         return Predicate { player: ServerPlayer ->
             val pos = player.blockPosition()
-            player.isAlive && player.level().getZombieRaids().getNearbyRaid(pos, SPAWN_DISTANCE * SPAWN_DISTANCE) === this
+            player.isAlive && player.serverLevel().getZombieRaids().getNearbyRaid(pos, SPAWN_DISTANCE * SPAWN_DISTANCE) === this
         }
     }
 
@@ -330,7 +330,7 @@ class ZombieRaid(
 
         for ((type, count, configure) in waveEntries) {
             for (i in 0..<count) {
-                val zombie = type.create(level, MobSpawnType.EVENT) ?: break
+                val zombie = type.create(level) ?: break
                 if (!leaderSet) {
                     setLeader(wavesSpawned, zombie)
                     leaderSet = true
@@ -384,7 +384,7 @@ class ZombieRaid(
     }
 
     private fun vanishAllZombies(level: ServerLevel) {
-        level.playLocalSound(center, SoundEvents.WITHER_DEATH, SoundSource.UI, 1f, 0.4f, false)
+        level.playLocalSound(center, SoundEvents.WITHER_DEATH, SoundSource.MASTER, 1f, 0.4f, false)
         waveZombieMap.values.forEach { zombies ->
             zombies.forEach { zombie ->
                 if (zombie is PazZombie) zombie.state = ZombieState.RETREATING
@@ -443,7 +443,7 @@ class ZombieRaid(
 
         val packet = ZombieRaidResponsePayload(data)
         zombieRaidEvent.players.forEach { player ->
-            player.connection.send(ClientboundCustomPayloadPacket(packet))
+            PacketDistributor.sendToPlayer(player, packet)
         }
     }
 
@@ -479,7 +479,7 @@ class ZombieRaid(
 
     private fun showTitleMessage(title: Component, subtitle: Component = Component.empty(), sound: Holder.Reference<SoundEvent> = PazSounds.SPECIAL_WAVE) {
         zombieRaidEvent.players.forEach {
-            it.connection.send(ClientboundSoundPacket(sound, SoundSource.UI, it.x, it.y, it.z, 1.0f, 1.0f, random.nextLong()))
+            it.connection.send(ClientboundSoundPacket(sound, SoundSource.MASTER, it.x, it.y, it.z, 1.0f, 1.0f, random.nextLong()))
             it.connection.send(ClientboundSetTitleTextPacket(title))
             it.connection.send(ClientboundSetSubtitleTextPacket(subtitle))
         }
@@ -505,8 +505,8 @@ class ZombieRaid(
 
         for (i in 0..<maxTries) {
             val angle = startAngle + Math.PI.toFloat() * i / 8.0f
-            val spawnX = center.x + Mth.floor(Mth.cos(angle.toDouble()) * SPAWN_DISTANCE)
-            val spawnZ = center.z + Mth.floor(Mth.sin(angle.toDouble()) * SPAWN_DISTANCE)
+            val spawnX = center.x + Mth.floor(Mth.cos(angle) * SPAWN_DISTANCE)
+            val spawnZ = center.z + Mth.floor(Mth.sin(angle) * SPAWN_DISTANCE)
             var spawnY = level.getHeight(Heightmap.Types.WORLD_SURFACE, spawnX, spawnZ)
             if (level.getFluidState(BlockPos(spawnX, spawnY + 1, spawnZ)).`is`(FluidTags.WATER)) {
                 while (level.getFluidState(BlockPos(spawnX, spawnY + 1, spawnZ)).`is`(FluidTags.WATER)) spawnY++
@@ -523,7 +523,7 @@ class ZombieRaid(
         val data = ZombieRaidClientData(id = zombieRaidEvent.id, status = ZombieRaidStatus.TERMINATE)
         status = ZombieRaidStatus.STOPPED
         zombieRaidEvent.players.forEach { player ->// terminate raid connection
-            player.connection.send(ClientboundCustomPayloadPacket(ZombieRaidResponsePayload(data)))
+            PacketDistributor.sendToPlayer(player, ZombieRaidResponsePayload(data))
         }
         zombieRaidEvent.removeAllPlayers()
     }

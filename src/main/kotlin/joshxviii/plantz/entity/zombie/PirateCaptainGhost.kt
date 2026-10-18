@@ -60,13 +60,12 @@ class PirateCaptainGhost(type: EntityType<out PirateCaptainGhost>, level: Level)
         entityData.define(IS_CHARGING_ID, false)
     }
 
-    override fun handleAttributes(difficultyModifier: Float, spawnReason: MobSpawnType) {}
+    override fun handleAttributes(difficultyModifier: Float) {}
 
-    override fun doHurtTarget(level: ServerLevel, target: Entity): Boolean {
-        val result = super.doHurtTarget(level, target)
+    override fun doHurtTarget(target: Entity): Boolean {
+        val result = super.doHurtTarget(target)
         return result
     }
-    override fun isAffectedByBlocks(): Boolean = !isRemoved
     override fun canPickUpLoot(): Boolean = false
     override fun isLeftHanded(): Boolean = false
     override fun hasLineOfSight(target: Entity): Boolean = true
@@ -75,6 +74,8 @@ class PirateCaptainGhost(type: EntityType<out PirateCaptainGhost>, level: Level)
         noPhysics = true
         super.tick()
         noPhysics = false
+        // 26.1 isAffectedByBlocks() = !isRemoved: 1.21.1 skips block effects while noPhysics, so apply them here
+        if (!isRemoved) tryCheckInsideBlocks()
         isNoGravity = true
     }
 
@@ -190,7 +191,7 @@ class PirateCaptainGhost(type: EntityType<out PirateCaptainGhost>, level: Level)
         override fun tick() {
             val attackTarget = ghost.target ?: return
             if (ghost.boundingBox.intersects(attackTarget.boundingBox)) {
-                ghost.doHurtTarget(getServerLevel(ghost.level()), attackTarget)
+                ghost.doHurtTarget(attackTarget)
                 ghost.isCharging = false
             } else {
                 val distance = ghost.distanceToSqr(attackTarget)

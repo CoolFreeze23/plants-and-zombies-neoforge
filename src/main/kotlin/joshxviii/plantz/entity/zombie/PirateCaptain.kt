@@ -109,10 +109,10 @@ class PirateCaptain(type: EntityType<out PirateCaptain>, level: Level) : PazZomb
         return getFirework()
     }
 
-    override fun handleAttributes(difficultyModifier: Float, spawnReason: MobSpawnType) {}
+    override fun handleAttributes(difficultyModifier: Float) {}
 
-    override fun doHurtTarget(level: ServerLevel, target: Entity): Boolean {
-        val result = super.doHurtTarget(level, target)
+    override fun doHurtTarget(target: Entity): Boolean {
+        val result = super.doHurtTarget(target)
         return result
     }
 
@@ -129,7 +129,8 @@ class PirateCaptain(type: EntityType<out PirateCaptain>, level: Level) : PazZomb
 
     override fun remove(reason: RemovalReason) {
         if (reason == RemovalReason.KILLED) {
-            convertTo(PazEntities.PIRATE_CAPTAIN_GHOST, ConversionParams.single(this, true, true)) {
+            // 26.1 ConversionParams.single(this, keepEquipment = true, preserveCanPickUpLoot = true) -> 1.21.1 convertTo(type, transferInventory)
+            convertTo(PazEntities.PIRATE_CAPTAIN_GHOST, true)?.let {
                 it.playSound(SoundEvents.ZOMBIE_VILLAGER_CONVERTED)
                 it.setItemSlot(EquipmentSlot.MAINHAND, Items.IRON_SWORD.defaultInstance)
                 it.setDropChance(EquipmentSlot.MAINHAND, 0.0f)

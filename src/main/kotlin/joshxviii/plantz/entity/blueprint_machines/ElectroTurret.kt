@@ -37,7 +37,7 @@ class ElectroTurret(type: EntityType<out ElectroTurret>, level: Level) : ZombieR
             actionStartEffect = { actionTime=1 },
             beforeHitEntityEffect = {
                 it.addEffect(MobEffectInstance(PazEffects.ELECTRIFIED, 180, 0), this)
-                val direction = this.headLookAngle.scale(0.5)
+                val direction = this.calculateViewVector(this.xRot, this.yHeadRot).scale(0.5) // 26.1 getHeadLookAngle()
                 playSound(PazSounds.ELECTRIC_ZAP)
                 (level() as? ServerLevel)?.sendParticles(
                     ElectricArcParticleOptions(

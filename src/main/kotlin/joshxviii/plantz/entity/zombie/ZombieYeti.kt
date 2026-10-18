@@ -85,7 +85,7 @@ class ZombieYeti(type: EntityType<out ZombieYeti>, level: Level) : PazZombie(typ
         if (isPathFinding && this.target!=null) {
             if (entity is LivingEntity && entity !is Zombie) {
                 val level = level() as? ServerLevel?: return
-                entity.hurtServer(level, this.damageSources().source(PazDamageTypes.ZOMBIE_TRAMPLE, this), 2.5f)
+                entity.hurt(this.damageSources().source(PazDamageTypes.ZOMBIE_TRAMPLE, this), 2.5f)
                 entity.knockback(
                     0.2, position().x - entity.position().x, position().z - entity.position().z
                 )
@@ -97,8 +97,8 @@ class ZombieYeti(type: EntityType<out ZombieYeti>, level: Level) : PazZombie(typ
     override fun canPickUpLoot(): Boolean = false
     override fun randomizeReinforcementsChance() {}
 
-    override fun doHurtTarget(level: ServerLevel, target: Entity): Boolean {
-        val result = super.doHurtTarget(level, target)
+    override fun doHurtTarget(target: Entity): Boolean {
+        val result = super.doHurtTarget(target)
         return result
     }
 
@@ -117,11 +117,11 @@ class ZombieYeti(type: EntityType<out ZombieYeti>, level: Level) : PazZombie(typ
             }
 
             if (random.nextFloat() < 0.001) {
-                val polarBear = EntityType.POLAR_BEAR.create(level(), MobSpawnType.JOCKEY)
+                val polarBear = EntityType.POLAR_BEAR.create(level())
                 if (polarBear != null) {
-                    polarBear.snapTo(x, y, z, yRot, 0.0f)
+                    polarBear.moveTo(x, y, z, yRot, 0.0f)
                     polarBear.finalizeSpawn(level, difficulty, MobSpawnType.JOCKEY, null)
-                    startRiding(polarBear, false, false)
+                    startRiding(polarBear, false)
                     level.addFreshEntity(polarBear)
                 }
             }

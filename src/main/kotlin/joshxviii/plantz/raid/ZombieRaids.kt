@@ -19,13 +19,13 @@ import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.level.dimension.DimensionType
 import net.minecraft.world.level.GameRules
 import net.minecraft.world.level.saveddata.SavedData
-import net.minecraft.world.level.saveddata.SavedDataType
+import net.minecraft.core.HolderLookup
 import org.spongepowered.asm.mixin.Unique
 import java.util.*
 import java.util.function.Function
 
 fun ServerLevel.getZombieRaids(): ZombieRaids {
-    return dataStorage.computeIfAbsent(ZombieRaids.TYPE)
+    return dataStorage.computeIfAbsent(ZombieRaids.TYPE, ZombieRaids.FILE_NAME)
 }
 
 class ZombieRaids(
@@ -63,7 +63,7 @@ class ZombieRaids(
 
         while (raidIterator.hasNext()) {
             val raid = raidIterator.next()
-            if (!level.gameRules.get(GameRules.RAIDS)) raid.stop()
+            if (level.gameRules.getBoolean(GameRules.RULE_DISABLE_RAIDS)) raid.stop()
 
             if (raid.isStopped()) {
                 raidIterator.remove()
@@ -78,8 +78,8 @@ class ZombieRaids(
         if (player.isSpectator) return null
         if (flagPosition == null) return null
         else {
-            val level = player.level()
-            if (!level.gameRules.get<Boolean>(GameRules.RAIDS)) return null
+            val level = player.serverLevel()
+            if (level.gameRules.getBoolean(GameRules.RULE_DISABLE_RAIDS)) return null
 
             val raid = getOrCreateRaid(level, flagPosition)
             if (raid.startedBy == null) raid.startedBy = player.uuid
@@ -126,10 +126,17 @@ class ZombieRaids(
         return closest
     }
 
+    override fun save(tag: CompoundTag, registries: HolderLookup.Provider): CompoundTag {
+        CODEC.encodeStart(NbtOps.INSTANCE, this).resultOrPartial().ifPresent { encoded ->
+            if (encoded is CompoundTag) tag.merge(encoded)
+        }
+        return tag
+    }
+
     @VisibleForDebug
     fun getRaidCentersInChunk(chunkPos: ChunkPos): MutableList<BlockPos> {
         return zombieRaidMap.values.stream().map<BlockPos> { obj: ZombieRaid -> obj.center }
-            .filter { chunkPos.contains(it) }.toList()
+            .filter { ChunkPos(it) == chunkPos }.toList()
     }
 
     @JvmRecord
@@ -165,11 +172,15 @@ class ZombieRaids(
                 ).apply<ZombieRaids>(i, ::ZombieRaids)
             }
         )
-        val TYPE: SavedDataType<ZombieRaids> =
-            SavedDataType<ZombieRaids>(RAID_FILE_ID, ::ZombieRaids, CODEC, DataFixTypes.SAVED_DATA_RAIDS)
+        /** 1.21.1 saved data is keyed by a file name, not an id: data/plantz_zombie_raids.dat */
+        val FILE_NAME: String = "${RAID_FILE_ID.namespace}_${RAID_FILE_ID.path}"
+
+        // Neo allows a null DataFixTypes: no vanilla raid datafixers run over this mod's data
+        val TYPE: SavedData.Factory<ZombieRaids> =
+            SavedData.Factory<ZombieRaids>({ ZombieRaids() }, { tag, _ -> load(tag) }, null)
 
 
-        fun getType(type: Holder<DimensionType>): SavedDataType<ZombieRaids> {
+        fun getType(type: Holder<DimensionType>): SavedData.Factory<ZombieRaids> {
             return TYPE
         }
 

@@ -74,17 +74,17 @@ class DiggerZombie(type: EntityType<out DiggerZombie>, level: Level) : PazZombie
         return MinerNavigation(this, level)
     }
 
-    override fun doHurtTarget(level: ServerLevel, target: Entity): Boolean {
-        val result = super.doHurtTarget(level, target)
+    override fun doHurtTarget(target: Entity): Boolean {
+        val result = super.doHurtTarget(target)
         return result
     }
 
     override fun canEquipDuckyInWater() = false
     override fun isLeftHanded(): Boolean = false
     override fun getPreferredWeaponType(): TagKey<Item> = PazTags.ItemTags.DIGGER_PREFERRED_WEAPONS
-    override fun wantsToPickUp(level: ServerLevel, itemStack: ItemStack): Boolean {
+    override fun wantsToPickUp(itemStack: ItemStack): Boolean {
         if(itemStack.`is`(ItemTags.ARMOR_ENCHANTABLE)) return false
-        return super.wantsToPickUp(level, itemStack)
+        return super.wantsToPickUp(itemStack)
     }
 
 

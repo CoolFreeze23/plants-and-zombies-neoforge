@@ -28,10 +28,10 @@ class BackupDancer(type: EntityType<out BackupDancer>, level: Level) : PazZombie
         return SoundEvents.ZOMBIE_STEP
     }
 
-    override fun handleAttributes(difficultyModifier: Float, spawnReason: MobSpawnType) {}
+    override fun handleAttributes(difficultyModifier: Float) {}
 
-    override fun doHurtTarget(level: ServerLevel, target: Entity): Boolean {
-        val result = super.doHurtTarget(level, target)
+    override fun doHurtTarget(target: Entity): Boolean {
+        val result = super.doHurtTarget(target)
         return result
     }
 

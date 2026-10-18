@@ -1,5 +1,6 @@
 package joshxviii.plantz.entity.zombie
 
+import net.minecraft.nbt.CompoundTag
 import joshxviii.plantz.PazDataSerializers.DATA_DYE_COLOR
 import joshxviii.plantz.PazItems
 import joshxviii.plantz.ai.goal.NavigateToTargetGoal
@@ -35,13 +36,15 @@ class SoldierZombie(type: EntityType<out SoldierZombie>, level: Level) : PazZomb
         entityData.define(DYE_COLOR, DyeColor.WHITE)
     }
 
-    override fun addAdditionalSaveData(output: ValueOutput) {
-        super.addAdditionalSaveData(output)
+    override fun addAdditionalSaveData(tag: CompoundTag) {
+        super.addAdditionalSaveData(tag)
+        val output = ValueOutput.of(tag, registryAccess())
         output.store("dyeColor", DyeColor.CODEC, dyeColor)
     }
 
-    override fun readAdditionalSaveData(input: ValueInput) {
-        super.readAdditionalSaveData(input)
+    override fun readAdditionalSaveData(tag: CompoundTag) {
+        super.readAdditionalSaveData(tag)
+        val input = ValueInput.of(tag, registryAccess())
         input.read("dyeColor", DyeColor.CODEC).ifPresent { dyeColor -> this.dyeColor = dyeColor }
     }
 
@@ -63,8 +66,8 @@ class SoldierZombie(type: EntityType<out SoldierZombie>, level: Level) : PazZomb
         addBehaviourGoalsNoMelee()
     }
 
-    override fun doHurtTarget(level: ServerLevel, target: Entity): Boolean {
-        val result = super.doHurtTarget(level, target)
+    override fun doHurtTarget(target: Entity): Boolean {
+        val result = super.doHurtTarget(target)
         return result
     }
 
@@ -77,7 +80,7 @@ class SoldierZombie(type: EntityType<out SoldierZombie>, level: Level) : PazZomb
         val data = super.finalizeSpawn(level, difficulty, spawnReason, groupData)
 
         setItemSlot(EquipmentSlot.MAINHAND, PazItems.DYE_BLASTER.defaultInstance)
-        dyeColor = DyeColor.VALUES.filter { it != DyeColor.WHITE && it != DyeColor.BLACK }.random()
+        dyeColor = DyeColor.entries.filter { it != DyeColor.WHITE && it != DyeColor.BLACK }.random()
         setDropChance(EquipmentSlot.MAINHAND, 0.0f)
         if (spawnReason != MobSpawnType.CONVERSION) {
             setCanBreakDoors(true)

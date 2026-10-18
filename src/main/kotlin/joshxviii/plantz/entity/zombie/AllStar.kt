@@ -1,5 +1,6 @@
 package joshxviii.plantz.entity.zombie
 
+import joshxviii.plantz.compat.AnimationState
 import joshxviii.plantz.PazDamageTypes
 import joshxviii.plantz.PazItems
 import joshxviii.plantz.PazSounds
@@ -89,7 +90,7 @@ class AllStar(type: EntityType<out AllStar>, level: Level) : PazZombie(type, lev
             )
             else if (entity is LivingEntity) {
                 val level = level() as? ServerLevel?: return
-                entity.hurtServer(level, this.damageSources().source(PazDamageTypes.ZOMBIE_TRAMPLE, this), 1.5f)
+                entity.hurt(this.damageSources().source(PazDamageTypes.ZOMBIE_TRAMPLE, this), 1.5f)
                 entity.knockback(
                     2.0, position().x - entity.position().x, position().z - entity.position().z
                 )
@@ -118,8 +119,8 @@ class AllStar(type: EntityType<out AllStar>, level: Level) : PazZombie(type, lev
 
     override fun canPickUpLoot(): Boolean = false
 
-    override fun doHurtTarget(level: ServerLevel, target: Entity): Boolean {
-        val result = super.doHurtTarget(level, target)
+    override fun doHurtTarget(target: Entity): Boolean {
+        val result = super.doHurtTarget(target)
         return result
     }
 

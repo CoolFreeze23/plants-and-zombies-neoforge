@@ -1,5 +1,6 @@
 package joshxviii.plantz.entity.zombie
 
+import joshxviii.plantz.compat.AnimationState
 import joshxviii.plantz.PazEffects
 import joshxviii.plantz.PazEntities
 import joshxviii.plantz.PazSounds
@@ -83,8 +84,8 @@ class DiscoZombie(type: EntityType<out DiscoZombie>, level: Level) : PazZombie(t
         return SoundEvents.ZOMBIE_STEP
     }
 
-    override fun doHurtTarget(level: ServerLevel, target: Entity): Boolean {
-        val result = super.doHurtTarget(level, target)
+    override fun doHurtTarget(target: Entity): Boolean {
+        val result = super.doHurtTarget(target)
         return result
     }
 
@@ -114,7 +115,7 @@ class DiscoZombie(type: EntityType<out DiscoZombie>, level: Level) : PazZombie(t
 
         override fun canUse(): Boolean {
             if (summoner.summoningTime>0) return true
-            val nearbyBackupDancers: Int = getServerLevel(summoner.level()).getNearbyEntities(BackupDancer::class.java, backupTargeting, summoner, summoner.boundingBox.inflate(16.0)).size
+            val nearbyBackupDancers: Int = (summoner.level() as ServerLevel).getNearbyEntities(BackupDancer::class.java, backupTargeting, summoner, summoner.boundingBox.inflate(16.0)).size
             return summoner.isAggressive && !summoner.isDeadOrDying && (summoner.target?.isAlive == true) && nearbyBackupDancers < 3
         }
 
@@ -145,8 +146,8 @@ class DiscoZombie(type: EntityType<out DiscoZombie>, level: Level) : PazZombie(t
             for(i in 1..amount) {
                 // get x/z coords based on angle
                 val b = a*i-a*(amount+1)*.5
-                val x = summoner.x + Mth.cos(b+angleToTarget)*SUMMON_DISTANCE
-                val z = summoner.z + Mth.sin(b+angleToTarget)*SUMMON_DISTANCE
+                val x = summoner.x + Mth.cos((b+angleToTarget).toFloat())*SUMMON_DISTANCE
+                val z = summoner.z + Mth.sin((b+angleToTarget).toFloat())*SUMMON_DISTANCE
                 tryCreateBackupDancer(x, z, minY, maxY, angleToTarget)
             }
         }
@@ -176,9 +177,9 @@ class DiscoZombie(type: EntityType<out DiscoZombie>, level: Level) : PazZombie(t
             } while (pos.y >= Mth.floor(minY) - 1)
 
             if (success) {
-                val backup = PazEntities.BACKUP_DANCER.create(level, MobSpawnType.MOB_SUMMONED)?: return
+                val backup = PazEntities.BACKUP_DANCER.create(level)?: return
                 // apply hypnotize-effect if present
-                backup.snapTo(BlockPos(Vec3i(x.toInt(),(pos.y+topOffset).toInt(),z.toInt())), angle * (180.0f / Math.PI.toFloat()), 0.0f)
+                backup.moveTo(BlockPos(Vec3i(x.toInt(),(pos.y+topOffset).toInt(),z.toInt())), angle * (180.0f / Math.PI.toFloat()), 0.0f)
                 backup.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.REINFORCEMENT, PazZombieGroupData(isRaider = summoner.isRaider()))
                 val effect = summoner.activeEffects.find { it.effect.`is`(PazEffects.HYPNOTIZE.unwrapKey().get()) }
                 if (effect!=null) backup.addEffect(effect)
