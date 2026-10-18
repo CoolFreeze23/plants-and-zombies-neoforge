@@ -11,6 +11,7 @@ import joshxviii.plantz.PazSounds.RAID_MUSIC_MEDIUM
 import joshxviii.plantz.PazSounds.RAID_MUSIC_PIRATE
 import joshxviii.plantz.PazSounds.RAID_MUSIC_WINTER
 import joshxviii.plantz.PazSounds.RAID_MUSIC_ZOMBOSS
+import joshxviii.plantz.mixin.client.MusicManagerAccessor
 import joshxviii.plantz.networking.ZombieRaidClientData
 import joshxviii.plantz.raid.WaveType
 import joshxviii.plantz.raid.ZombieRaid
@@ -22,6 +23,7 @@ import net.minecraft.core.Holder
 import net.minecraft.network.chat.Component
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundSource
+import net.minecraft.util.Mth
 import net.minecraft.util.RandomSource
 
 enum class RaidMusicLayer(
@@ -69,7 +71,7 @@ object RaidMusicManager {
 
         // start silent music track for music toast
         minecraft.musicManager.stopPlaying()
-        // (26.1 also reset MusicManager.setMinutesBetweenSongs here; 1.21.1 has no music frequency option)
+        (minecraft.musicManager as MusicManagerAccessor).`plantz$setNextSongDelay`(defaultNextSongDelay())
         //minecraft.soundManager.reload()
 
         // transition between song layers
@@ -94,8 +96,7 @@ object RaidMusicManager {
         // to avoid resetting the music, only start if there are no active layers already
         if (activeLayers.isNotEmpty()) return
         stop()
-        // 26.1 showed the NowPlayingToast when a layer STARTED; 1.21.1 shows the action-bar "Now playing" (see showNowPlaying)
-        nowPlayingPending = minecraft.options.getSoundSourceVolume(SoundSource.MUSIC) > 0f
+        nowPlayingPending = minecraft.options.getSoundSourceVolume(SoundSource.MASTER) > 0f && minecraft.options.getSoundSourceVolume(SoundSource.MUSIC) > 0f
         RaidMusicLayer.entries.forEach {
             val layer = RaidMusicSoundInstance(it.music.value())
             layer.volume = 0.0f
@@ -109,23 +110,27 @@ object RaidMusicManager {
             layer.stopLayer()
         }
         nowPlayingPending = false
-        shownSongName = null
         activeLayers.clear()
         targetMusicLayer = null
     }
 
     private var nowPlayingPending = false
-    private var shownSongName: String? = null
 
-    /** 1.21.1 stand-in for 26.1 NowPlayingToast + NowPlayingToastMixin (which named the current raid layer). */
+    /**
+     * 26.1 showed the NowPlayingToast once when the layers started (NowPlayingToastMixin named the raid layer);
+     * 1.21.1 has no music toast, so the jukebox "Now playing" line names the first layer instead.
+     */
     private fun showNowPlaying() {
         val layer = targetMusicLayer ?: return
-        val name = Component.translatable("music.plantz.raid." + layer.musicName)
-        if (nowPlayingPending || (shownSongName != null && shownSongName != name.string)) {
-            minecraft.gui.setNowPlaying(name)
-            shownSongName = name.string
-            nowPlayingPending = false
-        }
+        if (!nowPlayingPending) return
+        nowPlayingPending = false
+        minecraft.gui.setNowPlaying(Component.translatable("music.plantz.raid." + layer.musicName))
+    }
+
+    /** 26.1 MusicManager.setMinutesBetweenSongs(MusicFrequency.DEFAULT): a fresh between-songs delay, capped at 20 minutes. */
+    private fun defaultNextSongDelay(): Int {
+        val music = minecraft.situationalMusic ?: return 24000
+        return Mth.nextInt(random, music.minDelay.coerceAtMost(24000), music.maxDelay.coerceAtMost(24000))
     }
 
     fun isPlaying(): Boolean = targetMusicLayer != null
@@ -184,7 +189,7 @@ class RaidMusicSoundInstance(
 
     fun stopLayer() = this.stop()
 
-    // 26.1 lets MUSIC sounds start at volume 0; 1.21.1 skips silent sounds unless they opt in
+    // 26.1 starts MUSIC sounds at volume 0; 1.21.1 only if they opt in
     override fun canStartSilent(): Boolean = true
 
     override fun tick() {}

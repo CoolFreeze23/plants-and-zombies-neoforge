@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * @author Josh
- * Port: 26.1 AvatarRenderer.getArmPose(Avatar, ItemStack, InteractionHand) is 1.21.1 PlayerRenderer.getArmPose(AbstractClientPlayer, InteractionHand).
+ * 26.1 AvatarRenderer.getArmPose is PlayerRenderer.getArmPose on 1.21.1.
  */
 @Mixin(PlayerRenderer.class)
 public class AvatarRendererMixin {

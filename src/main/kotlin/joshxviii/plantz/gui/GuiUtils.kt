@@ -2,16 +2,14 @@ package joshxviii.plantz.gui
 
 import com.mojang.blaze3d.systems.RenderSystem
 import joshxviii.plantz.compat.ARGB
-import net.minecraft.client.gui.Font
+import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphics
-import net.minecraft.network.chat.Component
+import net.minecraft.client.gui.components.EditBox
+import net.minecraft.client.gui.components.events.ContainerEventHandler
 import net.minecraft.resources.ResourceLocation
-import net.minecraft.util.FormattedCharSequence
+import org.lwjgl.glfw.GLFW
 
-/*
- * 1.21.1 stand-ins for the 26.1 GuiGraphicsExtractor calls the GUI used.
- * (`joshxviii.plantz.renderer.outlineText` is the render area's copy for GuiGraphicsExtractor; these are the GuiGraphics ones.)
- */
+// 1.21.1 stand-ins for the 26.1 GuiGraphicsExtractor / EditBox calls the GUI uses.
 
 /** 26.1 `blit(RenderPipelines.GUI_TEXTURED, texture, x, y, u, v, w, h, texW, texH[, color])`: alpha-blended, ARGB-tinted. */
 fun GuiGraphics.pazBlit(texture: ResourceLocation, x: Int, y: Int, u: Float, v: Float, width: Int, height: Int, textureWidth: Int, textureHeight: Int, color: Int = -1) {
@@ -23,19 +21,58 @@ fun GuiGraphics.pazBlit(texture: ResourceLocation, x: Int, y: Int, u: Float, v: 
     RenderSystem.disableBlend()
 }
 
-fun GuiGraphics.outlineText(font: Font, text: String, x: Int = 0, y: Int = 0, color: Int = 0xFFFFFF, outlineColor: Int = ARGB.multiply(color, 0x333333)) {
-    val c = Component.literal(text)
-    outlineText(font, c, x, y, color, outlineColor)
+/**
+ * 26.1 hands a click only to the widget under the mouse, and a PazButton (whose mouseClicked returns false) clicks
+ * without taking focus. 1.21.1 keeps offering the click to the next children, which breaks when the button's action
+ * rebuilds the widget list, so screens with PazButtons dispatch to them here first.
+ */
+fun ContainerEventHandler.clickPazButton(mouseX: Double, mouseY: Double, button: Int): Boolean {
+    val widget = getChildAt(mouseX, mouseY).orElse(null) as? PazButton ?: return false
+    widget.mouseClicked(mouseX, mouseY, button)
+    return true
 }
 
-fun GuiGraphics.outlineText(font: Font, text: Component, x: Int = 0, y: Int = 0, color: Int = 0xFFFFFF, outlineColor: Int = ARGB.multiply(color, 0x333333)) {
-    outlineText(font, text.visualOrderText, x, y, color, outlineColor)
+/** 26.1 `com.mojang.blaze3d.platform.cursor.CursorTypes`, as GLFW standard cursors. */
+enum class CursorTypes(val glfwShape: Int) {
+    POINTING_HAND(GLFW.GLFW_HAND_CURSOR),
+    RESIZE_NS(GLFW.GLFW_VRESIZE_CURSOR);
+
+    internal val handle: Long by lazy { GLFW.glfwCreateStandardCursor(glfwShape) }
 }
 
-fun GuiGraphics.outlineText(font: Font, text: FormattedCharSequence, x: Int = 0, y: Int = 0, color: Int = 0xFFFFFF, outlineColor: Int = ARGB.multiply(color, 0x333333)) {
-    drawString(font, text, x+1, y, ARGB.opaque(outlineColor), false)
-    drawString(font, text, x-1, y, ARGB.opaque(outlineColor), false)
-    drawString(font, text, x, y+1, ARGB.opaque(outlineColor), false)
-    drawString(font, text, x, y-1, ARGB.opaque(outlineColor), false)
-    drawString(font, text, x, y, ARGB.opaque(color), false)
+/**
+ * 26.1 `GuiGraphicsExtractor.requestCursor`: a cursor requested during a frame is shown for that frame, the default arrow
+ * otherwise. Screens that request one call [applyRequestedCursor] after rendering and [resetCursor] when removed.
+ */
+object GuiCursor {
+    private var requested: CursorTypes? = null
+    var current: CursorTypes? = null
+        private set
+
+    fun request(type: CursorTypes) { requested = type }
+
+    fun applyRequestedCursor() {
+        set(requested)
+        requested = null
+    }
+
+    fun resetCursor() {
+        requested = null
+        set(null)
+    }
+
+    private fun set(type: CursorTypes?) {
+        if (type == current) return
+        current = type
+        GLFW.glfwSetCursor(Minecraft.getInstance().window.window, type?.handle ?: 0L)
+    }
 }
+
+fun GuiGraphics.requestCursor(type: CursorTypes) = GuiCursor.request(type)
+
+/** Implemented by EditBox through `EditBoxMixin` (26.1 `EditBox.invertHighlightedTextColor`). */
+interface InvertHighlightEditBox {
+    fun `plantz$setInvertHighlightedTextColor`(invert: Boolean)
+}
+
+fun EditBox.setInvertHighlightedTextColor(invert: Boolean) = (this as InvertHighlightEditBox).`plantz$setInvertHighlightedTextColor`(invert)

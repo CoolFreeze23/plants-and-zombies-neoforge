@@ -4,6 +4,7 @@ import joshxviii.plantz.PazNetwork.ZombieRaidClientCache
 import joshxviii.plantz.PazConfig
 import joshxviii.plantz.block.entity.FlagBlockEntity
 import joshxviii.plantz.pazResource
+import joshxviii.plantz.renderer.outlineText
 import joshxviii.plantz.raid.ZombieRaid
 import joshxviii.plantz.tickTimeFormat
 import net.minecraft.client.DeltaTracker

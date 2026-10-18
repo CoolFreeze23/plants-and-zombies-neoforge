@@ -14,15 +14,13 @@ import java.util.stream.Collectors;
 
 /**
  * @author Josh
- * Port: 26.1 extractRenderState(GuiGraphicsExtractor) is 1.21.1 render(GuiGraphics).
+ * Hides the zombie raid bars (ZombieRaidOverlay draws them). plantz$getAllEvents lives in BossHealthOverlayAccessor.
  */
 @Mixin(BossHealthOverlay.class)
 public class BossHealthOverlayMixin {
-    // (upstream also added plantz$getAllEvents() here; BossHealthOverlayAccessor now provides it as an @Accessor)
-
     @Redirect(method = "render(Lnet/minecraft/client/gui/GuiGraphics;)V", at = @At(value = "INVOKE", target = "Ljava/util/Map;values()Ljava/util/Collection;"))
     private Collection<LerpingBossEvent> plantz$filterEvents(Map<UUID, LerpingBossEvent> map) {
-        // list (not set like upstream) so the remaining bars keep their order
+        // a list, not a set, so the remaining bars keep their order
         return map.values().stream().filter(it -> !ZombieRaidOverlay.isZombieRaid(it)).collect(Collectors.toList());
     }
 
