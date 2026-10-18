@@ -38,12 +38,7 @@
                     "pattern": "minecraft:curly_border"
                   }
                 ],
-                "minecraft:custom_name": {
-                  "translate": "item.plantz.zombie_banner",
-                  "with": [],
-                  "color": "yellow",
-                  "italic": false
-                },
+                "minecraft:custom_name": "{\"translate\":\"item.plantz.zombie_banner\",\"with\":[],\"color\":\"yellow\",\"italic\":false}",
                 "minecraft:hide_additional_tooltip": {}
               }
             }
