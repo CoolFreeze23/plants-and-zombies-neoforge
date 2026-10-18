@@ -7,12 +7,21 @@
     "minecraft:flower_pot",
     "minecraft:clay",
     "minecraft:soul_soil",
-    "minecraft:pale_moss_carpet",
+    {
+      "id": "minecraft:pale_moss_carpet",
+      "required": false
+    },
     "minecraft:moss_carpet",
     "#minecraft:dirt",
-    "#minecraft:grass_blocks",
+    {
+      "id": "#minecraft:grass_blocks",
+      "required": false
+    },
     "#minecraft:nylium",
-    "#minecraft:moss_blocks",
+    {
+      "id": "#minecraft:moss_blocks",
+      "required": false
+    },
     "#plantz:gives_plant_pot_protection",
     "#plantz:farmable"
   ]

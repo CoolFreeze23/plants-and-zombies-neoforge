@@ -1,7 +1,10 @@
 {
   "replace": false,
   "values": [
-    "minecraft:copper_golem",
+    {
+      "id": "minecraft:copper_golem",
+      "required": false
+    },
     "plantz:electric_peashooter"
   ]
 }

@@ -1,0 +1,18 @@
+{
+  "loader": "neoforge:separate_transforms",
+  "gui_light": "front",
+  "textures": {
+    "particle": "plantz:item/watering_can_filled"
+  },
+  "base": {
+    "parent": "plantz:item/watering_can_filled"
+  },
+  "perspectives": {
+    "thirdperson_righthand": {
+      "parent": "plantz:block/watering_can_filled"
+    },
+    "thirdperson_lefthand": {
+      "parent": "plantz:block/watering_can_filled"
+    }
+  }
+}

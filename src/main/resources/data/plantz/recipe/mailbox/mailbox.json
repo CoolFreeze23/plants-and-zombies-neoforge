@@ -2,15 +2,15 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "#": [
-      "minecraft:iron_ingot"
-    ],
-    "@": [
-      "minecraft:iron_trapdoor"
-    ],
-    "*": [
-      "plantz:newspaper"
-    ]
+    "#": {
+      "item": "minecraft:iron_ingot"
+    },
+    "@": {
+      "item": "minecraft:iron_trapdoor"
+    },
+    "*": {
+      "item": "plantz:newspaper"
+    }
   },
   "pattern": [
     "###",

@@ -1,6 +1,18 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "neoforge:separate_transforms",
+  "gui_light": "front",
   "textures": {
-    "layer0": "plantz:item/cone"
+    "particle": "plantz:item/cone"
+  },
+  "base": {
+    "parent": "minecraft:item/generated",
+    "textures": {
+      "layer0": "plantz:item/cone"
+    }
+  },
+  "perspectives": {
+    "head": {
+      "parent": "plantz:block/cone_helmet"
+    }
   }
 }

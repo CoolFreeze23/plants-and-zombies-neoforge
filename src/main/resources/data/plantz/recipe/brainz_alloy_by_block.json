@@ -3,7 +3,9 @@
   "category": "misc",
   "group": "brainz_alloy",
   "ingredients": [
-    "plantz:brainz_alloy_block"
+    {
+      "item": "plantz:brainz_alloy_block"
+    }
   ],
   "result": {
     "count": 9,

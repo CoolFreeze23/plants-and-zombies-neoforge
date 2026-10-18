@@ -1,6 +1,18 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "neoforge:separate_transforms",
+  "gui_light": "front",
   "textures": {
-    "layer0": "plantz:item/plant_pot_helmet"
+    "particle": "plantz:item/plant_pot_helmet"
+  },
+  "base": {
+    "parent": "minecraft:item/generated",
+    "textures": {
+      "layer0": "plantz:item/plant_pot_helmet"
+    }
+  },
+  "perspectives": {
+    "head": {
+      "parent": "plantz:block/plant_pot_helmet"
+    }
   }
 }

@@ -1,6 +1,30 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "neoforge:separate_transforms",
+  "gui_light": "front",
   "textures": {
-    "layer0": "plantz:item/plantz_flag"
+    "particle": "plantz:item/plantz_flag"
+  },
+  "base": {
+    "parent": "minecraft:item/generated",
+    "textures": {
+      "layer0": "plantz:item/plantz_flag"
+    }
+  },
+  "perspectives": {
+    "thirdperson_righthand": {
+      "parent": "plantz:block/plantz_flag_block"
+    },
+    "thirdperson_lefthand": {
+      "parent": "plantz:block/plantz_flag_block"
+    },
+    "firstperson_righthand": {
+      "parent": "plantz:block/plantz_flag_block"
+    },
+    "firstperson_lefthand": {
+      "parent": "plantz:block/plantz_flag_block"
+    },
+    "head": {
+      "parent": "plantz:block/plantz_flag_block"
+    }
   }
 }

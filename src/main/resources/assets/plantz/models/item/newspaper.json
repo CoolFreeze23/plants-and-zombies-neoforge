@@ -1,0 +1,115 @@
+{
+  "parent": "plantz:item/newspaper/item",
+  "overrides": [
+    {
+      "predicate": {
+        "plantz:moon_phase": 0.0
+      },
+      "model": "plantz:item/newspaper/idle_1"
+    },
+    {
+      "predicate": {
+        "plantz:moon_phase": 0.125
+      },
+      "model": "plantz:item/newspaper/idle_2"
+    },
+    {
+      "predicate": {
+        "plantz:moon_phase": 0.25
+      },
+      "model": "plantz:item/newspaper/idle_3"
+    },
+    {
+      "predicate": {
+        "plantz:moon_phase": 0.375
+      },
+      "model": "plantz:item/newspaper/idle_4"
+    },
+    {
+      "predicate": {
+        "plantz:moon_phase": 0.5
+      },
+      "model": "plantz:item/newspaper/idle_5"
+    },
+    {
+      "predicate": {
+        "plantz:moon_phase": 0.625
+      },
+      "model": "plantz:item/newspaper/idle_6"
+    },
+    {
+      "predicate": {
+        "plantz:moon_phase": 0.75
+      },
+      "model": "plantz:item/newspaper/idle_7"
+    },
+    {
+      "predicate": {
+        "plantz:moon_phase": 0.875
+      },
+      "model": "plantz:item/newspaper/idle_8"
+    },
+    {
+      "predicate": {
+        "plantz:using": 1,
+        "plantz:moon_phase": 0.0
+      },
+      "model": "plantz:item/newspaper/reading_1"
+    },
+    {
+      "predicate": {
+        "plantz:using": 1,
+        "plantz:moon_phase": 0.125
+      },
+      "model": "plantz:item/newspaper/reading_2"
+    },
+    {
+      "predicate": {
+        "plantz:using": 1,
+        "plantz:moon_phase": 0.25
+      },
+      "model": "plantz:item/newspaper/reading_3"
+    },
+    {
+      "predicate": {
+        "plantz:using": 1,
+        "plantz:moon_phase": 0.375
+      },
+      "model": "plantz:item/newspaper/reading_4"
+    },
+    {
+      "predicate": {
+        "plantz:using": 1,
+        "plantz:moon_phase": 0.5
+      },
+      "model": "plantz:item/newspaper/reading_5"
+    },
+    {
+      "predicate": {
+        "plantz:using": 1,
+        "plantz:moon_phase": 0.625
+      },
+      "model": "plantz:item/newspaper/reading_6"
+    },
+    {
+      "predicate": {
+        "plantz:using": 1,
+        "plantz:moon_phase": 0.75
+      },
+      "model": "plantz:item/newspaper/reading_7"
+    },
+    {
+      "predicate": {
+        "plantz:using": 1,
+        "plantz:moon_phase": 0.875
+      },
+      "model": "plantz:item/newspaper/reading_8"
+    },
+    {
+      "predicate": {
+        "plantz:newspaper_zombie": 1
+      },
+      "model": "plantz:item/newspaper/newspaper"
+    }
+  ]
+}

@@ -44,11 +44,7 @@
                   "color": "yellow",
                   "italic": false
                 },
-                "minecraft:tooltip_display": {
-                  "hidden_components": [
-                    "minecraft:banner_patterns"
-                  ]
-                }
+                "minecraft:hide_additional_tooltip": {}
               }
             }
           ]

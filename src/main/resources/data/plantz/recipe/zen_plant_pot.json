@@ -2,15 +2,15 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "@": [
-      "plantz:plant_pot"
-    ],
-    "#": [
-      "minecraft:bamboo_slab"
-    ],
-    "*": [
-      "minecraft:bamboo"
-    ]
+    "@": {
+      "item": "plantz:plant_pot"
+    },
+    "#": {
+      "item": "minecraft:bamboo_slab"
+    },
+    "*": {
+      "item": "minecraft:bamboo"
+    }
   },
   "pattern": [
     "   ",

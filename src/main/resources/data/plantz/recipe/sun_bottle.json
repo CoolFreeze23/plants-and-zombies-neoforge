@@ -2,12 +2,12 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "@": [
-      "minecraft:glass_bottle"
-    ],
-    "*": [
-      "plantz:sun"
-    ]
+    "@": {
+      "item": "minecraft:glass_bottle"
+    },
+    "*": {
+      "item": "plantz:sun"
+    }
   },
   "pattern": [
     "***",

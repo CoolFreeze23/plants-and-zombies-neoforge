@@ -188,15 +188,11 @@
           "functions": [
             {
               "add": false,
-              "count": {
-                "type": "minecraft:uniform",
-                "max": 4,
-                "min": 1
-              },
+              "count": 1.0,
               "function": "minecraft:set_count"
             }
           ],
-          "name": "minecraft:copper_nugget",
+          "name": "minecraft:copper_ingot",
           "weight": 40
         },
         {

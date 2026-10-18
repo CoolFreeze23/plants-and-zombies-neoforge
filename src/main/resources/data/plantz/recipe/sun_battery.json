@@ -2,18 +2,18 @@
   "type": "minecraft:crafting_shaped",
   "category": "redstone",
   "key": {
-    "#": [
-      "plantz:brainz_alloy"
-    ],
-    "=": [
-      "plantz:reinforced_brainz_alloy_block"
-    ],
-    "@": [
-      "minecraft:daylight_detector"
-    ],
-    "*": [
-      "minecraft:glass"
-    ]
+    "#": {
+      "item": "plantz:brainz_alloy"
+    },
+    "=": {
+      "item": "plantz:reinforced_brainz_alloy_block"
+    },
+    "@": {
+      "item": "minecraft:daylight_detector"
+    },
+    "*": {
+      "item": "minecraft:glass"
+    }
   },
   "pattern": [
     "#@#",

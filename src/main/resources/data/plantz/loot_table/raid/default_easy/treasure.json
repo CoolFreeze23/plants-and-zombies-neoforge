@@ -76,8 +76,7 @@
           "name": "plantz:ducky_tube",
           "weight": 3,
           "conditions": [],
-          "functions": [
-          ]
+          "functions": []
         }
       ]
     }
