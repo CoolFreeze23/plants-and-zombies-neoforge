@@ -19,7 +19,7 @@ class SunItem(properties: Properties) : Item(properties) {
         val pos = context.clickedPos
         val relative = pos.relative(context.clickedFace)
         val sunStack = context.itemInHand
-        if (BoneMealItem.growCrop(sunStack, level, pos)) {
+        if (BoneMealItem.applyBonemeal(sunStack, level, pos, context.player)) {
             if (!level.isClientSide && context.player!=null) {
                 sunStack.causeUseVibration(context.player!!, GameEvent.ITEM_INTERACT_FINISH)
                 level.levelEvent(1505, pos, 15)

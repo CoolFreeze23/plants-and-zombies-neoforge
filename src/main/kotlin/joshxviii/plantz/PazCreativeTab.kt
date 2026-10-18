@@ -19,7 +19,7 @@ object PazCreativeTab {
     val PAZ_TAB: CreativeModeTab = Registry.register(
         BuiltInRegistries.CREATIVE_MODE_TAB,
         PAZ_TAB_KEY,
-        CreativeModeTab.builder(CreativeModeTab.Row.BOTTOM, 0)
+        CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.plantz.plantz_tab"))
             .icon { ItemStack(PazItems.SUN) }
 

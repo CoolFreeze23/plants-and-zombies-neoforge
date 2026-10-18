@@ -2,43 +2,41 @@ package joshxviii.plantz.item
 
 import joshxviii.plantz.entity.zombie.AllStar.Companion.CHARGE_BOOST_ID
 import net.minecraft.ChatFormatting
+import net.minecraft.core.Holder
 import net.minecraft.core.particles.BlockParticleOption
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.network.chat.Component
-import net.minecraft.core.Holder
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.sounds.SoundEvent
-import net.minecraft.world.InteractionHand
-import net.minecraft.world.InteractionResultHolder
-import net.minecraft.world.entity.player.Player
-import net.minecraft.world.item.Equipable
-import net.minecraft.world.item.Items
-import net.minecraft.world.level.Level
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResultHolder
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.ai.attributes.AttributeModifier
 import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.Equipable
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.level.Level
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import kotlin.math.sqrt
 
-/**
- * 26.1: `humanoidArmor(CHAINMAIL, HELMET)` (durability, enchantability, repair) + EQUIPPABLE(HEAD, iron equip sound).
- * Not an ArmorItem on 1.21.1 so the head layer keeps drawing the item model (upstream has no equipment asset for it).
- */
+/** Not an ArmorItem: upstream has no equipment asset for it, the head layer draws the item model. */
 class FootballHelmetItem(properties: Properties) : Item(properties), Equipable {
     override fun getEquipmentSlot(): EquipmentSlot = EquipmentSlot.HEAD
     override fun getEquipSound(): Holder<SoundEvent> = SoundEvents.ARMOR_EQUIP_IRON
 
     override fun use(level: Level, player: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> =
-        swapWithEquipmentSlot(this, level, player, hand)
+        swapWithEquipmentSlot(level, player, hand, EquipmentSlot.HEAD)
 
-    override fun getEnchantmentValue(): Int = 12 // chainmail enchantability
+    // 26.1 humanoidArmor(CHAINMAIL, HELMET): chainmail enchantability and repair material
+    override fun getEnchantmentValue(stack: ItemStack): Int = 12
     override fun isValidRepairItem(stack: ItemStack, repairCandidate: ItemStack): Boolean = repairCandidate.`is`(Items.IRON_INGOT)
 
     companion object {
@@ -67,7 +65,7 @@ class FootballHelmetItem(properties: Properties) : Item(properties), Equipable {
     override fun inventoryTick(itemStack: ItemStack, level: Level, owner: Entity, slotId: Int, isSelected: Boolean) {
         super.inventoryTick(itemStack, level, owner, slotId, isSelected)
         if (level.isClientSide || level !is ServerLevel || owner !is LivingEntity) return
-        // 26.1 passed the equipment slot; on 1.21.1 only the worn helmet (head slot) gets this far
+        // 26.1 passed the equipment slot the stack ticks in (HEAD for the worn helmet)
         val slot: EquipmentSlot? = if (owner.getItemBySlot(EquipmentSlot.HEAD) === itemStack) EquipmentSlot.HEAD else null
         if (!isWearingFootballHelmet(owner)) {
             removeModifiers(owner)

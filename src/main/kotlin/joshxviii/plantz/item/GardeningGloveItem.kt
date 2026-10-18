@@ -3,8 +3,7 @@ package joshxviii.plantz.item
 import joshxviii.plantz.getItemCount
 import joshxviii.plantz.removeItemFromInventory
 import net.minecraft.ChatFormatting
-import net.minecraft.core.Holder
-import net.minecraft.core.HolderSet
+import net.minecraft.core.BlockPos
 import net.minecraft.core.component.DataComponents
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
@@ -14,16 +13,17 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.item.ItemEntity
+import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.UseAnim
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.Tool
 import net.minecraft.world.item.context.UseOnContext
-import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.CropBlock
-import java.util.List
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.BlockHitResult
 
 class GardeningGloveItem(properties: Properties) : Item(properties) {
 
@@ -72,6 +72,9 @@ class GardeningGloveItem(properties: Properties) : Item(properties) {
     // 26.1 repairable(LEATHER)
     override fun isValidRepairItem(stack: ItemStack, repairCandidate: ItemStack): Boolean = repairCandidate.`is`(Items.LEATHER)
 
+    // 26.1 Tool(canDestroyBlocksInCreative = false)
+    override fun canAttackBlock(state: BlockState, level: Level, pos: BlockPos, player: Player): Boolean = !player.abilities.instabuild
+
     override fun useOn(context: UseOnContext): InteractionResult {
         val stack = context.itemInHand
         val level = context.level
@@ -80,7 +83,8 @@ class GardeningGloveItem(properties: Properties) : Item(properties) {
 
         val blockState = level.getBlockState(context.clickedPos)
         val cropAge = blockState.getOptionalValue(CropBlock.AGE).orElse(0)
-        val seedItem = blockState.block.getCloneItemStack(level, context.clickedPos, blockState).item
+        val hit = BlockHitResult(context.clickLocation, context.clickedFace, context.clickedPos, context.isInside)
+        val seedItem = player?.let { blockState.getCloneItemStack(hit, level, context.clickedPos, it).item } ?: Items.AIR
         if (cropAge >= 7 && (player?.hasInfiniteMaterials() ?: false || (player?.getItemCount(seedItem) ?: 0) > 0)) {
             if (isHolding) {
                 player?.sendOverlayMessage(Component.translatable("message.plantz.glove_full").withStyle(ChatFormatting.RED))

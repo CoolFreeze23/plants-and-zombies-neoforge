@@ -2,11 +2,9 @@ package joshxviii.plantz.block.entity
 
 import com.mojang.serialization.Codec
 import joshxviii.plantz.*
-import joshxviii.plantz.block.CollectionBoxState
 import joshxviii.plantz.block.MailboxBlock.Companion.FACING
 import joshxviii.plantz.block.MailboxBlock.Companion.STATE
 import joshxviii.plantz.block.MailboxState
-import joshxviii.plantz.inventory.MailCollectionBoxMenu
 import joshxviii.plantz.inventory.MailboxMenu
 import joshxviii.plantz.raid.ZombieRaid.Companion.BONUS_REWARD_INTERVAL
 import joshxviii.plantz.compat.menu.ExtendedMenuProvider
@@ -112,7 +110,7 @@ class MailboxBlockEntity(
     private val inventory = SimpleContainer(INVENTORY_SIZE)
     private val openersCounter: ContainerOpenersCounter = object : ContainerOpenersCounter() {
         override fun onOpen(level: Level, pos: BlockPos, blockState: BlockState) {
-            playSound(SoundEvents.COPPER_TRAPDOOR_OPEN /* 26.1 COPPER_CHEST_OPEN */, 0.3f, 1.5f)
+            playSound(SoundEvents.COPPER_TRAPDOOR_OPEN /* 26.1 COPPER_CHEST_OPEN: not in 1.21.1 or Vanilla Backport */, 0.3f, 1.5f)
             updateMailboxState(MailboxState.EJECTING)
         }
         override fun onClose(level: Level, pos: BlockPos, blockState: BlockState) {
@@ -126,6 +124,13 @@ class MailboxBlockEntity(
     }
 
     override fun getContainerSize(): Int = INVENTORY_SIZE
+
+    // upstream hooked Fabric's ServerBlockEntityEvents.BLOCK_ENTITY_LOAD (its UNLOAD handler was empty)
+    override fun onLoad() {
+        super.onLoad()
+        (level as? ServerLevel)?.let { PazMain.onBlockEntityLoad(this, it) }
+    }
+
     override fun startOpen(player: Player) {
         if (!remove && !player.isSpectator) {
             openersCounter.incrementOpeners(player, getLevel()!!, blockPos, blockState)

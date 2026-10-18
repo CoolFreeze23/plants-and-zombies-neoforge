@@ -3,7 +3,6 @@ package joshxviii.plantz.item
 import joshxviii.plantz.entity.projectile.PaintBall
 import joshxviii.plantz.percentFormat
 import net.minecraft.ChatFormatting
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.sounds.SoundEvents
@@ -20,11 +19,9 @@ import net.minecraft.world.item.DyeColor
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.UseAnim
 import net.minecraft.world.item.ProjectileWeaponItem
-import net.minecraft.world.item.TooltipFlag
 import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.Level
 import net.minecraft.world.phys.Vec2
-import net.minecraft.world.phys.Vec3
 import java.util.function.Predicate
 
 class DyeBlasterItem(properties: Properties) : ProjectileWeaponItem(properties) {
@@ -84,6 +81,7 @@ class DyeBlasterItem(properties: Properties) : ProjectileWeaponItem(properties) 
         return super.useOn(context)
     }
 
+    @Suppress("OVERRIDE_DEPRECATION") // abstract in 1.21.1
     override fun getAllSupportedProjectiles(): Predicate<ItemStack> = DYES
 
     override fun getDefaultProjectileRange(): Int = 12

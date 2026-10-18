@@ -20,7 +20,7 @@ fun ItemStack.entityDataType(): EntityType<*>? {
 
 fun entityTypeOf(data: CustomData): EntityType<*>? {
     if (data.isEmpty) return null
-    val id = data.unsafe.getString("id")
+    val id = data.copyTag().getString("id")
     if (id.isEmpty()) return null
     return EntityType.byString(id).orElse(null)
 }

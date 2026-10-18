@@ -6,6 +6,7 @@ import joshxviii.plantz.item.component.BlocksProjectileDamage
 import joshxviii.plantz.item.component.StoredWater.Companion.DEFAULT_CAPACITY
 import com.google.common.collect.ImmutableSet
 import joshxviii.plantz.item.EquipableBlockItem
+import joshxviii.plantz.item.WeaponBlockItem
 import net.minecraft.world.entity.ai.village.poi.PoiType
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.core.BlockPos
@@ -123,10 +124,11 @@ object PazBlocks {
     @JvmField val LAWN_FLAMINGO: Block = registerBlock(
         "lawn_flamingo", gardenGnomeProperties(MapColor.COLOR_PINK),
         { LawnFlamingo(it) },
-        Item.Properties() // 26.1 WEAPON(1) dropped: no 1.21.1 component, and the item has no durability
+        Item.Properties()
             .attributes(
                 ItemAttributeModifiers.builder().add(Attributes.ATTACK_DAMAGE, AttributeModifier(BASE_ATTACK_DAMAGE_ID, 2.0, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND).add(Attributes.ATTACK_SPEED, AttributeModifier(BASE_ATTACK_SPEED_ID, -2.5, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND).build()
-            )
+            ),
+        { block, props -> WeaponBlockItem(block, props, 1) } // 26.1 WEAPON(1)
     )
 
     @JvmField val MAIL_COLLECTION_BOX: Block = registerBlock("mail_collection_box", mailboxProperties(MapColor.COLOR_BLUE), ::MailCollectionBoxBlock)

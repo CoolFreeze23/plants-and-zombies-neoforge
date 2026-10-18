@@ -12,7 +12,6 @@ import net.minecraft.world.Containers
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.server.level.ServerPlayer
-import net.minecraft.util.RandomSource
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.inventory.AbstractContainerMenu
@@ -98,7 +97,7 @@ class MailCollectionBoxBlock(
 
     override fun rotate(state: BlockState, rotation: Rotation): BlockState = state.setValue(FACING, rotation.rotate(state.getValue(FACING)))
 
-    public override fun mirror(state: BlockState, mirror: Mirror): BlockState = state.rotate(mirror.getRotation(state.getValue(FACING)))
+    public override fun mirror(state: BlockState, mirror: Mirror): BlockState = rotate(state, mirror.getRotation(state.getValue(FACING)))
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
         builder.add(FACING, STATE, WATERLOGGED)
@@ -127,7 +126,6 @@ class MailCollectionBoxBlock(
         pos: BlockPos,
         neighbourPos: BlockPos
     ): BlockState {
-        val ticks = level
         return super.updateShape(state, directionToNeighbour, neighbourState, level, pos, neighbourPos)
     }
 

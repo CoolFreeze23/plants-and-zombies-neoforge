@@ -1,15 +1,13 @@
 {
-  "type": "minecraft:crafting_shapeless",
+  "type": "plantz:crafting_transmute",
   "group": "mailbox_dye",
   "category": "misc",
-  "ingredients": [
-    {
-      "tag": "plantz:mailboxes"
-    },
-    {
-      "item": "minecraft:magenta_dye"
-    }
-  ],
+  "input": {
+    "tag": "plantz:mailboxes"
+  },
+  "material": {
+    "item": "minecraft:magenta_dye"
+  },
   "result": {
     "count": 1,
     "id": "plantz:magenta_mailbox"

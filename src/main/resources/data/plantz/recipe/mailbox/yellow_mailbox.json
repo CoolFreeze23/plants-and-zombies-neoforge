@@ -1,15 +1,13 @@
 {
-  "type": "minecraft:crafting_shapeless",
+  "type": "plantz:crafting_transmute",
   "group": "mailbox_dye",
   "category": "misc",
-  "ingredients": [
-    {
-      "tag": "plantz:mailboxes"
-    },
-    {
-      "item": "minecraft:yellow_dye"
-    }
-  ],
+  "input": {
+    "tag": "plantz:mailboxes"
+  },
+  "material": {
+    "item": "minecraft:yellow_dye"
+  },
   "result": {
     "count": 1,
     "id": "plantz:yellow_mailbox"

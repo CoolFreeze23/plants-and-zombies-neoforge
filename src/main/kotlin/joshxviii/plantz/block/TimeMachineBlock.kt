@@ -2,13 +2,9 @@ package joshxviii.plantz.block
 
 import com.mojang.serialization.MapCodec
 import joshxviii.plantz.PazBlocks
-import joshxviii.plantz.PazComponents
-import joshxviii.plantz.PazItems
-import joshxviii.plantz.block.entity.MailboxBlockEntity
 import joshxviii.plantz.block.entity.TimeMachineBlockEntity
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
-import net.minecraft.util.RandomSource
 import net.minecraft.Util
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
@@ -170,9 +166,8 @@ class TimeMachineBlock(properties: Properties) : BaseEntityBlock(properties), Si
         pos: BlockPos,
         neighbourPos: BlockPos
     ): BlockState {
-        val ticks = level
         if (state.getValue(WATERLOGGED)) {
-            ticks.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level))
+            level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level))
         }
         return super.updateShape(state, directionToNeighbour, neighbourState, level, pos, neighbourPos)
     }

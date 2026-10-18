@@ -3,7 +3,6 @@ package joshxviii.plantz.block.entity
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import joshxviii.plantz.block.MailboxState
-import joshxviii.plantz.pazResource
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.util.datafix.DataFixTypes

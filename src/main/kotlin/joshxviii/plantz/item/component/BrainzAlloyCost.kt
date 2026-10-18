@@ -4,7 +4,6 @@ import com.mojang.serialization.Codec
 import joshxviii.plantz.PazConfig
 import joshxviii.plantz.PazItems
 import joshxviii.plantz.name
-import net.minecraft.ChatFormatting
 import joshxviii.plantz.item.entityDataType
 import net.minecraft.network.chat.Component
 import net.minecraft.network.codec.ByteBufCodecs

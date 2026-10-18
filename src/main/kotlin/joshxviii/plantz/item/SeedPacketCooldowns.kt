@@ -1,5 +1,6 @@
 package joshxviii.plantz.item
 
+import joshxviii.plantz.PazComponents
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerPlayer
@@ -8,14 +9,14 @@ import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import java.util.WeakHashMap
+import kotlin.jvm.optionals.getOrNull
 
 /**
- * Per-plant seed packet cooldowns. 26.1 used the USE_COOLDOWN component with a cooldown group per entity type
- * (`player.cooldowns.addCooldown(group, ticks)`); 1.21.1 ItemCooldowns is keyed by Item only, so all seed packets
- * would share one cooldown. This keeps one cooldown per plant type per player instead (ticks of `player.tickCount`).
+ * 26.1 item cooldown groups for seed packets. Upstream stamped a USE_COOLDOWN component with the plant's group on the
+ * stack (see [SeedPacketItem.applyCooldown]) and used `player.cooldowns.addCooldown(group, ticks)`; 1.21.1 ItemCooldowns
+ * is keyed by Item only, so the groups are kept here per player (ticks of `player.tickCount`).
  *
- * Server side is authoritative. For the client (hotbar overlay / prediction) the lead can set [syncListener] to send a
- * payload, and the client handler calls [addCooldown] on the local player with the same group and ticks.
+ * Server side is authoritative; [syncListener] mirrors changes to the client, whose handler calls [addCooldown].
  */
 object SeedPacketCooldowns {
     private class Cooldown(val start: Int, val end: Int)
@@ -29,8 +30,17 @@ object SeedPacketCooldowns {
     @JvmStatic
     fun groupFor(type: EntityType<*>): ResourceLocation = BuiltInRegistries.ENTITY_TYPE.getKey(type)
 
+    /** 26.1 `ItemCooldowns.getCooldownGroup`: the stack's USE_COOLDOWN group, else the item id. */
     @JvmStatic
-    fun groupFor(stack: ItemStack): ResourceLocation? = stack.entityDataType()?.let { groupFor(it) }
+    fun groupFor(stack: ItemStack): ResourceLocation =
+        stack.get(PazComponents.USE_COOLDOWN)?.cooldownGroup?.getOrNull() ?: BuiltInRegistries.ITEM.getKey(stack.item)
+
+    /** 26.1 `UseCooldown.apply` after a successful instant use of [stackBeforeUse]. */
+    @JvmStatic
+    fun applyUseCooldown(player: Player, stackBeforeUse: ItemStack) {
+        val useCooldown = stackBeforeUse.get(PazComponents.USE_COOLDOWN) ?: return
+        addCooldown(player, groupFor(stackBeforeUse), useCooldown.ticks())
+    }
 
     private fun active(player: Player, group: ResourceLocation): Cooldown? {
         val map = synchronized(cooldowns) { cooldowns[player] } ?: return null
@@ -46,15 +56,11 @@ object SeedPacketCooldowns {
     fun isOnCooldown(player: Player, group: ResourceLocation): Boolean = active(player, group) != null
 
     @JvmStatic
-    fun isOnCooldown(player: Player, stack: ItemStack): Boolean {
-        val group = groupFor(stack) ?: return false
-        return isOnCooldown(player, group)
-    }
+    fun isOnCooldown(player: Player, stack: ItemStack): Boolean = isOnCooldown(player, groupFor(stack))
 
     @JvmStatic
     fun getCooldownPercent(player: Player, stack: ItemStack, partialTick: Float): Float {
-        val group = groupFor(stack) ?: return 0f
-        val cooldown = active(player, group) ?: return 0f
+        val cooldown = active(player, groupFor(stack)) ?: return 0f
         val total = (cooldown.end - cooldown.start).toFloat()
         val remaining = cooldown.end - (player.tickCount + partialTick)
         return Mth.clamp(remaining / total, 0f, 1f)
