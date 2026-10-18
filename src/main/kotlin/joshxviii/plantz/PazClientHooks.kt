@@ -12,5 +12,6 @@ object PazClientHooks {
 
     /** Runs on the main thread during FMLClientSetupEvent. */
     fun clientSetup() {
+        joshxviii.plantz.data.PazItemModelProperties.register()
     }
 }

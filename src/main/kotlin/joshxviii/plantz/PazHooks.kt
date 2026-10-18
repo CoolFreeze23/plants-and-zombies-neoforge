@@ -10,5 +10,6 @@ object PazHooks {
     }
 
     fun registerGameBus(bus: IEventBus) {
+        bus.addListener { event: net.neoforged.neoforge.event.village.VillagerTradesEvent -> joshxviii.plantz.data.PazVillagerTrades.onVillagerTrades(event) }
     }
 }

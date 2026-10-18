@@ -1,5 +1,6 @@
 package joshxviii.plantz.mixin;
 
+import net.minecraft.nbt.CompoundTag;
 import joshxviii.plantz.*;
 import joshxviii.plantz.entity.zombie.PazZombie;
 import net.minecraft.network.syncher.EntityDataAccessor;
