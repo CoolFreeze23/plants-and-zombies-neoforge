@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "#plantz:plant",
+    "plantz:gnome",
+    "plantz:super_brainz",
+    "plantz:imp",
+    "#plantz:zombie_robots"
+  ]
+}

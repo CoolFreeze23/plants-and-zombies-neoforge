@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "plantz:gravestone",
+    "#plantz:brainz_alloy_blocks",
+    "#plantz:mailbox",
+    "#plantz:garden_gnome_blocks"
+  ]
+}

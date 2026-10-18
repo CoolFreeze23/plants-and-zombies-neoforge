@@ -1,0 +1,93 @@
+package joshxviii.plantz.ai.goal
+
+import joshxviii.plantz.PazBlocks.PLANTZ_FLAG
+import joshxviii.plantz.PazEffects
+import joshxviii.plantz.lookAtBlockPos
+import joshxviii.plantz.moveToBlockPos
+import joshxviii.plantz.raid.ZombieRaid
+import joshxviii.plantz.raid.getZombieRaids
+import joshxviii.plantz.withinAttackRange
+import net.minecraft.core.BlockPos
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.entity.PathfinderMob
+import net.minecraft.world.entity.ai.goal.Goal
+import net.minecraft.world.level.pathfinder.Path
+import java.util.*
+import kotlin.math.max
+
+class PathfindToFlagGoal(
+    val mob: PathfinderMob,
+    var targetFlagPos: BlockPos? = null,
+    var minimumDistance: Double = 4.0
+) : Goal(){
+    companion object {
+        const val SEARCH_COOLDOWN = 20
+    }
+
+    var path: Path? = null
+    var ticksUntilNextPathRecalculation = 0
+    var navCooldown: Int = SEARCH_COOLDOWN
+
+    init {
+        flags = EnumSet.of<Flag>(Flag.MOVE)
+    }
+
+    override fun canUse(): Boolean {
+        mob.target?.let { if(it.isAlive && mob.withinAttackRange(it)) return false }
+        if (navCooldown > 0) { navCooldown--
+            if (navCooldown <= 0) {
+                navCooldown = SEARCH_COOLDOWN
+                val level = mob.level() as ServerLevel
+                val zombieRaid = level.getZombieRaids().getNearbyRaid(mob.blockPosition(), ZombieRaid.SPAWN_DISTANCE * ZombieRaid.SPAWN_DISTANCE * 2)
+                //if (zombieRaid != null && mob is Zombie) zombieRaid.joinRaid(level, mob)
+                targetFlagPos = zombieRaid?.center
+            }
+        }
+        val targetPos = targetFlagPos ?: return false
+        path = mob.getNavigation().createPath(targetPos, 0)
+        val isValid = mob.level().getBlockState(targetPos).`is`(PLANTZ_FLAG)
+        return targetPos.distSqr(mob.blockPosition()) > minimumDistance * minimumDistance && isValid && !mob.isAggressive && path != null && !mob.hasEffect(PazEffects.HYPNOTIZE)
+    }
+
+    override fun canContinueToUse(): Boolean {
+        mob.target?.let { if (it.isAlive && mob.withinAttackRange(it)) return false }
+        val targetPos = targetFlagPos ?: return false
+        val isValid = mob.level().getBlockState(targetPos).`is`(PLANTZ_FLAG)
+        return targetPos.distSqr(mob.blockPosition()) > minimumDistance * minimumDistance && isValid && !mob.isAggressive && !mob.navigation.isDone && !mob.hasEffect(PazEffects.HYPNOTIZE)
+    }
+
+    override fun stop() {
+        //targetFlagPos = null
+        //mob.isAggressive = false
+        mob.navigation.stop()
+    }
+
+    override fun start() {
+        //mob.isAggressive = true
+        targetFlagPos?.center?.let {
+            mob.moveControl.setWantedPosition(it.x, it.y, it.z, 1.0)
+        }
+        mob.navigation.moveTo(path, 1.0)
+    }
+
+    override fun tick() {
+        super.tick()
+        val flagPos = targetFlagPos ?: return
+
+        mob.getLookControl().lookAtBlockPos(flagPos)
+        ticksUntilNextPathRecalculation = max(ticksUntilNextPathRecalculation - 1, 0)
+        if (ticksUntilNextPathRecalculation <= 0 && mob.getRandom().nextFloat() < 0.05f) {
+
+            ticksUntilNextPathRecalculation = 4 + mob.getRandom().nextInt(7)
+            val targetDistanceSqr: Double = flagPos.distSqr(mob.blockPosition())
+            if (targetDistanceSqr > 1024.0) ticksUntilNextPathRecalculation += 10
+            else if (targetDistanceSqr > 256.0) ticksUntilNextPathRecalculation += 5
+
+            if (!mob.getNavigation().moveToBlockPos(flagPos, 1.0)) ticksUntilNextPathRecalculation += 15
+
+            ticksUntilNextPathRecalculation = adjustedTickDelay(ticksUntilNextPathRecalculation)
+        }
+
+    }
+
+}

@@ -1,0 +1,14 @@
+{
+  "model": {
+    "type": "minecraft:composite",
+    "models": [
+      {
+        "type": "minecraft:model",
+        "model": "plantz:item/seed_packet"
+      },
+      {
+        "type": "plantz:plant_icon"
+      }
+    ]
+  }
+}

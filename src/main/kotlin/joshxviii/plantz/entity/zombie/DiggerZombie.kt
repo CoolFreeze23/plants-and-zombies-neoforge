@@ -1,0 +1,105 @@
+package joshxviii.plantz.entity.zombie
+
+import joshxviii.plantz.PazSounds
+import joshxviii.plantz.PazTags
+import joshxviii.plantz.ai.goal.MineBlocksToTargetGoal
+import joshxviii.plantz.ai.pathfinding.MinerNavigation
+import net.minecraft.core.BlockPos
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.tags.ItemTags
+import net.minecraft.tags.StructureTags
+import net.minecraft.tags.TagKey
+import net.minecraft.util.RandomSource
+import net.minecraft.world.Difficulty
+import net.minecraft.world.DifficultyInstance
+import net.minecraft.world.damagesource.DamageSource
+import net.minecraft.world.entity.*
+import net.minecraft.world.entity.ai.goal.FloatGoal
+import net.minecraft.world.entity.ai.navigation.PathNavigation
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.ServerLevelAccessor
+
+
+class DiggerZombie(type: EntityType<out DiggerZombie>, level: Level) : PazZombie(type, level) {
+
+    companion object {
+        fun checkMinerSpawnRules(
+            type: EntityType<out Mob>,
+            level: ServerLevelAccessor,
+            spawnReason: EntitySpawnReason,
+            pos: BlockPos,
+            random: RandomSource
+        ): Boolean {
+            val below = pos.below()
+            val isMineshaftSpawn = (level as ServerLevel).structureManager().getStructureWithPieceAt(pos, StructureTags.MINESHAFT).isValid
+
+            return level.difficulty != Difficulty.PEACEFUL
+                    && ((EntitySpawnReason.ignoresLightRequirements(spawnReason) || isDarkEnoughToSpawn(level, pos, random))
+                    && checkMobSpawnRules(type, level, spawnReason, pos, random)
+                    && pos.y < 10) || isMineshaftSpawn
+        }
+    }
+
+    override fun registerGoals() {
+        super.registerGoals()
+        goalSelector.addGoal(1, FloatGoal(this))
+        goalSelector.addGoal(2, MineBlocksToTargetGoal(this))
+    }
+
+    override fun getAmbientSound(): SoundEvent {
+        return PazSounds.DIGGER_ZOMBIE_AMBIENT
+    }
+    override fun getHurtSound(source: DamageSource): SoundEvent {
+        return PazSounds.DIGGER_ZOMBIE_HURT
+    }
+    override fun getDeathSound(): SoundEvent {
+        return PazSounds.DIGGER_ZOMBIE_DEATH
+    }
+    override fun getStepSound(): SoundEvent {
+        return SoundEvents.ZOMBIE_STEP
+    }
+
+    override fun getAttackAnim(a: Float): Float {
+        return super.getAttackAnim(a)
+    }
+
+    override fun hasLineOfSight(target: Entity): Boolean = true
+
+    override fun createNavigation(level: Level): PathNavigation {
+        return MinerNavigation(this, level)
+    }
+
+    override fun doHurtTarget(level: ServerLevel, target: Entity): Boolean {
+        val result = super.doHurtTarget(level, target)
+        return result
+    }
+
+    override fun canEquipDuckyInWater() = false
+    override fun isLeftHanded(): Boolean = false
+    override fun getPreferredWeaponType(): TagKey<Item> = PazTags.ItemTags.DIGGER_PREFERRED_WEAPONS
+    override fun wantsToPickUp(level: ServerLevel, itemStack: ItemStack): Boolean {
+        if(itemStack.`is`(ItemTags.ARMOR_ENCHANTABLE)) return false
+        return super.wantsToPickUp(level, itemStack)
+    }
+
+
+    override fun finalizeSpawn(
+        level: ServerLevelAccessor,
+        difficulty: DifficultyInstance,
+        spawnReason: EntitySpawnReason,
+        groupData: SpawnGroupData?
+    ): SpawnGroupData? {
+        val data = super.finalizeSpawn(level, difficulty, spawnReason, groupData)
+
+        setCanBreakDoors(true)
+        setItemSlot(EquipmentSlot.MAINHAND, Items.IRON_PICKAXE.defaultInstance)
+        setDropChance(EquipmentSlot.MAINHAND, 0.0f)
+
+        return data
+    }
+}

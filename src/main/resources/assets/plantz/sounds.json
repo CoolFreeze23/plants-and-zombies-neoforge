@@ -1,0 +1,372 @@
+{
+  "item.watering_can": {
+    "sounds": [
+      { "name": "item/bottle/empty1", "volume": 1.0, "pitch": 0.75},
+      { "name": "item/bottle/empty2", "volume": 1.0, "pitch": 0.75}
+    ], "subtitle": "plantz.subtitles.item.watering_can"
+  },
+
+  "item.balloon.inflate": {
+    "sounds": [
+      { "name": "plantz:item/balloon/inflate1", "volume": 0.4, "pitch": 1.1},
+      { "name": "plantz:item/balloon/inflate2", "volume": 0.4, "pitch": 1.1},
+      { "name": "plantz:item/balloon/inflate3", "volume": 0.4, "pitch": 1.1}
+    ], "subtitle": "plantz.subtitles.item.balloon.inflate"
+  },
+  "item.balloon.pop": {
+    "sounds": [
+      { "name": "plantz:item/balloon/pop1", "volume": 1.2, "pitch": 1.0},
+      { "name": "plantz:item/balloon/pop2", "volume": 1.2, "pitch": 1.0}
+    ], "subtitle": "plantz.subtitles.item.balloon.pop"
+  },
+
+  "entity.projectile.hit_paper": {
+    "sounds": [
+      { "name": "plantz:projectile/hit_paper_1", "volume": 1.0},
+      { "name": "plantz:projectile/hit_paper_2", "volume": 1.0}
+    ], "subtitle": "plantz.subtitles.projectile.deflected"
+  },
+  "entity.projectile.hit_cone": {
+    "sounds": [
+      { "name": "plantz:projectile/hit_cone_1", "volume": 1.0},
+      { "name": "plantz:projectile/hit_cone_2", "volume": 1.0}
+    ], "subtitle": "plantz.subtitles.projectile.deflected"
+  },
+  "entity.projectile.hit_bucket": {
+    "sounds": [
+      { "name": "plantz:projectile/hit_bucket_1", "volume": 1.0},
+      { "name": "plantz:projectile/hit_bucket_2", "volume": 1.0}
+    ], "subtitle": "plantz.subtitles.projectile.deflected"
+  },
+  "entity.projectile.shoot": {
+    "sounds": [{ "name": "random/pop", "volume": 1.0, "pitch": 1.0 }], "subtitle": "plantz.subtitles.projectile.shoot"
+  },
+
+  "entity.projectile.electric_zap": {
+    "sounds": [
+      { "name": "plantz:projectile/electric_zap/electric_zap_1", "volume": 1.0, "pitch": 1.0 },
+      { "name": "plantz:projectile/electric_zap/electric_zap_2", "volume": 1.0, "pitch": 1.0 },
+      { "name": "plantz:projectile/electric_zap/electric_zap_3", "volume": 1.0, "pitch": 1.0 },
+      { "name": "plantz:projectile/electric_zap/electric_zap_4", "volume": 1.0, "pitch": 1.0 },
+      { "name": "plantz:projectile/electric_zap/electric_zap_5", "volume": 1.0, "pitch": 1.0 },
+      { "name": "plantz:projectile/electric_zap/electric_zap_6", "volume": 1.0, "pitch": 1.0 },
+      { "name": "plantz:projectile/electric_zap/electric_zap_7", "volume": 1.0, "pitch": 1.0 }
+    ], "subtitle": "plantz.subtitles.projectile.electric_zap"
+  },
+
+  "entity.chomper.attack": {
+    "sounds": [{ "name": "mob/evocation_illager/fangs", "volume": 1.0, "pitch": 0.8 }], "subtitle": "plantz.subtitles.entity.chomper.attack"
+  },
+
+  "entity.scaredyshroom.peek": {
+    "sounds": [{ "name": "plantz:entity/scaredyshroom/peek", "volume": 0.7, "pitch": 1.2 }], "subtitle": "plantz.subtitles.entity.scaredyshroom.hide"
+  },
+  "entity.scaredyshroom.hide": {
+    "sounds": [{ "name": "plantz:entity/scaredyshroom/hide", "volume": 1.0, "pitch": 1.2 }], "subtitle": "plantz.subtitles.entity.scaredyshroom.hide"
+  },
+
+  "entity.potatomine.explode": {
+    "sounds": [
+      { "name": "plantz:entity/potatomine/explode1", "volume": 1.0, "pitch": 1.2 },
+      { "name": "plantz:entity/potatomine/explode2", "volume": 1.0, "pitch": 1.2 }
+    ], "subtitle": "plantz.subtitles.entity.potatomine.explode"
+  },
+
+  "entity.plant_explode": {
+    "sounds": [
+      { "name": "minecraft:random/explode1", "volume": 1.0, "pitch": 1.9 },
+      { "name": "minecraft:random/explode2", "volume": 1.0, "pitch": 1.9 },
+      { "name": "minecraft:random/explode3", "volume": 1.0, "pitch": 1.9 }
+    ], "subtitle": "plantz.subtitles.entity.plant_explode"
+  },
+
+  "entity.gnome.voice_1.ambient": {"sounds": [
+    { "name": "plantz:entity/gnome/voice_1/ambient_1", "volume": 1.0 },
+    { "name": "plantz:entity/gnome/voice_1/ambient_2", "volume": 1.0 },
+    { "name": "plantz:entity/gnome/voice_1/ambient_3", "volume": 1.0 }
+  ], "subtitle": "plantz.subtitles.entity.gnome.ambient"},
+  "entity.gnome.voice_1.hurt": {"sounds": [
+    { "name": "plantz:entity/gnome/voice_1/hurt_1", "volume": 1.0 },
+    { "name": "plantz:entity/gnome/voice_1/hurt_2", "volume": 1.0 },
+    { "name": "plantz:entity/gnome/voice_1/hurt_3", "volume": 1.0 }
+  ], "subtitle": "plantz.subtitles.entity.gnome.hurt"},
+  "entity.gnome.voice_1.death": {"sounds": [{ "name": "plantz:entity/gnome/voice_1/death", "volume": 1.0 }], "subtitle": "entity.gnome.death"},
+
+  "entity.gnome.voice_2.ambient": {"sounds": [
+    { "name": "plantz:entity/gnome/voice_2/ambient_1", "volume": 1.0 },
+    { "name": "plantz:entity/gnome/voice_2/ambient_2", "volume": 1.0 },
+    { "name": "plantz:entity/gnome/voice_2/ambient_3", "volume": 1.0 }
+  ], "subtitle": "plantz.subtitles.entity.gnome.ambient"},
+  "entity.gnome.voice_2.hurt": {"sounds": [
+    { "name": "plantz:entity/gnome/voice_2/hurt_1", "volume": 1.0 },
+    { "name": "plantz:entity/gnome/voice_2/hurt_2", "volume": 1.0 },
+    { "name": "plantz:entity/gnome/voice_2/hurt_3", "volume": 1.0 }
+  ], "subtitle": "plantz.subtitles.entity.gnome.hurt"},
+  "entity.gnome.voice_2.death": {"sounds": [{ "name": "plantz:entity/gnome/voice_2/death", "volume": 1.0 }], "subtitle": "entity.gnome.death"},
+
+  "entity.gnome.jump": {"sounds": [{ "name": "plantz:entity/gnome/jump", "volume": 0.2, "pitch": 1.2}], "subtitle": "entity.gnome.jump"},
+
+  "entity.browncoat.ambient": {
+    "sounds": [
+      { "name": "plantz:entity/browncoat/ambient_1", "volume": 0.7 },
+      { "name": "plantz:entity/browncoat/ambient_2", "volume": 0.7 },
+      { "name": "plantz:entity/browncoat/ambient_3", "volume": 0.7 }
+    ], "subtitle": "plantz.subtitles.entity.browncoat.ambient"
+  },
+  "entity.browncoat.hurt": {
+    "sounds": [
+      { "name": "plantz:entity/browncoat/hurt_1", "volume": 0.7 },
+      { "name": "plantz:entity/browncoat/hurt_2", "volume": 0.7 },
+      { "name": "plantz:entity/browncoat/hurt_3", "volume": 0.7 }
+    ], "subtitle": "plantz.subtitles.entity.browncoat.hurt"
+  },
+  "entity.browncoat.death": {
+    "sounds": [{ "name": "plantz:entity/browncoat/death", "volume": 0.7 }], "subtitle": "plantz.subtitles.entity.browncoat.death"
+  },
+
+  "entity.newspaper_zombie.ambient": {
+    "sounds": [
+      { "name": "plantz:entity/browncoat/ambient_1", "volume": 0.8 },
+      { "name": "plantz:entity/browncoat/ambient_2", "volume": 0.8 },
+      { "name": "plantz:entity/browncoat/ambient_3", "volume": 0.8 }
+    ], "subtitle": "plantz.subtitles.entity.newspaper_zombie.ambient"
+  },
+  "entity.newspaper_zombie.angry_ambient": {
+    "sounds": [
+      { "name": "plantz:entity/browncoat/angry_ambient_1", "volume": 0.8 },
+      { "name": "plantz:entity/browncoat/angry_ambient_2", "volume": 0.8 },
+      { "name": "plantz:entity/browncoat/angry_ambient_3", "volume": 0.8 }
+    ], "subtitle": "plantz.subtitles.entity.newspaper_zombie.angry_ambient"
+  },
+  "entity.newspaper_zombie.hurt": {
+    "sounds": [
+      { "name": "plantz:entity/browncoat/hurt_1", "volume": 0.8 },
+      { "name": "plantz:entity/browncoat/hurt_2", "volume": 0.8 },
+      { "name": "plantz:entity/browncoat/hurt_3", "volume": 0.8 }
+    ], "subtitle": "plantz.subtitles.entity.browncoat.hurt"
+  },
+  "entity.newspaper_zombie.death": {
+    "sounds": [{ "name": "plantz:entity/browncoat/death", "volume": 0.8 }], "subtitle": "plantz.subtitles.entity.newspaper_zombie.death"
+  },
+
+  "entity.digger_zombie.ambient": {
+    "sounds": [
+      { "name": "plantz:entity/digger_zombie/ambient_1", "volume": 0.8 },
+      { "name": "plantz:entity/digger_zombie/ambient_2", "volume": 0.8 },
+      { "name": "plantz:entity/digger_zombie/ambient_3", "volume": 0.8 }
+    ], "subtitle": "plantz.subtitles.entity.digger_zombie.ambient"
+  },
+  "entity.digger_zombie.hurt": {
+    "sounds": [
+      { "name": "plantz:entity/digger_zombie/hurt_1", "volume": 0.9 },
+      { "name": "plantz:entity/digger_zombie/hurt_2", "volume": 0.9 },
+      { "name": "plantz:entity/digger_zombie/hurt_3", "volume": 0.9 }
+    ], "subtitle": "plantz.subtitles.entity.digger_zombie.hurt"
+  },
+  "entity.digger_zombie.death": {
+    "sounds": [{ "name": "plantz:entity/digger_zombie/death", "volume": 0.9 }], "subtitle": "plantz.subtitles.entity.digger_zombie.death"
+  },
+
+  "entity.backup_dancer.ambient": {
+    "sounds": [
+      { "name": "plantz:entity/backup_dancer/ambient_1", "volume": 1.0, "pitch": 0.9 },
+      { "name": "plantz:entity/backup_dancer/ambient_2", "volume": 1.0, "pitch": 0.9 },
+      { "name": "plantz:entity/backup_dancer/ambient_3", "volume": 1.0, "pitch": 0.9 }
+    ], "subtitle": "plantz.subtitles.entity.backup_dancer.ambient"
+  },
+  "entity.backup_dancer.hurt": {
+    "sounds": [
+      { "name": "plantz:entity/backup_dancer/hurt_1", "volume": 1.0, "pitch": 0.9 },
+      { "name": "plantz:entity/backup_dancer/hurt_2", "volume": 1.0, "pitch": 0.9 },
+      { "name": "plantz:entity/backup_dancer/hurt_3", "volume": 1.0, "pitch": 0.9 }
+    ], "subtitle": "plantz.subtitles.entity.backup_dancer.hurt"
+  },
+  "entity.backup_dancer.death": {
+    "sounds": [{ "name": "plantz:entity/backup_dancer/death", "volume": 1.0 }], "subtitle": "plantz.subtitles.entity.backup_dancer.death"
+  },
+
+  "entity.disco_zombie.ambient": {
+    "sounds": [
+      { "name": "plantz:entity/disco_zombie/ambient_1", "volume": 1.0 },
+      { "name": "plantz:entity/disco_zombie/ambient_2", "volume": 1.0 },
+      { "name": "plantz:entity/disco_zombie/ambient_3", "volume": 1.0 }
+    ], "subtitle": "plantz.subtitles.entity.disco_zombie.ambient"
+  },
+  "entity.disco_zombie.hurt": {
+    "sounds": [
+      { "name": "plantz:entity/disco_zombie/hurt_1", "volume": 1.0 },
+      { "name": "plantz:entity/disco_zombie/hurt_2", "volume": 1.0 },
+      { "name": "plantz:entity/disco_zombie/hurt_3", "volume": 1.0 }
+    ], "subtitle": "plantz.subtitles.entity.disco_zombie.hurt"
+  },
+  "entity.disco_zombie.boogie": {
+    "sounds": [{ "name": "plantz:entity/disco_zombie/boogie", "volume": 1.0 }], "subtitle": "plantz.subtitles.entity.disco_zombie.boogie"
+  },
+  "entity.disco_zombie.summon": {
+    "sounds": [{ "name": "plantz:entity/disco_zombie/summon", "volume": 1.0 }], "subtitle": "plantz.subtitles.entity.disco_zombie.summon"
+  },
+  "entity.disco_zombie.death": {
+    "sounds": [{ "name": "plantz:entity/disco_zombie/death", "volume": 1.0 }], "subtitle": "plantz.subtitles.entity.disco_zombie.death"
+  },
+
+  "entity.all_star.ambient": {
+    "sounds": [
+      { "name": "plantz:entity/all_star/ambient_1", "volume": 1.0, "pitch": 0.9  },
+      { "name": "plantz:entity/all_star/ambient_2", "volume": 1.0, "pitch": 0.9  },
+      { "name": "plantz:entity/all_star/ambient_3", "volume": 1.0, "pitch": 0.9  }
+    ], "subtitle": "plantz.subtitles.entity.all_star.ambient"
+  },
+  "entity.all_star.hurt": {
+    "sounds": [
+      { "name": "plantz:entity/all_star/hurt_1", "volume": 1.0, "pitch": 0.9 },
+      { "name": "plantz:entity/all_star/hurt_2", "volume": 1.0, "pitch": 0.9  },
+      { "name": "plantz:entity/all_star/hurt_3", "volume": 1.0, "pitch": 0.9  }
+    ], "subtitle": "plantz.subtitles.entity.all_star.hurt"
+  },
+  "entity.all_star.whistle": {
+    "sounds": [{ "name": "plantz:entity/all_star/whistle", "volume": 1.0, "pitch": 1.1 }], "subtitle": "plantz.subtitles.entity.all_star.whistle"
+  },
+  "entity.all_star.death": {
+    "sounds": [{ "name": "plantz:entity/all_star/death", "volume": 1.0, "pitch": 0.9 }], "subtitle": "plantz.subtitles.entity.all_star.death"
+  },
+
+  "entity.zombie_yeti.ambient": {
+    "sounds": [
+      { "name": "plantz:entity/zombie_yeti/ambient_1", "volume": 1.0 },
+      { "name": "plantz:entity/zombie_yeti/ambient_2", "volume": 1.0 },
+      { "name": "plantz:entity/zombie_yeti/ambient_3", "volume": 1.0 }
+    ], "subtitle": "plantz.subtitles.entity.zombie_yeti.ambient"
+  },
+  "entity.zombie_yeti.hurt": {
+    "sounds": [
+      { "name": "plantz:entity/zombie_yeti/hurt_1", "volume": 1.0 },
+      { "name": "plantz:entity/zombie_yeti/hurt_2", "volume": 1.0 },
+      { "name": "plantz:entity/zombie_yeti/hurt_3", "volume": 1.0 }
+    ], "subtitle": "plantz.subtitles.entity.zombie_yeti.hurt"
+  },
+  "entity.zombie_yeti.death": {
+    "sounds": [{ "name": "plantz:entity/zombie_yeti/death", "volume": 1.0 }], "subtitle": "subtitles"
+  },
+
+  "entity.imp.ambient": {
+    "sounds": [
+      { "name": "plantz:entity/imp/ambient_1", "volume": 0.8 },
+      { "name": "plantz:entity/imp/ambient_2", "volume": 0.8 },
+      { "name": "plantz:entity/imp/ambient_3", "volume": 0.8 }
+    ], "subtitle": "plantz.subtitles.entity.imp.ambient"
+  },
+  "entity.imp.hurt": {
+    "sounds": [
+      { "name": "plantz:entity/imp/hurt_1", "volume": 0.8 },
+      { "name": "plantz:entity/imp/hurt_2", "volume": 0.8 },
+      { "name": "plantz:entity/imp/hurt_3", "volume": 0.8 }
+    ], "subtitle": "plantz.subtitles.entity.imp.hurt"
+  },
+  "entity.imp.death": {
+    "sounds": [{ "name": "plantz:entity/imp/death", "volume": 0.8 }], "subtitle": "plantz.subtitles.entity.imp.death"
+  },
+
+  "entity.super_brainz.ambient": {
+    "sounds": [
+      { "name": "plantz:entity/super_brainz/ambient_1", "volume": 1.2 },
+      { "name": "plantz:entity/super_brainz/ambient_2", "volume": 1.2 },
+      { "name": "plantz:entity/super_brainz/ambient_3", "volume": 1.2 }
+    ], "subtitle": "plantz.subtitles.entity.super_brainz.ambient"
+  },
+  "entity.super_brainz.hurt": {
+    "sounds": [
+      { "name": "plantz:entity/super_brainz/hurt_1", "volume": 1.0 },
+      { "name": "plantz:entity/super_brainz/hurt_2", "volume": 1.0 },
+      { "name": "plantz:entity/super_brainz/hurt_3", "volume": 1.0 }
+    ], "subtitle": "plantz.subtitles.entity.super_brainz.hurt"
+  },
+  "entity.super_brainz.punch": {
+    "sounds": [
+      { "name": "plantz:entity/super_brainz/punch_1", "volume": 1.2 },
+      { "name": "plantz:entity/super_brainz/punch_2", "volume": 1.2 },
+      { "name": "plantz:entity/super_brainz/punch_3", "volume": 1.2 }
+    ], "subtitle": "plantz.subtitles.entity.super_brainz.hurt"
+  },
+  "entity.super_brainz.death": {
+    "sounds": [{ "name": "plantz:entity/super_brainz/death", "volume": 1.0 }], "subtitle": "subtitles"
+  },
+
+  "entity.gargantuar.ambient": {
+    "sounds": [
+      { "name": "plantz:entity/gargantuar/ambient_1", "volume": 2.0 },
+      { "name": "plantz:entity/gargantuar/ambient_2", "volume": 2.0 },
+      { "name": "plantz:entity/gargantuar/ambient_3", "volume": 2.0 }
+    ], "subtitle": "plantz.subtitles.entity.gargantuar.ambient"
+  },
+  "entity.gargantuar.hurt": {
+    "sounds": [
+      { "name": "plantz:entity/gargantuar/hurt_1", "volume": 2.0 },
+      { "name": "plantz:entity/gargantuar/hurt_2", "volume": 2.0 },
+      { "name": "plantz:entity/gargantuar/hurt_3", "volume": 2.0 }
+    ], "subtitle": "plantz.subtitles.entity.gargantuar.hurt"
+  },
+  "entity.gargantuar.death": {
+    "sounds": [{ "name": "plantz:entity/gargantuar/death", "volume": 2.0 }], "subtitle": "subtitles"
+  },
+  "entity.gargantuar.dig": {
+    "sounds": [{ "name": "plantz:entity/gargantuar/dig", "volume": 1.3 }], "subtitle": "plantz.subtitles.entity.gargantuar.dig"
+  },
+
+  "entity.zombie.eat": {
+    "sounds": [{ "name": "random/burp", "volume": 1.0, "pitch": 0.9 }], "subtitle": "plantz.subtitles.entity.zombie.eat"
+  },
+
+  "event.raid.special_wave": {
+    "sounds": [
+      { "name": "block/trial_spawner/ambient_ominous1", "volume": 6.0, "pitch": 1.0 },
+      { "name": "block/trial_spawner/ambient_ominous2", "volume": 6.0, "pitch": 1.0 },
+      { "name": "block/trial_spawner/ambient_ominous3", "volume": 6.0, "pitch": 1.0 }
+    ], "subtitle": "plantz.subtitles.event.raid.special_wave"
+  },
+
+  "event.raid.taco_reward": {
+    "sounds": [{ "name": "plantz:event/taco_reward", "volume": 1.0, "pitch": 1.0  }], "subtitle": "plantz.subtitles.event.raid.taco_reward"
+  },
+
+  "event.mob_effect.hypnotized": {
+    "sounds": [{ "name": "enchant/thorns/hit1", "volume": 1.0, "pitch": 1.3 }], "subtitle": "plantz.subtitles.event.mob_effect.hypnotized"
+  },
+  "event.mob_effect.zombie_omen": {
+    "sounds": [{ "name": "event/mob_effects/raid_omen", "volume": 1.0, "pitch": 1.2 }], "subtitle": "plantz.subtitles.event.mob_effect.zombie_omen"
+  },
+
+  "music_disc.grassy_groove": {
+    "sounds": [{ "name": "plantz:music/grassy_groove", "volume": 1.0, "pitch": 1.0 }], "subtitle": "plantz.subtitles.music_disc.grassy_groove"
+  },
+
+  "music.raid.low": {
+    "sounds": [{ "name": "plantz:music/raid/loon_griefers_low", "volume": 1.0, "pitch": 1.0 }], "subtitle": "plantz.subtitles.music.raid.low"
+  },
+  "music.raid.medium": {
+    "sounds": [{ "name": "plantz:music/raid/loon_griefers_medium", "volume": 1.0, "pitch": 1.0 }], "subtitle": "plantz.subtitles.music.raid.medium"
+  },
+  "music.raid.high": {
+    "sounds": [{ "name": "plantz:music/raid/loon_griefers_high", "volume": 1.0, "pitch": 1.0 }], "subtitle": "plantz.subtitles.music.raid.high"
+  },
+  "music.raid.bucket": {
+    "sounds": [{ "name": "plantz:music/raid/loon_griefers_medium", "volume": 1.0, "pitch": 1.0 }], "subtitle": "plantz.subtitles.music.raid.bucket"
+  },
+  "music.raid.halftime": {
+    "sounds": [{ "name": "plantz:music/raid/loon_griefers_medium", "volume": 1.0, "pitch": 1.0 }], "subtitle": "plantz.subtitles.music.raid.halftime"
+  },
+  "music.raid.winter": {
+    "sounds": [{ "name": "plantz:music/raid/loon_griefers_high", "volume": 1.0, "pitch": 1.0 }], "subtitle": "plantz.subtitles.music.raid.winter"
+  },
+  "music.raid.pirate": {
+    "sounds": [{ "name": "plantz:music/raid/loon_griefers_high", "volume": 1.0, "pitch": 1.0 }], "subtitle": "plantz.subtitles.music.raid.pirate"
+  },
+  "music.raid.army": {
+    "sounds": [{ "name": "plantz:music/raid/loon_griefers_high", "volume": 1.0, "pitch": 1.0 }], "subtitle": "plantz.subtitles.music.raid.army"
+  },
+  "music.raid.league": {
+    "sounds": [{ "name": "plantz:music/raid/loon_griefers_high", "volume": 1.0, "pitch": 1.0 }], "subtitle": "plantz.subtitles.music.raid.league"
+  },
+  "music.raid.zomboss": {
+    "sounds": [{ "name": "plantz:music/raid/loon_griefers_high", "volume": 1.0, "pitch": 1.0 }], "subtitle": "plantz.subtitles.music.raid.zomboss"
+  }
+}

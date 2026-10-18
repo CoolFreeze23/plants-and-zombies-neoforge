@@ -1,0 +1,36 @@
+package joshxviii.plantz.entity.projectile
+
+import joshxviii.plantz.PazDamageTypes
+import joshxviii.plantz.PazEntities
+import joshxviii.plantz.PazServerParticles
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.Level
+import net.minecraft.world.phys.HitResult
+import net.minecraft.world.phys.Vec2
+
+class Pea(
+    level: Level,
+    owner: LivingEntity? = null,
+    spawnOffset: Vec2 = Vec2.ZERO,
+) : PazProjectile(PazEntities.PEA, level, owner, spawnOffset,
+    PazDamageTypes.PLANT
+) {
+    override fun isOnFire(): Boolean {
+        val onFire = super.isOnFire()
+        if (onFire) {
+            val level = level() as ServerLevel
+            val p = PeaFire(level(), entityOwner)
+            spawnProjectile(p, level, ItemStack.EMPTY)
+            p.deltaMovement = deltaMovement
+            discard()
+        }
+        return onFire
+    }
+
+    override fun onHit(hitResult: HitResult) {
+        super.onHit(hitResult)
+        spawnParticle(PazServerParticles.PEA_HIT)
+    }
+}

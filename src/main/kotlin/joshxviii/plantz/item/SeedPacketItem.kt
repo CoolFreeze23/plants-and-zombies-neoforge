@@ -1,0 +1,306 @@
+package joshxviii.plantz.item
+
+import joshxviii.plantz.*
+import joshxviii.plantz.block.entity.SunBatteryBlockEntity
+import joshxviii.plantz.entity.plant.GraveBuster
+import joshxviii.plantz.entity.plant.PacketInteractionResult
+import joshxviii.plantz.entity.plant.Plant
+import joshxviii.plantz.entity.plant.processSeedPacketInteraction
+import net.minecraft.ChatFormatting
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.core.component.DataComponents
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.chat.Component
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.stats.Stats
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.entity.EntitySpawnReason
+import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.TamableAnimal
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.component.TypedEntityData
+import net.minecraft.world.item.component.UseCooldown
+import net.minecraft.world.item.context.UseOnContext
+import net.minecraft.world.level.ClipContext
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.block.LiquidBlock
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.world.level.gameevent.GameEvent
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.HitResult
+import java.util.*
+import kotlin.compareTo
+import kotlin.jvm.optionals.getOrNull
+
+class SeedPacketItem(properties: Properties) : Item(properties) {
+
+    override fun getName(itemStack: ItemStack): Component {
+        val entityData = itemStack.get(DataComponents.ENTITY_DATA) ?: return super.getName(itemStack)
+        val entityId = BuiltInRegistries.ENTITY_TYPE.getKey(entityData.type())
+
+        val entityName = Component.translatable("entity.${entityId.namespace}.${entityId.path}")
+        return Component.translatable("item.plantz.seed_packet.entity", entityName)
+    }
+
+    override fun interactLivingEntity(itemStack: ItemStack, player: Player, target: LivingEntity, type: InteractionHand): InteractionResult {
+        val result = Companion.interactLivingEntity(itemStack, player, target, type)
+        return if (result == InteractionResult.PASS)
+            super.interactLivingEntity(itemStack, player, target, type)
+        else
+            result
+    }
+
+    override fun use(level: Level, player: Player, hand: InteractionHand): InteractionResult {
+        return Companion.use(level, player, hand)
+    }
+
+    override fun useOn(context: UseOnContext): InteractionResult {
+        return Companion.useOn(context)
+    }
+
+    companion object {
+
+        fun interactLivingEntity(
+            itemStack: ItemStack,
+            player: Player,
+            target: LivingEntity,
+            type: InteractionHand
+        ): InteractionResult {
+            if (player.cooldowns.isOnCooldown(itemStack)) return InteractionResult.PASS
+            if (target is Plant) {
+                val result = target.processSeedPacketInteraction(player, itemStack)
+                if (result == PacketInteractionResult.SUCCESS) {
+                    itemStack.consume(1, player)
+                    applyCooldown(itemStack, player)
+                    return InteractionResult.SUCCESS_SERVER
+                }
+                if (result == PacketInteractionResult.FAIL) return InteractionResult.CONSUME
+            }
+            return InteractionResult.PASS
+        }
+
+        fun use(level: Level, player: Player, hand: InteractionHand): InteractionResult {
+            val itemStack = player.getItemInHand(hand)
+
+            val entityData = itemStack.get(DataComponents.ENTITY_DATA)
+            val entityType = entityData?.type()
+            val waterPlaceable = entityType!=null && BuiltInRegistries.ENTITY_TYPE.wrapAsHolder(entityType).`is`(PazTags.EntityTypes.PLANTABLE_ON_WATER)
+
+            if (!waterPlaceable) return InteractionResult.PASS
+            val hitResult = getPlayerPOVHitResult(level, player, ClipContext.Fluid.SOURCE_ONLY)
+            if (hitResult.type != HitResult.Type.BLOCK) return InteractionResult.PASS
+            else if (level is ServerLevel) {
+                val pos: BlockPos = hitResult.blockPos
+                if (level.getBlockState(pos).block !is LiquidBlock) return InteractionResult.PASS
+                else if (level.mayInteract(player, pos) && player.mayUseItemAt(pos, hitResult.direction, itemStack)) {
+                    val result = tryPlant(level, player, itemStack, pos, UseOnContext(player, hand, hitResult).clickedFace, player.direction, checkWater = true)
+                    if (result === InteractionResult.SUCCESS) player.awardStat(Stats.ITEM_USED.get(itemStack.item))
+
+                    return result
+                } else return InteractionResult.FAIL
+            }
+            return InteractionResult.SUCCESS
+        }
+
+        fun useOn(context: UseOnContext): InteractionResult {
+            val level: Level = context.level
+            if (level !is ServerLevel) return InteractionResult.SUCCESS
+            else {
+                val itemStack = context.itemInHand
+                val type = itemStack.get(DataComponents.ENTITY_DATA)?.type()
+                val pos: BlockPos = context.clickedPos
+                val blockState = level.getBlockState(pos)
+                val clickedFace: Direction = if (blockState.`is`(PazTags.BlockTags.PLANT_POT)) Direction.UP else context.clickedFace
+                val spawnPos = if (blockState.getCollisionShape(level, pos).isEmpty) pos
+                else if (blockState.`is`(PazBlocks.GRAVESTONE) && type == PazEntities.GRAVE_BUSTER) pos.above()
+                else pos.relative(clickedFace)
+
+                return tryPlant(level, context.player, itemStack, spawnPos, clickedFace, context.horizontalDirection)
+            }
+        }
+
+        fun tryPlant(
+            level: Level,
+            player: Player?,
+            itemStack: ItemStack,
+            pos: BlockPos,
+            face: Direction,
+            horizontalDir: Direction,
+            checkWater: Boolean = false,
+            ignoreSunRequirement: Boolean = false,
+            consumeItem: Boolean = true
+        ): InteractionResult {
+            if (level !is ServerLevel || player == null) return InteractionResult.PASS
+
+            val entityData = itemStack.get(DataComponents.ENTITY_DATA)
+            val entityType = entityData?.type()
+
+            val spawnPos = if (level.getBlockState(pos).getCollisionShape(level, pos).isEmpty) pos
+            else pos.relative(face)
+
+            val availableSun = player.getTotalSun()
+            val sunCost = itemStack.get(PazComponents.SUN_COST)?.getSunCost(entityType) ?: 0
+            if (!ignoreSunRequirement && sunCost > availableSun && !player.hasInfiniteMaterials()) {
+                player.sendOverlayMessage(
+                    Component.translatable("message.plantz.not_enough_item", PazItems.SUN.name(), availableSun, sunCost).withStyle(ChatFormatting.RED)
+                )
+                return InteractionResult.FAIL
+            }
+
+            val entity = entityType?.create(
+                level,
+                EntityType.createDefaultStackConfig(level, itemStack, player),
+                spawnPos,
+                EntitySpawnReason.SPAWN_ITEM_USE,
+                !checkWater,
+                face == Direction.UP
+            )?: return InteractionResult.FAIL
+            entityData.loadInto(entity)
+
+            if (entity is Plant) {
+
+                val entityLimit = PazConfig.getEntityLimit(entityType)
+                if (entityLimit > -1 && !player.hasInfiniteMaterials()) {
+                    if (entity.isOverEntityLimit()) {
+                        player.sendOverlayMessage(
+                            Component.translatable("message.plantz.entity_limit", entityType.description.copy().withStyle(ChatFormatting.RED)).withStyle(ChatFormatting.DARK_RED)
+                        )
+                        return InteractionResult.FAIL
+                    }
+                }
+
+                val spawnBlockCollisionShape = level.getBlockState(spawnPos).getCollisionShape(level, spawnPos).let { if (it.isEmpty.not()) it.bounds() else null }
+                val entityBox = entity.boundingBox.move(spawnPos.multiply(-1))
+                val blockBelow = level.getBlockState(spawnPos.below())
+                if (
+                    !(entity.canPlaceOn(blockBelow) || checkWater)
+                    || !(spawnBlockCollisionShape==null || !entityBox.intersects(spawnBlockCollisionShape))
+                ) {
+                    player.sendOverlayMessage(
+                        Component.translatable("message.plantz.cannot_place", entity.name.copy().withStyle(ChatFormatting.RED)).withStyle(ChatFormatting.DARK_RED)
+                    )
+                    return InteractionResult.FAIL
+                }
+                val yaw =
+                    if (blockBelow.`is`(PazTags.BlockTags.PLANT_POT) || (blockBelow.`is`(PazBlocks.GRAVESTONE) && entity is GraveBuster))
+                        blockBelow.getOptionalValue(BlockStateProperties.HORIZONTAL_FACING).getOrNull()?.toYRot()
+                            ?:
+                            horizontalDir.opposite.toYRot()
+                    else
+                        horizontalDir.opposite.toYRot()
+                entity.yHeadRot = yaw
+                entity.yBodyRot = yaw
+                entity.yRot = yaw
+            }
+
+            entity.let {
+                val existingPlants = level.getEntitiesOfClass(Plant::class.java, AABB(it.blockPosition()))
+                if (existingPlants.isNotEmpty()) {
+                    player.sendOverlayMessage(
+                        Component.translatable("message.plantz.already_planted").withStyle(ChatFormatting.RED)
+                    )
+                    return InteractionResult.FAIL
+                }
+            }
+
+            if (!level.addFreshEntity(entity)) {
+                entity.discard()
+                return InteractionResult.FAIL
+            }
+
+            if (consumeItem) itemStack.consume(1, player)
+            if (!player.hasInfiniteMaterials() && !ignoreSunRequirement) {
+                player.removeSunFromStorageAndInventory(sunCost)
+            }
+            entity.playSound(SoundEvents.BIG_DRIPLEAF_PLACE)
+            if (entity is TamableAnimal) entity.tame(player)
+            level.gameEvent(player, GameEvent.ENTITY_PLACE, spawnPos)
+
+            return InteractionResult.SUCCESS
+        }
+
+        fun tryPlantFromDispenser(
+            level: ServerLevel,
+            itemStack: ItemStack,
+            dispenserPos: BlockPos,
+            pos: BlockPos,
+            face: Direction,
+            horizontalDir: Direction,
+        ): Boolean {
+            val entityData = itemStack.get(DataComponents.ENTITY_DATA) ?: return false
+            val entityType = entityData.type()
+
+            val sunCost = itemStack.get(PazComponents.SUN_COST)?.getSunCost(entityType) ?: 0
+            val battery = SunBatteryBlockEntity.findAttachedSunBattery(level, dispenserPos, sunCost)?: return false
+
+            val spawnPos = if (level.getBlockState(pos).getCollisionShape(level, pos).isEmpty) pos else pos
+
+            val entity = entityType.create(
+                level,
+                EntityType.createDefaultStackConfig(level, itemStack, null),
+                spawnPos,
+                EntitySpawnReason.DISPENSER,
+                true,
+                face == Direction.UP
+            ) ?: return false
+
+            entityData.loadInto(entity)
+
+            if (entity is Plant) {
+                val blockBelow = level.getBlockState(spawnPos.below())
+                if (!entity.canPlaceOn(blockBelow)) return false
+
+                if (level.getEntitiesOfClass(Plant::class.java, AABB(spawnPos)).isNotEmpty()) return false
+                val yaw = horizontalDir.toYRot()
+                entity.yRot = yaw
+                entity.yBodyRot = yaw
+                entity.yHeadRot = yaw
+            }
+
+            if (!level.addFreshEntity(entity)) {
+                entity.discard()
+                return false
+            }
+
+            entity.playSound(SoundEvents.BIG_DRIPLEAF_PLACE)
+            level.gameEvent(null, GameEvent.ENTITY_PLACE, spawnPos)
+            if (sunCost > 0) battery.removeSun(sunCost)
+            level.getNearestPlayer(entity, 64.0)?.let {
+                if (entity is TamableAnimal) entity.tame(it)
+            }
+            return true
+        }
+
+        fun applyCooldown(itemStack: ItemStack, player: Player) {
+            val entityType = itemStack.get(DataComponents.ENTITY_DATA)?.type()?: return
+            val group = BuiltInRegistries.ENTITY_TYPE.getKey(entityType)
+            if (PazConfig.PLANT_COOLDOWN_ENABLED) {
+                val cooldownTime = PazConfig.getCooldownTime(PazConfig.getSunCost(entityType))
+                itemStack.set(DataComponents.USE_COOLDOWN, UseCooldown(cooldownTime, Optional.of(group)))
+                player.cooldowns.addCooldown(group, (cooldownTime*20).toInt())
+            } else {
+                player.cooldowns.removeCooldown(group)
+                itemStack.set(DataComponents.USE_COOLDOWN, UseCooldown(0f))
+            }
+        }
+
+        fun stackFor(type: EntityType<*>): ItemStack {
+            val stack = ItemStack(PazItems.SEED_PACKET)
+            stack.set(DataComponents.ENTITY_DATA, TypedEntityData.of(type, CompoundTag()))
+
+            return stack
+        }
+
+        fun typeFromStack(itemStack: ItemStack): EntityType<*>? {
+            val type = itemStack.get(DataComponents.ENTITY_DATA)?.type()?: return null
+            return type
+        }
+    }
+}

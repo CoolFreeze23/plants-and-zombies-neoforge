@@ -1,0 +1,175 @@
+package joshxviii.plantz
+
+import joshxviii.plantz.entity.plant.*
+import joshxviii.plantz.entity.zombie.DiggerZombie
+import joshxviii.plantz.entity.zombie.PazZombie
+import joshxviii.plantz.entity.zombie.ZombieYeti
+import joshxviii.plantz.mixin.SpawnPlacementsInvoker
+import net.fabricmc.fabric.api.biome.v1.BiomeModifications
+import net.fabricmc.fabric.api.biome.v1.BiomeSelectionContext
+import net.minecraft.tags.TagKey
+import net.minecraft.world.entity.*
+import net.minecraft.world.level.biome.Biome
+import net.minecraft.world.level.levelgen.Heightmap
+
+object PazSpawnPlacements {
+
+    //TODO make a layer for more dynamic spawning mechanics
+    fun initialize() {
+        // region PLANTS
+        addBiomeSpawn(PazTags.Biomes.HAS_CACTUS, PazEntities.CACTUS,
+            weight = 6, minGroupSize = 1, maxGroupSize = 3)
+        registerSpawnPlacement(PazEntities.CACTUS, Cactus::checkCactusSpawnRules)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_LIGHTNING_REED, PazEntities.LIGHTNING_REED,
+            weight = 12, minGroupSize = 2, maxGroupSize = 3)
+        registerSpawnPlacement(PazEntities.LIGHTNING_REED, LightningReed::checkLightningReedSpawnRules)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_CHERRYBOMB, PazEntities.CHERRY_BOMB,
+            weight = 20, minGroupSize = 1, maxGroupSize = 1)
+        registerSpawnPlacement(PazEntities.CHERRY_BOMB, CherryBomb::checkCherryBombSpawnRules)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_CHOMPER, PazEntities.CHOMPER,
+            weight = 4, minGroupSize = 1, maxGroupSize = 1)
+        registerSpawnPlacement(PazEntities.CHOMPER, Plant::checkPlantSpawnRules)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_FIRE_PEASHOOTER, PazEntities.FIRE_PEA_SHOOTER,
+            weight = 4, minGroupSize = 1, maxGroupSize = 2)
+        registerSpawnPlacement(PazEntities.FIRE_PEA_SHOOTER, Plant::checkPlantSpawnRules)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_FUMESHROOM, PazEntities.FUME_SHROOM,
+            weight = 8, minGroupSize = 1, maxGroupSize = 1)
+        registerSpawnPlacement(PazEntities.FUME_SHROOM, Plant::checkPlantSpawnRules)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_HYPNOSHROOM, PazEntities.HYPNOSHROOM,
+            weight = 2, minGroupSize = 1, maxGroupSize = 1)
+        registerSpawnPlacement(PazEntities.HYPNOSHROOM, Plant::checkPlantSpawnRules)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_ICE_SHROOM, PazEntities.ICE_SHROOM,
+            weight = 8, minGroupSize = 1, maxGroupSize = 2)
+        registerSpawnPlacement(PazEntities.ICE_SHROOM, IcePeaShooter::checkIcePeaShooterSpawnRules)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_DOOM_SHROOM, PazEntities.DOOM_SHROOM,
+            weight = 25, minGroupSize = 1, maxGroupSize = 1)
+        registerSpawnPlacement(PazEntities.DOOM_SHROOM, DoomShroom::checkDoomShroomSpawnRules)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_SEA_SHROOM, PazEntities.SEA_SHROOM,
+            weight = 2, minGroupSize = 1, maxGroupSize = 3)
+        registerSpawnPlacement(PazEntities.SEA_SHROOM, SeaShroom::checkSeaShroomSpawnRules, spawnPlacements = SpawnPlacementTypes.IN_WATER)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_ICE_PEASHOOTER, PazEntities.ICE_PEA_SHOOTER,
+            weight = 5, minGroupSize = 1, maxGroupSize = 2)
+        registerSpawnPlacement(PazEntities.ICE_PEA_SHOOTER, IcePeaShooter::checkIcePeaShooterSpawnRules)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_CABBAGEPULT, PazEntities.CABBAGE_PULT,
+            weight = 4, minGroupSize = 1, maxGroupSize = 1)
+        registerSpawnPlacement(PazEntities.CABBAGE_PULT, Plant::checkPlantSpawnRules)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_KERNELPULT, PazEntities.KERNEL_PULT,
+            weight = 4, minGroupSize = 1, maxGroupSize = 1)
+        registerSpawnPlacement(PazEntities.KERNEL_PULT, Plant::checkPlantSpawnRules)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_MELONPULT, PazEntities.MELON_PULT,
+            weight = 2, minGroupSize = 1, maxGroupSize = 1)
+        registerSpawnPlacement(PazEntities.MELON_PULT, Plant::checkPlantSpawnRules)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_BONK_CHOY, PazEntities.BONK_CHOY,
+            weight = 6, minGroupSize = 1, maxGroupSize = 1)
+        registerSpawnPlacement(PazEntities.BONK_CHOY, Plant::checkPlantSpawnRules)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_TANGLE_KELP, PazEntities.TANGLE_KELP,
+            weight = 9, minGroupSize = 3, maxGroupSize = 5)
+        registerSpawnPlacement(PazEntities.TANGLE_KELP, TangleKelp::checkTangleKelpSpawnRules, spawnPlacements = SpawnPlacementTypes.IN_WATER)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_PEASHOOTER, PazEntities.PEA_SHOOTER,
+            weight = 8, minGroupSize = 1, maxGroupSize = 2)
+        registerSpawnPlacement(PazEntities.PEA_SHOOTER, Plant::checkPlantSpawnRules)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_POTATOMINE, PazEntities.POTATO_MINE,
+            weight = 3, minGroupSize = 1, maxGroupSize = 1)
+        registerSpawnPlacement(PazEntities.POTATO_MINE, Plant::checkPlantSpawnRules)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_SCAREDYSHROOM, PazEntities.SCAREDY_SHROOM,
+            weight = 7, minGroupSize = 1, maxGroupSize = 1)
+        registerSpawnPlacement(PazEntities.SCAREDY_SHROOM, Plant::checkPlantSpawnRules)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_SUNFLOWER, PazEntities.SUNFLOWER,
+            weight = 8, minGroupSize = 1, maxGroupSize = 3)
+        addBiomeSpawn(PazTags.Biomes.HAS_SUNFLOWER_ALT, PazEntities.SUNFLOWER,
+            weight = 10, minGroupSize = 2, maxGroupSize = 4)
+        registerSpawnPlacement(PazEntities.SUNFLOWER, Plant::checkPlantSpawnRules)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_PUFFSHROOM, PazEntities.PUFF_SHROOM,
+            weight = 12, minGroupSize = 1, maxGroupSize = 4)
+        registerSpawnPlacement(PazEntities.PUFF_SHROOM, Plant::checkPlantSpawnRules)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_WALLNUT, PazEntities.WALL_NUT,
+            weight = 5, minGroupSize = 1, maxGroupSize = 1)
+        registerSpawnPlacement(PazEntities.WALL_NUT, Plant::checkPlantSpawnRules)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_SUNSHROOM, PazEntities.SUN_SHROOM,
+            weight = 16, minGroupSize = 1, maxGroupSize = 3)
+        addBiomeSpawn(PazTags.Biomes.HAS_SUNFLOWER, PazEntities.SUN_SHROOM,
+            weight = 1, minGroupSize = 1, maxGroupSize = 4)
+        registerSpawnPlacement(PazEntities.SUN_SHROOM, Plant::checkPlantSpawnRules)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_COFFEE_BEAN, PazEntities.COFFEE_BEAN,
+            weight = 5, minGroupSize = 2, maxGroupSize = 5)
+        registerSpawnPlacement(PazEntities.COFFEE_BEAN, CoffeeBean::checkCoffeeBeanSpawnRules, Heightmap.Types.MOTION_BLOCKING)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_GRAVE_BUSTER, PazEntities.GRAVE_BUSTER,
+            weight = 15, minGroupSize = 1, maxGroupSize = 3)
+        registerSpawnPlacement(PazEntities.GRAVE_BUSTER, Plant::checkPlantSpawnRules)
+        // endregion
+
+        // region ZOMBIES
+        addBiomeSpawn(PazTags.Biomes.HAS_BROWNCOAT, PazEntities.BROWN_COAT, category = MobCategory.MONSTER,
+            weight = 100, minGroupSize = 1, maxGroupSize = 5)
+        addBiomeSpawn(PazTags.Biomes.WATER_SPAWNS, PazEntities.BROWN_COAT, category = MobCategory.MONSTER,
+            weight = 10, minGroupSize = 1, maxGroupSize = 2)
+        registerSpawnPlacement(PazEntities.BROWN_COAT, PazZombie::checkPazZombieSpawnRules, spawnPlacements = SpawnPlacementTypes.NO_RESTRICTIONS)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_NEWSPAPER_ZOMBIE, PazEntities.NEWSPAPER_ZOMBIE, category = MobCategory.MONSTER,
+            weight = 25, minGroupSize = 1, maxGroupSize = 1)
+        addBiomeSpawn(PazTags.Biomes.WATER_SPAWNS, PazEntities.NEWSPAPER_ZOMBIE, category = MobCategory.MONSTER,
+            weight = 4, minGroupSize = 1, maxGroupSize = 1)
+        registerSpawnPlacement(PazEntities.NEWSPAPER_ZOMBIE, PazZombie::checkPazZombieSpawnRules, spawnPlacements = SpawnPlacementTypes.NO_RESTRICTIONS)
+
+        addBiomeSpawn(PazTags.Biomes.HAS_ZOMBIE_YETI, PazEntities.ZOMBIE_YETI, category = MobCategory.MONSTER,
+            weight = 8, minGroupSize = 1, maxGroupSize = 1)
+        addBiomeSpawn(PazTags.Biomes.HAS_ZOMBIE_YETI_ALT, PazEntities.ZOMBIE_YETI, category = MobCategory.MONSTER,
+            weight = 20, minGroupSize = 1, maxGroupSize = 2)
+        registerSpawnPlacement(PazEntities.ZOMBIE_YETI, ZombieYeti::checkZombieYetiSpawnRules)
+        addBiomeSpawn(PazTags.Biomes.HAS_DIGGER, PazEntities.DIGGER_ZOMBIE, category = MobCategory.MONSTER,
+            weight = 8, minGroupSize = 1, maxGroupSize = 1)
+        addBiomeSpawn(PazTags.Biomes.HAS_DIGGER_ALT, PazEntities.DIGGER_ZOMBIE, category = MobCategory.MONSTER,
+            weight = 11, minGroupSize = 1, maxGroupSize = 2)
+        registerSpawnPlacement(PazEntities.DIGGER_ZOMBIE, DiggerZombie::checkMinerSpawnRules)
+        addBiomeSpawn(PazTags.Biomes.HAS_DISCO_ZOMBIE, PazEntities.DISCO_ZOMBIE, category = MobCategory.MONSTER,
+            weight = 12, minGroupSize = 1, maxGroupSize = 1)
+        registerSpawnPlacement(PazEntities.DISCO_ZOMBIE, PazZombie::checkPazZombieSpawnRules)
+        addBiomeSpawn(PazTags.Biomes.HAS_ALL_STAR, PazEntities.ALL_STAR, category = MobCategory.MONSTER,
+            weight = 12, minGroupSize = 1, maxGroupSize = 1)
+        registerSpawnPlacement(PazEntities.ALL_STAR, PazZombie::checkPazZombieSpawnRules)
+        addBiomeSpawn(PazTags.Biomes.HAS_GRAVE_DIGGER, PazEntities.GRAVE_DIGGER, category = MobCategory.MONSTER,
+            weight = 15, minGroupSize = 1, maxGroupSize = 1)
+        registerSpawnPlacement(PazEntities.GRAVE_DIGGER, PazZombie::checkPazZombieSpawnRules)
+        addBiomeSpawn(PazTags.Biomes.HAS_IMP, PazEntities.IMP, category = MobCategory.MONSTER,
+            weight = 7, minGroupSize = 1, maxGroupSize = 1)
+        registerSpawnPlacement(PazEntities.IMP, PazZombie::checkPazZombieSpawnRules)
+        // endregion
+    }
+
+    fun <T : Mob> addBiomeSpawn(biomeTag: TagKey<Biome>, entityType: EntityType<T>, weight: Int, minGroupSize: Int, maxGroupSize: Int, category: MobCategory = MobCategory.AMBIENT) {
+        BiomeModifications.addSpawn({ biomeSelector: BiomeSelectionContext -> biomeSelector.hasTag(biomeTag) }, category, entityType, weight, minGroupSize, maxGroupSize)
+    }
+
+    fun <T : Mob> registerSpawnPlacement(entityType: EntityType<T>, spawnRules: SpawnPlacements.SpawnPredicate<T>, heightmap: Heightmap.Types = Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,spawnPlacements: SpawnPlacementType = SpawnPlacementTypes.ON_GROUND) {
+        SpawnPlacementsInvoker.invokeRegister(
+            entityType,
+            spawnPlacements,
+            heightmap,
+            spawnRules
+        )
+    }
+}

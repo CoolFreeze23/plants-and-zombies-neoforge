@@ -1,0 +1,376 @@
+package joshxviii.plantz
+
+import joshxviii.plantz.block.*
+import joshxviii.plantz.block.entity.*
+import joshxviii.plantz.item.component.BlocksProjectileDamage
+import joshxviii.plantz.item.component.StoredWater.Companion.DEFAULT_CAPACITY
+import net.fabricmc.fabric.api.`object`.builder.v1.block.entity.FabricBlockEntityTypeBuilder
+import net.fabricmc.fabric.api.`object`.builder.v1.world.poi.PoiHelper
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Registry
+import net.minecraft.core.component.DataComponents
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.registries.Registries
+import net.minecraft.resources.ResourceKey
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.EquipmentSlotGroup
+import net.minecraft.world.entity.ai.attributes.AttributeModifier
+import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.DyeColor
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Item.BASE_ATTACK_DAMAGE_ID
+import net.minecraft.world.item.Item.BASE_ATTACK_SPEED_ID
+import net.minecraft.world.item.Rarity
+import net.minecraft.world.item.component.ItemAttributeModifiers
+import net.minecraft.world.item.component.Weapon
+import net.minecraft.world.item.equipment.Equippable
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.IronBarsBlock
+import net.minecraft.world.level.block.SlabBlock
+import net.minecraft.world.level.block.SoundType
+import net.minecraft.world.level.block.StairBlock
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.level.block.state.BlockBehaviour
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.state.properties.BooleanProperty
+import net.minecraft.world.level.block.state.properties.IntegerProperty
+import net.minecraft.world.level.material.MapColor
+import net.minecraft.world.level.material.PushReaction
+
+object PazBlocks {
+    @JvmField val HAS_WATER = BooleanProperty.create("has_water");
+    @JvmField val STORED_WATER = IntegerProperty.create("stored_water", 0, DEFAULT_CAPACITY);
+
+    @JvmField val PLANT_POT: Block = registerBlock(
+        "plant_pot",
+        BlockBehaviour.Properties.of()
+            .sound(SoundType.STONE)
+            .strength(0.2F)
+            .noOcclusion()
+            .pushReaction(PushReaction.NORMAL),
+        ::PlantPotBlock
+    )
+    @JvmField val ZEN_PLANT_POT: Block = registerBlock(
+        "zen_plant_pot",
+        BlockBehaviour.Properties.of()
+            .sound(SoundType.WOOD)
+            .strength(0.2F)
+            .noOcclusion()
+            .pushReaction(PushReaction.NORMAL),
+        ::ZenPlantPotBlock
+    )
+    @JvmField val WATERING_CAN_BLOCK: Block = registerBlock(
+        "watering_can",
+        BlockBehaviour.Properties.of()
+            .sound(SoundType.LANTERN)
+            .strength(0.18F)
+            .noOcclusion()
+            .pushReaction(PushReaction.DESTROY),
+        ::WateringCanBlock,
+        null
+    )
+    @JvmField val SUN_BATTERY_BLOCK: Block = registerBlock(
+        "sun_battery",
+        BlockBehaviour.Properties.of()
+            .sound(SoundType.COPPER_BULB)
+            .strength(0.25F)
+            .noOcclusion()
+            .pushReaction(PushReaction.BLOCK)
+            .lightLevel(SunBatteryBlock.LIGHT_EMISSION),
+        ::SunBatteryBlock,
+        null
+    )
+    val SUN_BATTERY_BLOCK_ENTITY: BlockEntityType<SunBatteryBlockEntity> = registerBlockEntity(
+        "sun_battery",
+        ::SunBatteryBlockEntity,
+        SUN_BATTERY_BLOCK
+    )
+    @JvmField val SUN_BATTERY_POI = PoiHelper.register(pazResource("sun_battery"), 8, 16, SUN_BATTERY_BLOCK)
+    @JvmField val TIME_MACHINE: Block = registerBlock(
+        "time_machine",
+        BlockBehaviour.Properties.of()
+            .sound(SoundType.COPPER_GRATE)
+            .strength(0.7F)
+            .noOcclusion()
+            .pushReaction(PushReaction.BLOCK)
+            .lightLevel(TimeMachineBlock.LIGHT_EMISSION),
+        ::TimeMachineBlock,
+        Item.Properties()
+            .rarity(Rarity.EPIC)
+    )
+    val TIME_MACHINE_ENTITY: BlockEntityType<TimeMachineBlockEntity> = registerBlockEntity(
+        "time_machine",
+        ::TimeMachineBlockEntity,
+        TIME_MACHINE
+    )
+
+    @JvmField val BLUE_GARDEN_GNOME: Block = registerBlock("blue_garden_gnome", gardenGnomeProperties(), { GardenGnomeBlock(it, GardenGnomeColor.BLUE) })
+    @JvmField val GREEN_GARDEN_GNOME: Block = registerBlock("green_garden_gnome", gardenGnomeProperties(MapColor.COLOR_GREEN), { GardenGnomeBlock(it, GardenGnomeColor.GREEN) })
+    @JvmField val RED_GARDEN_GNOME: Block = registerBlock("red_garden_gnome", gardenGnomeProperties(MapColor.COLOR_RED), { GardenGnomeBlock(it, GardenGnomeColor.RED) })
+    @JvmField val YELLOW_GARDEN_GNOME: Block = registerBlock("yellow_garden_gnome", gardenGnomeProperties(MapColor.COLOR_YELLOW), { GardenGnomeBlock(it, GardenGnomeColor.YELLOW) })
+    val GARDEN_GNOME_ENTITY: BlockEntityType<GardenGnomeBlockEntity> = registerBlockEntity(
+        "garden_gnome",
+        ::GardenGnomeBlockEntity,
+        BLUE_GARDEN_GNOME,
+        GREEN_GARDEN_GNOME,
+        RED_GARDEN_GNOME,
+        YELLOW_GARDEN_GNOME
+    )
+
+    @JvmField val LAWN_FLAMINGO: Block = registerBlock(
+        "lawn_flamingo", gardenGnomeProperties(MapColor.COLOR_PINK),
+        { LawnFlamingo(it) },
+        Item.Properties()
+            .component(DataComponents.WEAPON, Weapon(1))
+            .attributes(
+                ItemAttributeModifiers.builder().add(Attributes.ATTACK_DAMAGE, AttributeModifier(BASE_ATTACK_DAMAGE_ID, 2.0, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND).add(Attributes.ATTACK_SPEED, AttributeModifier(BASE_ATTACK_SPEED_ID, -2.5, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND).build()
+            )
+    )
+
+    @JvmField val MAIL_COLLECTION_BOX: Block = registerBlock("mail_collection_box", mailboxProperties(MapColor.COLOR_BLUE), ::MailCollectionBoxBlock)
+    val MAIL_COLLECTION_BOX_ENTITY: BlockEntityType<MailCollectionBoxEntity> = registerBlockEntity(
+        "mail_collection_box",
+        ::MailCollectionBoxEntity,
+        MAIL_COLLECTION_BOX
+    )
+
+
+    @JvmField val MAILBOX: Block = registerBlock("mailbox", mailboxProperties(), ::MailboxBlock)
+    @JvmField val LIGHT_GRAY_MAILBOX: Block = registerBlock("light_gray_mailbox", mailboxProperties(MapColor.COLOR_LIGHT_GRAY), {MailboxBlock(it, DyeColor.LIGHT_GRAY)})
+    @JvmField val GRAY_MAILBOX: Block = registerBlock("gray_mailbox", mailboxProperties(MapColor.COLOR_GRAY), {MailboxBlock(it, DyeColor.GRAY)})
+    @JvmField val BLACK_MAILBOX: Block = registerBlock("black_mailbox", mailboxProperties(MapColor.COLOR_BLACK), {MailboxBlock(it, DyeColor.BLACK)})
+    @JvmField val BROWN_MAILBOX: Block = registerBlock("brown_mailbox", mailboxProperties(MapColor.COLOR_BROWN), {MailboxBlock(it, DyeColor.BROWN)})
+    @JvmField val RED_MAILBOX: Block = registerBlock("red_mailbox", mailboxProperties(MapColor.COLOR_RED), {MailboxBlock(it, DyeColor.RED)})
+    @JvmField val ORANGE_MAILBOX: Block = registerBlock("orange_mailbox", mailboxProperties(MapColor.COLOR_ORANGE), {MailboxBlock(it, DyeColor.ORANGE)})
+    @JvmField val YELLOW_MAILBOX: Block = registerBlock("yellow_mailbox", mailboxProperties(MapColor.COLOR_YELLOW), {MailboxBlock(it, DyeColor.YELLOW)})
+    @JvmField val LIME_MAILBOX: Block = registerBlock("lime_mailbox", mailboxProperties(MapColor.COLOR_LIGHT_GREEN), {MailboxBlock(it, DyeColor.LIME)})
+    @JvmField val GREEN_MAILBOX: Block = registerBlock("green_mailbox", mailboxProperties(MapColor.COLOR_GREEN), {MailboxBlock(it, DyeColor.GREEN)})
+    @JvmField val CYAN_MAILBOX: Block = registerBlock("cyan_mailbox", mailboxProperties(MapColor.COLOR_CYAN), {MailboxBlock(it, DyeColor.CYAN)})
+    @JvmField val LIGHT_BLUE_MAILBOX: Block = registerBlock("light_blue_mailbox", mailboxProperties(MapColor.COLOR_LIGHT_BLUE), {MailboxBlock(it, DyeColor.LIGHT_BLUE)})
+    @JvmField val BLUE_MAILBOX: Block = registerBlock("blue_mailbox", mailboxProperties(MapColor.COLOR_BLUE), {MailboxBlock(it, DyeColor.BLUE)})
+    @JvmField val PURPLE_MAILBOX: Block = registerBlock("purple_mailbox", mailboxProperties(MapColor.COLOR_PURPLE), {MailboxBlock(it, DyeColor.PURPLE)})
+    @JvmField val MAGENTA_MAILBOX: Block = registerBlock("magenta_mailbox", mailboxProperties(MapColor.COLOR_MAGENTA), {MailboxBlock(it, DyeColor.MAGENTA)})
+    @JvmField val PINK_MAILBOX: Block = registerBlock("pink_mailbox", mailboxProperties(MapColor.COLOR_PINK), {MailboxBlock(it, DyeColor.PINK)})
+    val mailboxByColor = mapOf(
+        DyeColor.WHITE to      MAILBOX,
+        DyeColor.LIGHT_GRAY to LIGHT_GRAY_MAILBOX,
+        DyeColor.GRAY to       GRAY_MAILBOX,
+        DyeColor.BLACK to      BLACK_MAILBOX,
+        DyeColor.BROWN to      BROWN_MAILBOX,
+        DyeColor.RED to        RED_MAILBOX,
+        DyeColor.ORANGE to     ORANGE_MAILBOX,
+        DyeColor.YELLOW to     YELLOW_MAILBOX,
+        DyeColor.LIME to       LIME_MAILBOX,
+        DyeColor.GREEN to      GREEN_MAILBOX,
+        DyeColor.CYAN to       CYAN_MAILBOX,
+        DyeColor.LIGHT_BLUE to LIGHT_BLUE_MAILBOX,
+        DyeColor.BLUE to       BLUE_MAILBOX,
+        DyeColor.PURPLE to     PURPLE_MAILBOX,
+        DyeColor.MAGENTA to    MAGENTA_MAILBOX,
+        DyeColor.PINK to       PINK_MAILBOX,
+    )
+    val MAILBOX_ENTITY: BlockEntityType<MailboxBlockEntity> = registerBlockEntity(
+        "mailbox",
+        ::MailboxBlockEntity,
+        *mailboxByColor.values.toTypedArray()
+    )
+
+    @JvmField val CONE: Block = registerBlock(
+        "cone",
+        BlockBehaviour.Properties.of()
+            .sound(SoundType.CANDLE)
+            .instabreak()
+            .noOcclusion()
+            .pushReaction(PushReaction.DESTROY),
+        ::ConeBlock,
+        Item.Properties()
+            .component(PazComponents.BLOCKS_PROJECTILE_DAMAGE, BlocksProjectileDamage(breakChance = 0.12f))
+            .component(
+                DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.HEAD)
+                    .setEquipSound(SoundEvents.ARMOR_EQUIP_LEATHER)
+                    .build()
+            ).component(
+                DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.builder()
+                    .add(
+                        Attributes.ARMOR,
+                        AttributeModifier(pazResource("cone_armor"), 0.5, AttributeModifier.Operation.ADD_VALUE),
+                        EquipmentSlotGroup.HEAD
+                    ).add(
+                        Attributes.KNOCKBACK_RESISTANCE,
+                        AttributeModifier(pazResource("cone_knockback_resistance"), 0.1, AttributeModifier.Operation.ADD_VALUE),
+                        EquipmentSlotGroup.HEAD
+                    ).build()
+            )
+    )
+
+    @JvmField val BRAINZ_ALLOY_BLOCK: Block = registerBlock(
+        "brainz_alloy_block",
+        BlockBehaviour.Properties.of().sound(SoundType.COPPER).requiresCorrectToolForDrops()
+            .strength(3.0F, 6.0F),
+    )
+    @JvmField val BRAINZ_ALLOY_STAIRS: Block = registerBlock(
+        "brainz_alloy_stairs",
+        BlockBehaviour.Properties.of().sound(SoundType.COPPER).requiresCorrectToolForDrops()
+            .strength(3.0F, 6.0F),
+        { StairBlock(BRAINZ_ALLOY_BLOCK.defaultBlockState(), it) }
+    )
+    @JvmField val BRAINZ_ALLOY_SLAB: Block = registerBlock(
+        "brainz_alloy_slab",
+        BlockBehaviour.Properties.of().sound(SoundType.COPPER).requiresCorrectToolForDrops()
+            .strength(3.25F, 6.0F),
+        ::SlabBlock
+    )
+    @JvmField val SMOOTH_BRAINZ_ALLOY_BLOCK: Block = registerBlock(
+        "smooth_brainz_alloy_block",
+        BlockBehaviour.Properties.of().sound(SoundType.COPPER).requiresCorrectToolForDrops()
+            .strength(3.25F, 6.0F),
+    )
+    @JvmField val TREADED_BRAINZ_ALLOY_BLOCK: Block = registerBlock(
+        "treaded_brainz_alloy_block",
+        BlockBehaviour.Properties.of().sound(SoundType.COPPER).requiresCorrectToolForDrops()
+            .strength(3.25F, 6.0F),
+    )
+    @JvmField val REINFORCED_BRAINZ_ALLOY_BLOCK: Block = registerBlock(
+        "reinforced_brainz_alloy_block",
+        BlockBehaviour.Properties.of().sound(SoundType.COPPER).requiresCorrectToolForDrops()
+            .strength(10.0F, 1200.0F),
+    )
+    @JvmField val BRAINZ_ALLOY_FENCE: Block = registerBlock(
+        "brainz_alloy_fence",
+        BlockBehaviour.Properties.of().sound(SoundType.COPPER).requiresCorrectToolForDrops()
+            .strength(3.0f, 6.0f).noOcclusion(),
+        ::IronBarsBlock
+    )
+
+    @JvmField val BRAINZ_FLAG: Block = registerBlock(
+        "brainz_flag",
+        BlockBehaviour.Properties.of()
+            .sound(SoundType.WOOD)
+            .instabreak()
+            .noCollision()
+            .pushReaction(PushReaction.DESTROY),
+        ::FlagBlock,
+        Item.Properties()
+            .stacksTo(16)
+            .rarity(Rarity.RARE)
+            .equippableUnswappable(EquipmentSlot.OFFHAND)
+            .component(
+                DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.builder()
+                    .add(
+                        Attributes.SPAWN_REINFORCEMENTS_CHANCE,
+                        AttributeModifier(pazResource("zombie_leader_flag"), 0.5, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
+                        EquipmentSlotGroup.HAND
+                    ).add(
+                        Attributes.FOLLOW_RANGE,
+                        AttributeModifier(pazResource("zombie_leader_flag"), 0.5, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
+                        EquipmentSlotGroup.HAND
+                    ).build()
+            )
+    )
+    @JvmField val PLANTZ_FLAG: Block = registerBlock(
+        "plantz_flag",
+        BlockBehaviour.Properties.of()
+            .sound(SoundType.WOOD)
+            .instabreak()
+            .noCollision()
+            .pushReaction(PushReaction.DESTROY),
+        ::FlagBlock,
+        Item.Properties()
+            .stacksTo(16)
+            .rarity(Rarity.RARE)
+            .equippableUnswappable(EquipmentSlot.OFFHAND)
+            .component(
+                DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.builder()
+                    .add(
+                        Attributes.MOVEMENT_SPEED,
+                        AttributeModifier(pazResource("plantz_flag"), 0.2, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
+                        EquipmentSlotGroup.HAND
+                    ).add(
+                        Attributes.ATTACK_SPEED,
+                        AttributeModifier(pazResource("plantz_flag"), 0.2, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
+                        EquipmentSlotGroup.HAND
+                    ).build()
+            )
+    )
+    val FLAG_BLOCK_ENTITY: BlockEntityType<FlagBlockEntity> = registerBlockEntity(
+        "flag_block",
+        ::FlagBlockEntity,
+        PLANTZ_FLAG, BRAINZ_FLAG
+    )
+    @JvmField val PLANTZ_FLAG_POI = PoiHelper.register(pazResource("plantz_flag"), 8, 32, PLANTZ_FLAG)
+
+    @JvmField val GRAVESTONE: Block = registerBlock(
+        "gravestone",
+        BlockBehaviour.Properties.of()
+            .sound(SoundType.TUFF_BRICKS)
+            .strength(19.5F)
+            .pushReaction(PushReaction.BLOCK)
+            .requiresCorrectToolForDrops(),
+        ::GravestoneBlock,
+    )
+    val GRAVESTONE_BLOCK_ENTITY: BlockEntityType<GravestoneBlockEntity> = registerBlockEntity(
+        "gravestone",
+        ::GravestoneBlockEntity,
+        GRAVESTONE
+    )
+
+    private fun registerBlock(
+        name: String,
+        properties: BlockBehaviour.Properties = BlockBehaviour.Properties.of(),
+        blockFactory: (BlockBehaviour.Properties) -> Block = ::Block,
+        itemProperties: Item.Properties? = Item.Properties(),
+    ): Block {
+        val key = ResourceKey.create(Registries.BLOCK, pazResource(name))
+        val block = blockFactory(properties.setId(key))
+        Registry.register(BuiltInRegistries.BLOCK, key, block)
+
+        // Also register the block item
+        if (itemProperties!=null) {
+            val itemKey = ResourceKey.create(Registries.ITEM, pazResource(name))
+            val blockItem = BlockItem(block, itemProperties.setId(itemKey))
+            Registry.register(BuiltInRegistries.ITEM, itemKey, blockItem)
+        }
+
+        return block
+    }
+
+
+    private fun <T : BlockEntity> registerBlockEntity(
+        name: String,
+        factory: (BlockPos, BlockState) -> T,
+        vararg validBlocks: Block,
+    ): BlockEntityType<T> {
+        val key = ResourceKey.create(Registries.BLOCK_ENTITY_TYPE, pazResource(name))
+        val builder = FabricBlockEntityTypeBuilder.create(
+            factory,
+            *validBlocks
+        )
+        val blockEntity = builder.build()
+        Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, key, blockEntity)
+        return blockEntity
+    }
+
+    private fun gardenGnomeProperties(mapColor: MapColor = MapColor.COLOR_BLUE): BlockBehaviour.Properties {
+        return BlockBehaviour.Properties.of()
+            .mapColor(mapColor)
+            .sound(SoundType.DECORATED_POT)
+            .strength(1.8F)
+            .noOcclusion()
+            .pushReaction(PushReaction.DESTROY)
+    }
+
+    private fun mailboxProperties(mapColor: MapColor = MapColor.SNOW): BlockBehaviour.Properties {
+        return BlockBehaviour.Properties.of()
+            .mapColor(mapColor)
+            .sound(SoundType.LANTERN)
+            .strength(1.3F)
+            .noOcclusion()
+            .pushReaction(PushReaction.BLOCK)
+    }
+
+    fun initialize() {
+    }
+}

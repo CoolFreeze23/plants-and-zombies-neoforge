@@ -1,0 +1,79 @@
+package joshxviii.plantz.inventory
+
+import joshxviii.plantz.MailboxData
+import joshxviii.plantz.PazMenus
+import joshxviii.plantz.PazTags
+import joshxviii.plantz.block.entity.MailCollectionBoxEntity
+import joshxviii.plantz.block.entity.MailboxBlockEntity
+import net.minecraft.core.BlockPos
+import net.minecraft.network.chat.Component
+import net.minecraft.world.Container
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.entity.player.Inventory
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.inventory.Slot
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.block.state.BlockState
+import java.util.*
+import kotlin.run
+
+class MailboxMenu(
+    containerId: Int,
+    val inventory: Inventory,
+    val data: MailboxData,
+    private val mailbox: Container = SimpleContainer(MailboxBlockEntity.INVENTORY_SIZE),
+) : AbstractMailboxMenu(PazMenus.MAILBOX_MENU, inventory, containerId, mailbox) {
+
+    val mailSlot: Slot
+    val inputContainer = object : SimpleContainer(1) {
+        init { Objects.requireNonNull(this@MailboxMenu) }
+        override fun setChanged() {
+            super.setChanged()
+            this@MailboxMenu.slotsChanged(this)
+            this@MailboxMenu.slotUpdateListener.run()
+        }
+    }
+    init {
+        mailSlot = addSlot(object : Slot(inputContainer, 0, 20, 32) {
+            init { Objects.requireNonNull(this@MailboxMenu) }
+            override fun mayPlace(itemStack: ItemStack): Boolean = true
+        })
+        addStandardInventorySlots(inventory, 8, 98)
+    }
+
+    override fun stillValid(player: Player): Boolean {
+        return ContainerLevelAccess.NULL.evaluate( { level: Level, pos: BlockPos ->
+            if (!isValidBlock(level.getBlockState(pos))) false
+            else player.isWithinBlockInteractionRange(pos, 4.0)
+        }, true)
+    }
+    fun isValidBlock(state: BlockState): Boolean = state.`is`(PazTags.BlockTags.MAILBOX)
+
+    override fun slotsChanged(container: Container) {
+        val mailStack = this.mailSlot.item
+        if (!mailStack.isEmpty) {
+            this.broadcastChanges()
+        }
+    }
+
+    override fun quickMoveStack(player: Player, slotIndex: Int): ItemStack {
+        val clicked = ItemStack.EMPTY
+        val slot = slots[slotIndex]
+        if (slot.hasItem()) {
+            val stack = slot.item
+            if (slotIndex == 0) {
+                if (!this.moveItemStackTo(stack, 1, 37, false)) return ItemStack.EMPTY
+            } else {
+                if (!this.moveItemStackTo(stack, 0, 1, false)) return ItemStack.EMPTY
+            }
+        }
+        return clicked
+    }
+
+    override fun removed(player: Player) {
+        super.removed(player)
+        if(mailSlot.hasItem()) clearContainer(player, inputContainer)
+    }
+}

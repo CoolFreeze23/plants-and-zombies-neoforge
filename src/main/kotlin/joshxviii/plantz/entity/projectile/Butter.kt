@@ -1,0 +1,56 @@
+package joshxviii.plantz.entity.projectile
+
+import joshxviii.plantz.PazDamageTypes
+import joshxviii.plantz.PazEffects
+import joshxviii.plantz.PazEntities
+import joshxviii.plantz.PazServerParticles
+import net.minecraft.core.particles.BlockParticleOption
+import net.minecraft.core.particles.ParticleTypes
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.phys.HitResult
+import net.minecraft.world.phys.Vec2
+import net.minecraft.world.phys.Vec3
+
+class Butter(
+    level: Level,
+    owner: LivingEntity? = null,
+    spawnOffset: Vec2 = Vec2.ZERO,
+) : PazProjectile(
+    PazEntities.BUTTER, level, owner, spawnOffset,
+    PazDamageTypes.PLANT,
+    damage = 3.5f,
+    knockback = 0.2
+) {
+    override fun getDefaultGravity(): Double = 0.03
+
+    override fun afterHitEntityEffect(target: LivingEntity) {
+        target.addEffect(MobEffectInstance(PazEffects.BUTTERED, 100, 0))
+    }
+
+    override fun tick() {
+        super.tick()
+        if (tickCount % 3 == 0) spawnParticle(
+            PazServerParticles.BUTTER_DRIP,
+            amount = 1,
+            speed = 0.01,
+            spread = Vec3(0.0, 0.0, 0.0)
+        )
+    }
+
+    override fun onHit(hitResult: HitResult) {
+        super.onHit(hitResult)
+        knockbackNearby(damage = 1.0f)
+        spawnParticle(
+            BlockParticleOption(
+                ParticleTypes.BLOCK,
+                Blocks.HONEY_BLOCK.defaultBlockState()
+            ),
+            amount = 30,
+            speed = 0.13,
+            spread = Vec3(0.5, 0.2, 0.5)
+        )
+    }
+}

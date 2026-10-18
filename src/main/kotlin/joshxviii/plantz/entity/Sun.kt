@@ -1,0 +1,363 @@
+package joshxviii.plantz.entity
+
+import joshxviii.plantz.*
+import joshxviii.plantz.PazBlocks.SUN_BATTERY_POI
+import joshxviii.plantz.block.entity.SunBatteryBlockEntity
+import joshxviii.plantz.entity.plant.Plant
+import net.minecraft.core.BlockPos
+import net.minecraft.network.syncher.EntityDataAccessor
+import net.minecraft.network.syncher.EntityDataSerializers
+import net.minecraft.network.syncher.SynchedEntityData
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.sounds.SoundSource
+import net.minecraft.util.ExtraCodecs
+import net.minecraft.world.damagesource.DamageSource
+import net.minecraft.world.entity.*
+import net.minecraft.world.entity.ai.village.poi.PoiManager.Occupancy
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.entity.EntityTypeTest
+import net.minecraft.world.level.storage.ValueInput
+import net.minecraft.world.level.storage.ValueOutput
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.Shapes
+import java.util.function.Consumer
+import java.util.function.Predicate
+import kotlin.math.min
+import kotlin.math.sqrt
+
+class Sun(type: EntityType<out Sun>, level: Level) : Entity(type, level) {
+    private var age = 0
+    private var health = 5
+    private var count = 1
+    private var followingEntity: LivingEntity? = null
+    private var batteryPos: Vec3? = null
+    private var batteryState: BlockState? = null
+    private val interpolation = InterpolationHandler(this)
+
+    companion object {
+        val DATA_VALUE: EntityDataAccessor<Int> =
+            SynchedEntityData.defineId<Int>(Sun::class.java, EntityDataSerializers.INT)
+        private const val ENTITY_SCAN_PERIOD = 20
+        private const val MAX_FOLLOW_DIST = 8.0
+        private const val SUN_GROUPS_PER_AREA = 40
+        private const val SUN_MERGE_DISTANCE = 0.5
+        private const val DEFAULT_LIFETIME = 750
+        private const val DEFAULT_HEALTH: Short = 5
+        private const val DEFAULT_AGE: Short = 0
+        private const val DEFAULT_VALUE: Short = 0
+        private const val DEFAULT_COUNT = 1
+        fun award(level: ServerLevel, pos: Vec3, amount: Int) {
+            awardWithDirection(level, pos, Vec3.Y_AXIS, amount)
+        }
+
+        fun awardWithDirection(level: ServerLevel, pos: Vec3, roughDirection: Vec3, amount: Int) {
+            var amount = amount
+            while (amount > 0) {
+                val newCount = getExperienceValue(amount)
+                amount -= newCount
+                if (!tryMergeToExisting(level, pos, newCount)) level.addFreshEntity(Sun(level, pos, roughDirection, newCount))
+            }
+        }
+
+        private fun tryMergeToExisting(level: ServerLevel, pos: Vec3, value: Int): Boolean {
+            val box = AABB.ofSize(pos, 1.0, 1.0, 1.0)
+            val id = level.getRandom().nextInt(SUN_GROUPS_PER_AREA)
+            val orbs: MutableList<Sun> = level.getEntities(
+                EntityTypeTest.forClass(Sun::class.java),
+                box,
+                Predicate { orbx: Sun -> canMerge(orbx, id, value) })
+            if (!orbs.isEmpty()) {
+                val orb = orbs[0]
+                orb.count++
+                orb.age = 0
+                return true
+            } else return false
+        }
+
+        private fun canMerge(orb: Sun, id: Int, value: Int): Boolean {
+            return !orb.isRemoved && (orb.id - id) % SUN_GROUPS_PER_AREA == 0 && orb.value == value
+        }
+
+        fun getExperienceValue(maxValue: Int): Int {
+            return when {
+                maxValue >= 2477 -> 2477
+                maxValue >= 1237 -> 1237
+                maxValue >= 617 -> 617
+                maxValue >= 307 -> 307
+                maxValue >= 149 -> 149
+                maxValue >= 73 -> 73
+                maxValue >= 12 -> 12
+                maxValue >= 6 -> 6
+                maxValue >= 3 -> 3
+                maxValue >= 2 -> 2
+                else -> 1
+            }
+        }
+    }
+
+    var value: Int
+        get() = entityData.get(DATA_VALUE)
+        private set(value) {
+            entityData.set(DATA_VALUE, value)
+            if (value <= 0) discard()
+        }
+
+    constructor(level: Level, pos: Vec3, roughly: Vec3, value: Int) : this(PazEntities.SUN, level) {
+        setPos(pos)
+        if (!level.isClientSide) {
+            yRot = random.nextFloat() * 360.0f
+            var randomMovement = Vec3(
+                (random.nextDouble() * 0.2 - 0.1) * 2.0,
+                random.nextDouble() * 0.2 * 2.0,
+                (random.nextDouble() * 0.2 - 0.1) * 2.0
+            )
+            if (roughly.lengthSqr() > 0.0 && roughly.dot(randomMovement) < 0.0) {
+                randomMovement = randomMovement.scale(-1.0)
+            }
+
+            val size = boundingBox.size
+            setPos(pos.add(roughly.normalize().scale(size * SUN_MERGE_DISTANCE)))
+            deltaMovement = randomMovement
+            if (!level.noCollision(boundingBox)) unstuckIfPossible(size)
+        }
+        this.value = value
+    }
+
+    fun unstuckIfPossible(maxDistance: Double) {
+        val center = position().add(0.0, bbHeight / 2.0, 0.0)
+        val allowedCenters = Shapes.create(AABB.ofSize(center, maxDistance, maxDistance, maxDistance))
+        level()
+            .findFreePosition(
+                this,
+                allowedCenters,
+                center,
+                bbWidth.toDouble(),
+                bbHeight.toDouble(),
+                bbWidth.toDouble()
+            )
+            .ifPresent(Consumer { pos: Vec3? -> setPos(pos!!.add(0.0, -bbHeight / 2.0, 0.0)) })
+    }
+
+    override fun getMovementEmission(): MovementEmission = MovementEmission.NONE
+
+    override fun defineSynchedData(entityData: SynchedEntityData.Builder) { entityData.define(DATA_VALUE, 0) }
+
+    override fun getDefaultGravity(): Double = 0.015
+
+    override fun tick() {
+        interpolation.interpolate()
+        if (firstTick && level().isClientSide) firstTick = false
+        else {
+            super.tick()
+            val colliding = !level().noCollision(boundingBox)
+            if (!colliding) applyGravity()
+
+
+            if (tickCount % ENTITY_SCAN_PERIOD == 1) scanForMerges()
+            moveTowardsClosestTarget()
+            if (tickCount % 20 == 0) {
+                batteryPos = getNearestBattery(MAX_FOLLOW_DIST)
+                followingEntity = getNearestEntity(MAX_FOLLOW_DIST)
+            }
+
+            if (batteryPos != null) needsSync = true
+            if (followingEntity == null && !level().isClientSide && colliding) {
+                val nextColliding = !level().noCollision(boundingBox.move(deltaMovement))
+                if (nextColliding) {
+                    moveTowardsClosestSpace(x, (boundingBox.minY + boundingBox.maxY) / 2.0, z)
+                    needsSync = true
+                }
+            }
+
+            val fallSpeed = deltaMovement.y
+            move(MoverType.SELF, deltaMovement)
+            //applyEffectsFromBlocks()
+            var friction = 0.97f
+            if (onGround()) {
+                friction = level().getBlockState(blockPosBelowThatAffectsMyMovement).block.getFriction() * 0.97f
+            }
+
+            deltaMovement = deltaMovement.scale(friction.toDouble())
+            if (verticalCollisionBelow && fallSpeed < -gravity) {
+                deltaMovement = Vec3(deltaMovement.x, -fallSpeed * 0.8, deltaMovement.z)
+            }
+
+            if (age++ >= getLifeTime()) discard()
+        }
+    }
+
+    fun getLifeTime(): Int = DEFAULT_LIFETIME
+
+    private fun moveTowardsClosestTarget() {
+        val targetPos: Vec3 = when {
+            batteryPos != null && shouldPrioritizeBattery() -> batteryPos
+            followingEntity != null -> followingEntity?.position()
+            else -> null
+        } ?: return
+
+        val delta = targetPos.subtract(position())
+        val distanceSq = delta.lengthSqr()
+        val distance = sqrt(distanceSq)
+
+        if (distance > MAX_FOLLOW_DIST) return
+        val power = (1.0 - distance / MAX_FOLLOW_DIST).coerceAtLeast(0.0)
+
+        val movement = delta.normalize()
+            .multiply(1.0, 1.5, 1.0)
+            .scale(power * power * 0.1)
+
+        deltaMovement = deltaMovement.add(movement)
+        when {
+            batteryPos!= null && distanceSq < 0.25 -> { touchedBattery(batteryPos!!) }
+            followingEntity != null && boundingBox.inflate(0.4).intersects(followingEntity!!.boundingBox) -> {
+                touchedEntity(followingEntity!!)
+            }
+        }
+    }
+
+    private fun shouldPrioritizeBattery(): Boolean {
+        val entityDis = followingEntity?.distanceToSqr(position()) ?: Double.POSITIVE_INFINITY
+        val batteryDis = batteryPos?.distanceToSqr(position()) ?: Double.POSITIVE_INFINITY
+        return batteryDis < entityDis
+    }
+
+    private fun touchedBattery(pos: Vec3) {
+        val blockPos = BlockPos.containing(pos)
+        (level().getBlockEntity(blockPos) as? SunBatteryBlockEntity)?.let {
+            if (it.isFull()) return
+            it.addSun(1)
+            value--
+        }
+        this.level().blockEvent(blockPos, PazBlocks.SUN_BATTERY_BLOCK, 1, 2)
+    }
+
+    private fun touchedEntity(entity: LivingEntity?) {
+        if (entity !is Player && entity !is Plant || entity.isDeadOrDying) return
+
+        val serverLevel = level() as? ServerLevel
+        if (serverLevel!=null) {
+            var successCount = 0
+            for (i in 0 until this.value) {
+                val success = when (entity) {
+                    is Player -> tryToGiveSun(entity)
+                    is Plant -> entity.sunHeal()
+                    else -> false
+                }
+                if(success) {
+                    successCount++
+                    value--
+                }
+            }
+            if (successCount>0) playPickupSound()
+        }
+    }
+
+    fun tryToGiveSun(entity: Player): Boolean {
+        val itemStack = PazItems.SUN.defaultInstance
+        if (entity.tryAddSunToStorage()) return true
+        return (!entity.hasInfiniteMaterials() && entity.inventory.add(itemStack)) || entity.isCreative
+    }
+
+    fun getNearestEntity(range: Double = 3.5) : LivingEntity? {
+        var best = -1.0
+        var result: LivingEntity? = null
+        val candidates = level().getEntitiesOfClass(
+            LivingEntity::class.java,
+            boundingBox.inflate(range),
+            Predicate {
+                (it is Player && it.hasSpaceForSun(PazItems.SUN.defaultInstance)) ||
+                (it is Plant && it.health != it.maxHealth)
+            }
+        )
+        for (candidate in candidates) {
+            val dist: Double = candidate.distanceToSqr(x, y, z)
+            if ((range < 0.0 || dist < range * range) && (best == -1.0 || dist < best)) {
+                best = dist
+                result = candidate
+            }
+        }
+        return result
+    }
+
+    fun getNearestBattery(range: Double = 4.5): Vec3? {
+        val poiManager = (level() as? ServerLevel)?.poiManager ?: return null
+        val batteryPos: BlockPos = poiManager.findClosest(
+            { it.value() == SUN_BATTERY_POI },
+            blockPosition(),
+            range.toInt(),
+            Occupancy.ANY
+        ).orElse(null)?: return null
+        (level().getBlockEntity(batteryPos) as? SunBatteryBlockEntity)?.let {
+            if (it.isFull()) return null
+        }
+        return batteryPos.let { Vec3(it.x+0.5, it.y+0.5, it.z+0.5) }
+    }
+
+    private fun playPickupSound() {
+        playSound(SoundEvents.ITEM_PICKUP, 0.2F, ((random.nextFloat() - random.nextFloat()) * 0.7F + 1.0F) * 2.0F)
+    }
+
+    override fun getBlockPosBelowThatAffectsMyMovement(): BlockPos = getOnPos(0.999999f)
+
+    private fun scanForMerges() {
+        if (level() is ServerLevel) {
+            for (orb in level().getEntities(
+                EntityTypeTest.forClass(Sun::class.java),
+                boundingBox.inflate(SUN_MERGE_DISTANCE),
+                Predicate { orb: Sun -> canMerge(orb) })) {
+                merge(orb)
+            }
+        }
+    }
+
+    private fun canMerge(orb: Sun): Boolean = orb !== this && canMerge(orb, id, value)
+
+    private fun merge(orb: Sun) {
+        count += orb.count
+        age = min(age, orb.age)
+        orb.discard()
+    }
+
+    private fun setUnderwaterMovement() {
+        val movement = deltaMovement
+        setDeltaMovement(movement.x * 0.99f, min(movement.y + 5.0E-4f, 0.06), movement.z * 0.99f)
+    }
+
+    override fun doWaterSplashEffect() {}
+
+    override fun hurtClient(source: DamageSource): Boolean = !isInvulnerableToBase(source)
+
+    override fun hurtServer(level: ServerLevel, source: DamageSource, damage: Float): Boolean {
+        if (isInvulnerableToBase(source)) return false
+        else {
+            markHurt()
+            health = (health - damage).toInt()
+            if (health <= 0) discard()
+            return true
+        }
+    }
+
+    override fun addAdditionalSaveData(output: ValueOutput) {
+        output.putShort("Health", health.toShort())
+        output.putShort("Age", age.toShort())
+        output.putShort("Value", value.toShort())
+        output.putInt("Count", count)
+    }
+
+    override fun readAdditionalSaveData(input: ValueInput) {
+        health = input.getShortOr("Health", DEFAULT_HEALTH)
+        age = input.getShortOr("Age", DEFAULT_AGE)
+        value = input.getShortOr("Value", DEFAULT_VALUE)
+        count = input.read("Count", ExtraCodecs.POSITIVE_INT).orElse(DEFAULT_COUNT) as Int
+    }
+
+    override fun isAttackable(): Boolean = false
+
+    override fun getSoundSource(): SoundSource = SoundSource.AMBIENT
+
+    override fun getInterpolation(): InterpolationHandler = interpolation
+}

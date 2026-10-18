@@ -1,0 +1,132 @@
+package joshxviii.plantz.entity.zombie
+
+import joshxviii.plantz.PazDamageTypes
+import joshxviii.plantz.PazSounds
+import joshxviii.plantz.PazTags
+import joshxviii.plantz.ai.goal.ProjectileAttackGoal
+import joshxviii.plantz.canReachTarget
+import joshxviii.plantz.entity.projectile.PowderSnowChunk
+import net.minecraft.core.BlockPos
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.util.RandomSource
+import net.minecraft.world.Difficulty
+import net.minecraft.world.DifficultyInstance
+import net.minecraft.world.damagesource.DamageSource
+import net.minecraft.world.entity.*
+import net.minecraft.world.entity.ai.goal.FloatGoal
+import net.minecraft.world.entity.monster.zombie.Zombie
+import net.minecraft.world.item.Items
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.ServerLevelAccessor
+
+class ZombieYeti(type: EntityType<out ZombieYeti>, level: Level) : PazZombie(type, level) {
+
+    companion object {
+        fun checkZombieYetiSpawnRules(
+            type: EntityType<out Mob>,
+            level: ServerLevelAccessor,
+            spawnReason: EntitySpawnReason,
+            pos: BlockPos,
+            random: RandomSource
+        ): Boolean {
+            val below = pos.below()
+            return level.difficulty != Difficulty.PEACEFUL
+                    && (EntitySpawnReason.ignoresLightRequirements(spawnReason) || isDarkEnoughToSpawn(level, pos, random))
+                    && checkMobSpawnRules(type, level, spawnReason, pos, random) || level.getBlockState(below).`is`(PazTags.BlockTags.YETI_SPAWNABLE_ON)
+                    && pos.y > level.seaLevel
+        }
+    }
+
+    init {
+        xpReward = 25
+    }
+
+    override fun registerGoals() {
+        super.registerGoals()
+        goalSelector.addGoal(1, FloatGoal(this))
+        goalSelector.addGoal(2, ProjectileAttackGoal(
+            usingEntity = this,
+            projectileFactory = {
+                PowderSnowChunk(level(), this)
+//                val block = FallingBlockEntity.fall(this.level(), this.blockPosition().above(), Blocks.POWDER_SNOW.defaultBlockState())
+//                block.setPos(this.eyePosition)
+//                return@ProjectileAttackGoal block
+            },
+            velocity = 1.0,
+            inaccuracy = 1.2f,
+            actionSuccessEffect = {
+                this.swing(this.usedItemHand)
+            },
+            actionPredicate = { it.random.nextDouble() < 0.25
+                                && it.target!=null
+                                && it.distanceTo(it.target!!) > 6.5f
+                                && !this.navigation.path.canReachTarget(target!!.blockPosition())
+                              },
+            actionDelay = 35))
+    }
+
+    override fun getAmbientSound(): SoundEvent {
+        return PazSounds.ZOMBIE_YETI_AMBIENT
+    }
+    override fun getHurtSound(source: DamageSource): SoundEvent {
+        return PazSounds.ZOMBIE_YETI_HURT
+    }
+    override fun getDeathSound(): SoundEvent {
+        return PazSounds.ZOMBIE_YETI_DEATH
+    }
+    override fun getStepSound(): SoundEvent {
+        return SoundEvents.ZOMBIE_STEP
+    }
+
+    override fun doPush(entity: Entity) {
+        super.doPush(entity)
+        if (isPathFinding && this.target!=null) {
+            if (entity is LivingEntity && entity !is Zombie) {
+                val level = level() as? ServerLevel?: return
+                entity.hurtServer(level, this.damageSources().source(PazDamageTypes.ZOMBIE_TRAMPLE, this), 2.5f)
+                entity.knockback(
+                    0.2, position().x - entity.position().x, position().z - entity.position().z
+                )
+            }
+        }
+    }
+
+    override fun canEquipDuckyInWater(): Boolean = false
+    override fun canPickUpLoot(): Boolean = false
+    override fun randomizeReinforcementsChance() {}
+
+    override fun doHurtTarget(level: ServerLevel, target: Entity): Boolean {
+        val result = super.doHurtTarget(level, target)
+        return result
+    }
+
+    override fun finalizeSpawn(
+        level: ServerLevelAccessor,
+        difficulty: DifficultyInstance,
+        spawnReason: EntitySpawnReason,
+        groupData: SpawnGroupData?
+    ): SpawnGroupData? {
+        val data = super.finalizeSpawn(level, difficulty, spawnReason, groupData)
+        val random = level.random
+        if (spawnReason != EntitySpawnReason.CONVERSION) {
+
+            if (random.nextFloat() < 0.06 && getItemBySlot(EquipmentSlot.HEAD).isEmpty) {
+                setItemSlot(EquipmentSlot.HEAD, Items.BUCKET.defaultInstance)
+            }
+
+            if (random.nextFloat() < 0.001) {
+                val polarBear = EntityType.POLAR_BEAR.create(level(), EntitySpawnReason.JOCKEY)
+                if (polarBear != null) {
+                    polarBear.snapTo(x, y, z, yRot, 0.0f)
+                    polarBear.finalizeSpawn(level, difficulty, EntitySpawnReason.JOCKEY, null)
+                    startRiding(polarBear, false, false)
+                    level.addFreshEntity(polarBear)
+                }
+            }
+        }
+
+        return data
+    }
+}

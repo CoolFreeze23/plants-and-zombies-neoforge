@@ -1,0 +1,161 @@
+package joshxviii.plantz.entity.zombie
+
+import PazOwnableZombie
+import joshxviii.plantz.entity.plant.Plant
+import joshxviii.plantz.hasSameRootOwner
+import joshxviii.plantz.item.BlueprintItem
+import net.minecraft.network.syncher.EntityDataAccessor
+import net.minecraft.network.syncher.EntityDataSerializers
+import net.minecraft.network.syncher.SynchedEntityData
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.util.Mth
+import net.minecraft.world.DifficultyInstance
+import net.minecraft.world.damagesource.DamageSource
+import net.minecraft.world.entity.*
+import net.minecraft.world.entity.ai.control.BodyRotationControl
+import net.minecraft.world.entity.ai.control.LookControl
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal
+import net.minecraft.world.entity.monster.Creeper
+import net.minecraft.world.entity.monster.Enemy
+import net.minecraft.world.entity.monster.zombie.Zombie
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.ServerLevelAccessor
+import net.minecraft.world.level.entity.UniquelyIdentifyable
+import net.minecraft.world.level.storage.ValueInput
+import net.minecraft.world.level.storage.ValueOutput
+import net.minecraft.world.phys.Vec3
+import java.util.*
+
+abstract class ZombieRobot(type: EntityType<out ZombieRobot>, level: Level) : PazOwnableZombie(type, level) {
+
+    companion object {
+        val DATA_OWNERUUID_ID: EntityDataAccessor<Optional<EntityReference<LivingEntity>>> = SynchedEntityData.defineId(ZombieRobot::class.java, EntityDataSerializers.OPTIONAL_LIVING_ENTITY_REFERENCE)
+        val ACTION_TIME_ID: EntityDataAccessor<Int> = SynchedEntityData.defineId<Int>(ZombieRobot::class.java, EntityDataSerializers.INT)
+    }
+
+    val initAnimation : AnimationState = AnimationState()
+    val idleAnimation : AnimationState = AnimationState()
+    val actionAnimation : AnimationState = AnimationState()
+
+    var actionTime: Int
+        get() = this.entityData.get(ACTION_TIME_ID)
+        set(value) = this.entityData.set(ACTION_TIME_ID, value)
+
+    init {
+        xpReward = 2
+        noLookControl()
+    }
+
+    override fun setPos(x: Double, y: Double, z: Double) {
+        if (!clampToGrid() || this.isPassenger || !onGround()) super.setPos(x, y, z)
+        else super.setPos(Mth.floor(x) + 0.5, y, Mth.floor(z) + 0.5)
+    }
+
+    open fun clampToGrid() = true
+
+    open fun noLookControl() {
+        this.lookControl = object : LookControl(this) {override fun clampHeadRotationToBody() {}}
+    }
+
+    override fun createBodyControl(): BodyRotationControl = object : BodyRotationControl(this) { override fun clientTick() {} }
+
+    override fun getDeltaMovement(): Vec3 = if (clampToGrid()) Vec3(0.0, super.deltaMovement.y, 0.0) else super.getDeltaMovement()
+    override fun setDeltaMovement(deltaMovement: Vec3) {
+        if (!clampToGrid() || !onGround() || isInWater) return super.setDeltaMovement(deltaMovement)
+    }
+
+    fun setOwner(owner: LivingEntity?) {
+        this.entityData.set(DATA_OWNERUUID_ID, Optional.ofNullable(owner).map { EntityReference.of(it) })
+    }
+
+    fun setOwnerReference(owner: EntityReference<LivingEntity>) {
+        this.entityData.set(DATA_OWNERUUID_ID, Optional.ofNullable(owner))
+    }
+
+    override fun defineSynchedData(entityData: SynchedEntityData.Builder) {
+        super.defineSynchedData(entityData)
+        entityData.define(DATA_OWNERUUID_ID, Optional.empty())
+        entityData.define(ACTION_TIME_ID, 0)
+    }
+
+    override fun addAdditionalSaveData(output: ValueOutput) {
+        super.addAdditionalSaveData(output)
+        EntityReference.store(ownerReference, output, "Owner")
+        output.putInt("actionTime", actionTime)
+    }
+
+    override fun readAdditionalSaveData(input: ValueInput) {
+        super.readAdditionalSaveData(input)
+        val owner = EntityReference.readWithOldOwnerConversion<LivingEntity>(input, "Owner", this.level())
+        if (owner != null) {
+            try { setOwnerReference(owner) } catch (ignored: Throwable) { }
+        } else this.entityData.set(DATA_OWNERUUID_ID, Optional.empty())
+        input.getIntOr("actionTime", 0)
+    }
+
+    override fun getOwnerReference(): EntityReference<LivingEntity>? {
+        return this.entityData.get(DATA_OWNERUUID_ID).orElse(null);
+    }
+
+    override fun doPush(entity: Entity) {
+        if (!clampToGrid()) super.doPush(entity)
+    }
+
+    override fun tick() {
+        super.tick()
+        if (tickCount < 20) initAnimation.startIfStopped(tickCount)
+        idleAnimation.startIfStopped(tickCount)
+    }
+
+    override fun getAmbientSound(): SoundEvent = SoundEvents.EMPTY
+    override fun getHurtSound(source: DamageSource): SoundEvent = SoundEvents.EMPTY
+    override fun getDeathSound(): SoundEvent = SoundEvents.EMPTY
+    override fun getStepSound(): SoundEvent = SoundEvents.EMPTY
+
+    override fun getPickResult(): ItemStack = BlueprintItem.stackFor(this.type)
+
+    override fun canEquipBalloons(): Boolean = false
+    override fun canEquipDuckyInWater(): Boolean = false
+    override fun canPickUpLoot(): Boolean = false
+    override fun canBreakDoors(): Boolean = false
+    override fun canHoldItem(itemStack: ItemStack): Boolean = false
+
+    override fun registerGoals() {
+        this.goalSelector.addGoal(3, RandomLookAroundGoal(this))
+        this.goalSelector.addGoal(3, LookAtPlayerGoal(this, Player::class.java, 8.0f))
+        // attack owner's target goal
+        this.targetSelector.addGoal(2, NearestAttackableTargetGoal(this, LivingEntity::class.java, true
+        ) { entity, level ->
+            return@NearestAttackableTargetGoal entity is Player || entity is Plant
+            if (this.owner is Player) (
+                entity !is Plant &&
+                entity !is Creeper &&
+                !entity.hasSameRootOwner(this.owner) &&
+                (entity is Zombie || (entity is Enemy))
+            )
+            else (
+                entity is Player || entity is Plant
+            )
+        })
+    }
+
+    override fun ignoreZombieDamage(): Boolean {
+        return this.owner !is Player
+    }
+
+    override fun finalizeSpawn(
+        level: ServerLevelAccessor,
+        difficulty: DifficultyInstance,
+        spawnReason: EntitySpawnReason,
+        groupData: SpawnGroupData?
+    ): SpawnGroupData? {
+        val data = super.finalizeSpawn(level, difficulty, spawnReason, groupData)
+        return data
+    }
+
+}

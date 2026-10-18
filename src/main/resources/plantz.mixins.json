@@ -1,0 +1,21 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "joshxviii.plantz.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "mixins": [
+    "LivingEntityAccessor",
+    "LivingEntityMixin",
+    "MobAccessor",
+    "PlayerListMixin",
+    "ProjectileMixin",
+    "ServerLevelMixin",
+    "ServerPlayerMixin",
+    "SpawnPlacementsInvoker",
+    "VillagerHostilesSensorMixin",
+    "ZombieMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
