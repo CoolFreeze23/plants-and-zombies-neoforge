@@ -5,7 +5,15 @@ import net.minecraft.ChatFormatting
 import net.minecraft.core.particles.BlockParticleOption
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.network.chat.Component
+import net.minecraft.core.Holder
 import net.minecraft.server.level.ServerLevel
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResultHolder
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.Equipable
+import net.minecraft.world.item.Items
+import net.minecraft.world.level.Level
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.entity.Entity
@@ -19,8 +27,24 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import kotlin.math.sqrt
 
-class FootballHelmetItem(properties: Properties) : Item(properties) {
+/**
+ * 26.1: `humanoidArmor(CHAINMAIL, HELMET)` (durability, enchantability, repair) + EQUIPPABLE(HEAD, iron equip sound).
+ * Not an ArmorItem on 1.21.1 so the head layer keeps drawing the item model (upstream has no equipment asset for it).
+ */
+class FootballHelmetItem(properties: Properties) : Item(properties), Equipable {
+    override fun getEquipmentSlot(): EquipmentSlot = EquipmentSlot.HEAD
+    override fun getEquipSound(): Holder<SoundEvent> = SoundEvents.ARMOR_EQUIP_IRON
+
+    override fun use(level: Level, player: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> =
+        swapWithEquipmentSlot(this, level, player, hand)
+
+    override fun getEnchantmentValue(): Int = 12 // chainmail enchantability
+    override fun isValidRepairItem(stack: ItemStack, repairCandidate: ItemStack): Boolean = repairCandidate.`is`(Items.IRON_INGOT)
+
     companion object {
+        /** ArmorType.HELMET durability (11) x chainmail multiplier (15) */
+        const val DURABILITY = 11 * 15
+
         fun addToTooltip(consumer: MutableList<Component>, sprintKey: Component) {
             consumer.add(1, Component.translatable("item.plantz.football_helmet.description", sprintKey)
                 .withStyle(ChatFormatting.DARK_GRAY).withStyle(ChatFormatting.ITALIC))
@@ -40,9 +64,11 @@ class FootballHelmetItem(properties: Properties) : Item(properties) {
         entity.getAttribute(Attributes.STEP_HEIGHT)?.removeModifier(CHARGE_BOOST_ID)
     }
 
-    override fun inventoryTick(itemStack: ItemStack, level: ServerLevel, owner: Entity, slot: EquipmentSlot?) {
-        super.inventoryTick(itemStack, level, owner, slot)
-        if (level.isClientSide || owner !is LivingEntity) return
+    override fun inventoryTick(itemStack: ItemStack, level: Level, owner: Entity, slotId: Int, isSelected: Boolean) {
+        super.inventoryTick(itemStack, level, owner, slotId, isSelected)
+        if (level.isClientSide || level !is ServerLevel || owner !is LivingEntity) return
+        // 26.1 passed the equipment slot; on 1.21.1 only the worn helmet (head slot) gets this far
+        val slot: EquipmentSlot? = if (owner.getItemBySlot(EquipmentSlot.HEAD) === itemStack) EquipmentSlot.HEAD else null
         if (!isWearingFootballHelmet(owner)) {
             removeModifiers(owner)
             return

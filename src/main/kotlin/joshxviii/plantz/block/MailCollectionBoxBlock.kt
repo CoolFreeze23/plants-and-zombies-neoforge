@@ -7,7 +7,8 @@ import joshxviii.plantz.block.entity.MailCollectionBoxEntity
 import joshxviii.plantz.block.entity.MailboxManager
 import joshxviii.plantz.inventory.MailCollectionBoxMenu
 import joshxviii.plantz.networking.MailboxListResponsePayload
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
+import net.neoforged.neoforge.network.PacketDistributor
+import net.minecraft.world.Containers
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.server.level.ServerPlayer
@@ -22,13 +23,13 @@ import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.RenderShape
 import net.minecraft.world.level.block.state.StateDefinition
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.level.block.state.properties.BooleanProperty
 import net.minecraft.world.level.block.state.properties.EnumProperty
 import net.minecraft.world.level.material.FluidState
 import net.minecraft.world.level.material.Fluids
-import net.minecraft.world.level.redstone.Orientation
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.phys.shapes.VoxelShape
@@ -36,6 +37,9 @@ import net.minecraft.world.phys.shapes.VoxelShape
 class MailCollectionBoxBlock(
     properties: Properties,
 ) : BaseEntityBlock(properties) {
+    // 1.21.1 BaseEntityBlock defaults to INVISIBLE; 26.1 renders the block model
+    override fun getRenderShape(state: BlockState): RenderShape = RenderShape.MODEL
+
     companion object {
         val CODEC: MapCodec<MailCollectionBoxBlock> = RecordCodecBuilder.mapCodec { it.group(propertiesCodec()).apply(it) { properties -> MailCollectionBoxBlock(properties) } }
 
@@ -75,10 +79,16 @@ class MailCollectionBoxBlock(
                 val mailboxes = MailboxManager.getMailboxesInLevel(level).sortedBy { it.blockPos.distSqr(pos) }
                 player.openMenu(currentMailbox)
                 (player.containerMenu as? MailCollectionBoxMenu)?.availableMailboxes = mailboxes
-                ServerPlayNetworking.send(player as ServerPlayer, MailboxListResponsePayload(level.dimension(), mailboxes))
+                PacketDistributor.sendToPlayer(player as ServerPlayer, MailboxListResponsePayload(level.dimension(), mailboxes))
             }
         }
         return InteractionResult.SUCCESS
+    }
+
+    // 26.1 BlockEntity.preRemoveSideEffects dropped container contents; 1.21.1 does it from the block
+    override fun onRemove(state: BlockState, level: Level, pos: BlockPos, newState: BlockState, movedByPiston: Boolean) {
+        Containers.dropContentsOnDestroy(state, newState, level, pos)
+        super.onRemove(state, level, pos, newState, movedByPiston)
     }
 
     override fun destroy(level: LevelAccessor, pos: BlockPos, state: BlockState) {
@@ -111,15 +121,14 @@ class MailCollectionBoxBlock(
 
     override fun updateShape(
         state: BlockState,
-        level: LevelReader,
-        ticks: ScheduledTickAccess,
-        pos: BlockPos,
         directionToNeighbour: Direction,
-        neighbourPos: BlockPos,
         neighbourState: BlockState,
-        random: RandomSource
+        level: LevelAccessor,
+        pos: BlockPos,
+        neighbourPos: BlockPos
     ): BlockState {
-        return super.updateShape(state, level, ticks, pos, directionToNeighbour, neighbourPos, neighbourState, random)
+        val ticks = level
+        return super.updateShape(state, directionToNeighbour, neighbourState, level, pos, neighbourPos)
     }
 
     override fun neighborChanged(
@@ -127,7 +136,7 @@ class MailCollectionBoxBlock(
         level: Level,
         pos: BlockPos,
         block: Block,
-        orientation: Orientation?,
+        fromPos: BlockPos,
         movedByPiston: Boolean
     ) {
         if (level.isClientSide) return
@@ -139,7 +148,7 @@ class MailCollectionBoxBlock(
     }
 
     override fun hasAnalogOutputSignal(state: BlockState): Boolean = true
-    override fun getAnalogOutputSignal(state: BlockState, level: Level, pos: BlockPos, direction: Direction): Int {
+    override fun getAnalogOutputSignal(state: BlockState, level: Level, pos: BlockPos): Int {
         val blockEntity = level.getBlockEntity(pos) as? MailCollectionBoxEntity ?: return 0
         val hasSelected = blockEntity.selectedMailbox != null
         return AbstractContainerMenu.getRedstoneSignalFromBlockEntity(blockEntity)

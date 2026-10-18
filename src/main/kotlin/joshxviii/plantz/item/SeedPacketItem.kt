@@ -18,6 +18,7 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.stats.Stats
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionResultHolder
 import net.minecraft.world.entity.MobSpawnType
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.LivingEntity
@@ -25,8 +26,6 @@ import net.minecraft.world.entity.TamableAnimal
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.component.TypedEntityData
-import net.minecraft.world.item.component.UseCooldown
 import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.Level
@@ -42,8 +41,8 @@ import kotlin.jvm.optionals.getOrNull
 class SeedPacketItem(properties: Properties) : Item(properties) {
 
     override fun getName(itemStack: ItemStack): Component {
-        val entityData = itemStack.get(DataComponents.ENTITY_DATA) ?: return super.getName(itemStack)
-        val entityId = BuiltInRegistries.ENTITY_TYPE.getKey(entityData.type())
+        val entityType = itemStack.entityDataType() ?: return super.getName(itemStack)
+        val entityId = BuiltInRegistries.ENTITY_TYPE.getKey(entityType)
 
         val entityName = Component.translatable("entity.${entityId.namespace}.${entityId.path}")
         return Component.translatable("item.plantz.seed_packet.entity", entityName)
@@ -57,8 +56,14 @@ class SeedPacketItem(properties: Properties) : Item(properties) {
             result
     }
 
-    override fun use(level: Level, player: Player, hand: InteractionHand): InteractionResult {
-        return Companion.use(level, player, hand)
+    override fun use(level: Level, player: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
+        val stack = player.getItemInHand(hand)
+        return when (Companion.use(level, player, hand)) {
+            InteractionResult.SUCCESS -> InteractionResultHolder.sidedSuccess(stack, level.isClientSide)
+            InteractionResult.CONSUME -> InteractionResultHolder.consume(stack)
+            InteractionResult.FAIL -> InteractionResultHolder.fail(stack)
+            else -> InteractionResultHolder.pass(stack)
+        }
     }
 
     override fun useOn(context: UseOnContext): InteractionResult {
@@ -73,13 +78,13 @@ class SeedPacketItem(properties: Properties) : Item(properties) {
             target: LivingEntity,
             type: InteractionHand
         ): InteractionResult {
-            if (player.cooldowns.isOnCooldown(itemStack)) return InteractionResult.PASS
+            if (SeedPacketCooldowns.isOnCooldown(player, itemStack)) return InteractionResult.PASS
             if (target is Plant) {
                 val result = target.processSeedPacketInteraction(player, itemStack)
                 if (result == PacketInteractionResult.SUCCESS) {
                     itemStack.consume(1, player)
                     applyCooldown(itemStack, player)
-                    return InteractionResult.SUCCESS_SERVER
+                    return InteractionResult.sidedSuccess(player.level().isClientSide)
                 }
                 if (result == PacketInteractionResult.FAIL) return InteractionResult.CONSUME
             }
@@ -88,9 +93,10 @@ class SeedPacketItem(properties: Properties) : Item(properties) {
 
         fun use(level: Level, player: Player, hand: InteractionHand): InteractionResult {
             val itemStack = player.getItemInHand(hand)
+            // 26.1 vanilla skipped use() while the cooldown group of the stack was active
+            if (SeedPacketCooldowns.isOnCooldown(player, itemStack)) return InteractionResult.PASS
 
-            val entityData = itemStack.get(DataComponents.ENTITY_DATA)
-            val entityType = entityData?.type()
+            val entityType = itemStack.entityDataType()
             val waterPlaceable = entityType!=null && BuiltInRegistries.ENTITY_TYPE.wrapAsHolder(entityType).`is`(PazTags.EntityTypes.PLANTABLE_ON_WATER)
 
             if (!waterPlaceable) return InteractionResult.PASS
@@ -111,10 +117,12 @@ class SeedPacketItem(properties: Properties) : Item(properties) {
 
         fun useOn(context: UseOnContext): InteractionResult {
             val level: Level = context.level
+            // 26.1 vanilla skipped useOn() while the cooldown group of the stack was active
+            if (context.player?.let { SeedPacketCooldowns.isOnCooldown(it, context.itemInHand) } == true) return InteractionResult.PASS
             if (level !is ServerLevel) return InteractionResult.SUCCESS
             else {
                 val itemStack = context.itemInHand
-                val type = itemStack.get(DataComponents.ENTITY_DATA)?.type()
+                val type = itemStack.entityDataType()
                 val pos: BlockPos = context.clickedPos
                 val blockState = level.getBlockState(pos)
                 val clickedFace: Direction = if (blockState.`is`(PazTags.BlockTags.PLANT_POT)) Direction.UP else context.clickedFace
@@ -139,8 +147,7 @@ class SeedPacketItem(properties: Properties) : Item(properties) {
         ): InteractionResult {
             if (level !is ServerLevel || player == null) return InteractionResult.PASS
 
-            val entityData = itemStack.get(DataComponents.ENTITY_DATA)
-            val entityType = entityData?.type()
+            val entityType = itemStack.entityDataType()
 
             val spawnPos = if (level.getBlockState(pos).getCollisionShape(level, pos).isEmpty) pos
             else pos.relative(face)
@@ -162,7 +169,7 @@ class SeedPacketItem(properties: Properties) : Item(properties) {
                 !checkWater,
                 face == Direction.UP
             )?: return InteractionResult.FAIL
-            entityData.loadInto(entity)
+            // 26.1 entityData.loadInto(entity): 1.21.1 createDefaultStackConfig already applies ENTITY_DATA
 
             if (entity is Plant) {
 
@@ -234,8 +241,7 @@ class SeedPacketItem(properties: Properties) : Item(properties) {
             face: Direction,
             horizontalDir: Direction,
         ): Boolean {
-            val entityData = itemStack.get(DataComponents.ENTITY_DATA) ?: return false
-            val entityType = entityData.type()
+            val entityType = itemStack.entityDataType() ?: return false
 
             val sunCost = itemStack.get(PazComponents.SUN_COST)?.getSunCost(entityType) ?: 0
             val battery = SunBatteryBlockEntity.findAttachedSunBattery(level, dispenserPos, sunCost)?: return false
@@ -250,8 +256,6 @@ class SeedPacketItem(properties: Properties) : Item(properties) {
                 true,
                 face == Direction.UP
             ) ?: return false
-
-            entityData.loadInto(entity)
 
             if (entity is Plant) {
                 val blockBelow = level.getBlockState(spawnPos.below())
@@ -279,28 +283,25 @@ class SeedPacketItem(properties: Properties) : Item(properties) {
         }
 
         fun applyCooldown(itemStack: ItemStack, player: Player) {
-            val entityType = itemStack.get(DataComponents.ENTITY_DATA)?.type()?: return
-            val group = BuiltInRegistries.ENTITY_TYPE.getKey(entityType)
+            val entityType = itemStack.entityDataType()?: return
+            val group = SeedPacketCooldowns.groupFor(entityType)
             if (PazConfig.PLANT_COOLDOWN_ENABLED) {
                 val cooldownTime = PazConfig.getCooldownTime(PazConfig.getSunCost(entityType))
-                itemStack.set(DataComponents.USE_COOLDOWN, UseCooldown(cooldownTime, Optional.of(group)))
-                player.cooldowns.addCooldown(group, (cooldownTime*20).toInt())
+                SeedPacketCooldowns.addCooldown(player, group, (cooldownTime*20).toInt())
             } else {
-                player.cooldowns.removeCooldown(group)
-                itemStack.set(DataComponents.USE_COOLDOWN, UseCooldown(0f))
+                SeedPacketCooldowns.removeCooldown(player, group)
             }
         }
 
         fun stackFor(type: EntityType<*>): ItemStack {
             val stack = ItemStack(PazItems.SEED_PACKET)
-            stack.set(DataComponents.ENTITY_DATA, TypedEntityData.of(type, CompoundTag()))
+            stack.set(DataComponents.ENTITY_DATA, entityDataOf(type, CompoundTag()))
 
             return stack
         }
 
         fun typeFromStack(itemStack: ItemStack): EntityType<*>? {
-            val type = itemStack.get(DataComponents.ENTITY_DATA)?.type()?: return null
-            return type
+            return itemStack.entityDataType()
         }
     }
 }

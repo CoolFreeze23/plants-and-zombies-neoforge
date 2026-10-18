@@ -4,8 +4,10 @@ import joshxviii.plantz.block.*
 import joshxviii.plantz.block.entity.*
 import joshxviii.plantz.item.component.BlocksProjectileDamage
 import joshxviii.plantz.item.component.StoredWater.Companion.DEFAULT_CAPACITY
-import net.fabricmc.fabric.api.`object`.builder.v1.block.entity.FabricBlockEntityTypeBuilder
-import net.fabricmc.fabric.api.`object`.builder.v1.world.poi.PoiHelper
+import com.google.common.collect.ImmutableSet
+import joshxviii.plantz.item.EquipableBlockItem
+import net.minecraft.world.entity.ai.village.poi.PoiType
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Registry
 import net.minecraft.core.component.DataComponents
@@ -24,8 +26,6 @@ import net.minecraft.world.item.Item.BASE_ATTACK_DAMAGE_ID
 import net.minecraft.world.item.Item.BASE_ATTACK_SPEED_ID
 import net.minecraft.world.item.Rarity
 import net.minecraft.world.item.component.ItemAttributeModifiers
-import net.minecraft.world.item.component.Weapon
-import net.minecraft.world.item.equipment.Equippable
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.IronBarsBlock
 import net.minecraft.world.level.block.SlabBlock
@@ -88,7 +88,7 @@ object PazBlocks {
         ::SunBatteryBlockEntity,
         SUN_BATTERY_BLOCK
     )
-    @JvmField val SUN_BATTERY_POI = PoiHelper.register(pazResource("sun_battery"), 8, 16, SUN_BATTERY_BLOCK)
+    @JvmField val SUN_BATTERY_POI = registerPoi(pazResource("sun_battery"), 8, 16, SUN_BATTERY_BLOCK)
     @JvmField val TIME_MACHINE: Block = registerBlock(
         "time_machine",
         BlockBehaviour.Properties.of()
@@ -123,8 +123,7 @@ object PazBlocks {
     @JvmField val LAWN_FLAMINGO: Block = registerBlock(
         "lawn_flamingo", gardenGnomeProperties(MapColor.COLOR_PINK),
         { LawnFlamingo(it) },
-        Item.Properties()
-            .component(DataComponents.WEAPON, Weapon(1))
+        Item.Properties() // 26.1 WEAPON(1) dropped: no 1.21.1 component, and the item has no durability
             .attributes(
                 ItemAttributeModifiers.builder().add(Attributes.ATTACK_DAMAGE, AttributeModifier(BASE_ATTACK_DAMAGE_ID, 2.0, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND).add(Attributes.ATTACK_SPEED, AttributeModifier(BASE_ATTACK_SPEED_ID, -2.5, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND).build()
             )
@@ -189,10 +188,6 @@ object PazBlocks {
         Item.Properties()
             .component(PazComponents.BLOCKS_PROJECTILE_DAMAGE, BlocksProjectileDamage(breakChance = 0.12f))
             .component(
-                DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.HEAD)
-                    .setEquipSound(SoundEvents.ARMOR_EQUIP_LEATHER)
-                    .build()
-            ).component(
                 DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.builder()
                     .add(
                         Attributes.ARMOR,
@@ -203,7 +198,8 @@ object PazBlocks {
                         AttributeModifier(pazResource("cone_knockback_resistance"), 0.1, AttributeModifier.Operation.ADD_VALUE),
                         EquipmentSlotGroup.HEAD
                     ).build()
-            )
+            ),
+        { block, props -> EquipableBlockItem(block, props, EquipmentSlot.HEAD, SoundEvents.ARMOR_EQUIP_LEATHER) }
     )
 
     @JvmField val BRAINZ_ALLOY_BLOCK: Block = registerBlock(
@@ -250,13 +246,12 @@ object PazBlocks {
         BlockBehaviour.Properties.of()
             .sound(SoundType.WOOD)
             .instabreak()
-            .noCollision()
+            .noCollission()
             .pushReaction(PushReaction.DESTROY),
         ::FlagBlock,
         Item.Properties()
             .stacksTo(16)
             .rarity(Rarity.RARE)
-            .equippableUnswappable(EquipmentSlot.OFFHAND)
             .component(
                 DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.builder()
                     .add(
@@ -268,20 +263,20 @@ object PazBlocks {
                         AttributeModifier(pazResource("zombie_leader_flag"), 0.5, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
                         EquipmentSlotGroup.HAND
                     ).build()
-            )
+            ),
+        { block, props -> EquipableBlockItem(block, props, EquipmentSlot.OFFHAND, swappable = false) }
     )
     @JvmField val PLANTZ_FLAG: Block = registerBlock(
         "plantz_flag",
         BlockBehaviour.Properties.of()
             .sound(SoundType.WOOD)
             .instabreak()
-            .noCollision()
+            .noCollission()
             .pushReaction(PushReaction.DESTROY),
         ::FlagBlock,
         Item.Properties()
             .stacksTo(16)
             .rarity(Rarity.RARE)
-            .equippableUnswappable(EquipmentSlot.OFFHAND)
             .component(
                 DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.builder()
                     .add(
@@ -293,14 +288,15 @@ object PazBlocks {
                         AttributeModifier(pazResource("plantz_flag"), 0.2, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
                         EquipmentSlotGroup.HAND
                     ).build()
-            )
+            ),
+        { block, props -> EquipableBlockItem(block, props, EquipmentSlot.OFFHAND, swappable = false) }
     )
     val FLAG_BLOCK_ENTITY: BlockEntityType<FlagBlockEntity> = registerBlockEntity(
         "flag_block",
         ::FlagBlockEntity,
         PLANTZ_FLAG, BRAINZ_FLAG
     )
-    @JvmField val PLANTZ_FLAG_POI = PoiHelper.register(pazResource("plantz_flag"), 8, 32, PLANTZ_FLAG)
+    @JvmField val PLANTZ_FLAG_POI = registerPoi(pazResource("plantz_flag"), 8, 32, PLANTZ_FLAG)
 
     @JvmField val GRAVESTONE: Block = registerBlock(
         "gravestone",
@@ -322,15 +318,16 @@ object PazBlocks {
         properties: BlockBehaviour.Properties = BlockBehaviour.Properties.of(),
         blockFactory: (BlockBehaviour.Properties) -> Block = ::Block,
         itemProperties: Item.Properties? = Item.Properties(),
+        itemFactory: (Block, Item.Properties) -> Item = ::BlockItem,
     ): Block {
         val key = ResourceKey.create(Registries.BLOCK, pazResource(name))
-        val block = blockFactory(properties.setId(key))
+        val block = blockFactory(properties)
         Registry.register(BuiltInRegistries.BLOCK, key, block)
 
         // Also register the block item
         if (itemProperties!=null) {
             val itemKey = ResourceKey.create(Registries.ITEM, pazResource(name))
-            val blockItem = BlockItem(block, itemProperties.setId(itemKey))
+            val blockItem = itemFactory(block, itemProperties)
             Registry.register(BuiltInRegistries.ITEM, itemKey, blockItem)
         }
 
@@ -344,13 +341,16 @@ object PazBlocks {
         vararg validBlocks: Block,
     ): BlockEntityType<T> {
         val key = ResourceKey.create(Registries.BLOCK_ENTITY_TYPE, pazResource(name))
-        val builder = FabricBlockEntityTypeBuilder.create(
-            factory,
-            *validBlocks
-        )
-        val blockEntity = builder.build()
+        @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+        val blockEntity = BlockEntityType.Builder.of({ pos, state -> factory(pos, state) }, *validBlocks).build(null)
         Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, key, blockEntity)
         return blockEntity
+    }
+
+    /** Fabric `PoiHelper.register`: NeoForge maps the block states to the POI type when it is registered. */
+    private fun registerPoi(id: ResourceLocation, ticketCount: Int, searchDistance: Int, vararg blocks: Block): PoiType {
+        val states = ImmutableSet.copyOf(blocks.flatMap { it.stateDefinition.possibleStates })
+        return Registry.register(BuiltInRegistries.POINT_OF_INTEREST_TYPE, id, PoiType(states, ticketCount, searchDistance))
     }
 
     private fun gardenGnomeProperties(mapColor: MapColor = MapColor.COLOR_BLUE): BlockBehaviour.Properties {

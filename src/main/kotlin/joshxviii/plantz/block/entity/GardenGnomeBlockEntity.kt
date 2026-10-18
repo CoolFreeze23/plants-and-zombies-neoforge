@@ -9,6 +9,8 @@ import joshxviii.plantz.block.TimeMachineState
 import joshxviii.plantz.inventory.TimeMachineMenu
 import joshxviii.plantz.compat.menu.ExtendedMenuProvider
 import net.minecraft.core.BlockPos
+import net.minecraft.core.HolderLookup
+import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvent
@@ -32,8 +34,9 @@ class GardenGnomeBlockEntity(
     companion object {
     }
 
-    override fun saveAdditional(output: ValueOutput) {
-        super.saveAdditional(output)
+    override fun saveAdditional(tag: CompoundTag, registries: HolderLookup.Provider) {
+        super.saveAdditional(tag, registries)
+        val output = ValueOutput.of(tag, registries)
 
     }
 }

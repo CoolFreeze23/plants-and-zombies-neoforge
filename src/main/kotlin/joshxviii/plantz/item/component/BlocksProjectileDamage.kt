@@ -4,27 +4,26 @@ import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import io.netty.buffer.ByteBuf
 import net.minecraft.ChatFormatting
-import net.minecraft.core.component.DataComponentGetter
 import net.minecraft.network.chat.Component
 import net.minecraft.network.codec.ByteBufCodecs
 import net.minecraft.network.codec.StreamCodec
 import net.minecraft.world.entity.EquipmentSlotGroup
 import net.minecraft.world.item.Item.TooltipContext
 import net.minecraft.world.item.TooltipFlag
-import net.minecraft.world.item.component.TooltipProvider
+import net.minecraft.world.item.ItemStack
 import java.util.function.Consumer
 
 class BlocksProjectileDamage(
     val slot: EquipmentSlotGroup = EquipmentSlotGroup.HEAD,
     val breakChance: Float = 0.15f,
     val mustBeUsing: Boolean = false
-) : TooltipProvider {
+) {
 
-    override fun addToTooltip(
+    fun addToTooltip(
         context: TooltipContext,
         consumer: Consumer<Component>,
         flag: TooltipFlag,
-        components: DataComponentGetter
+        components: ItemStack
     ) {
         consumer.accept(Component.translatable("component.blocks_damage.description").withStyle(ChatFormatting.GRAY))
         consumer.accept(Component.translatable("component.blocks_damage", (breakChance * 100).toInt()).withStyle(ChatFormatting.BLUE))

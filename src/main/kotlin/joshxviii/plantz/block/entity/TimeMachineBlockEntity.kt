@@ -9,6 +9,8 @@ import joshxviii.plantz.block.TimeMachineState
 import joshxviii.plantz.inventory.TimeMachineMenu
 import joshxviii.plantz.compat.menu.ExtendedMenuProvider
 import net.minecraft.core.BlockPos
+import net.minecraft.core.HolderLookup
+import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvent
@@ -51,20 +53,22 @@ class TimeMachineBlockEntity(
         }
     }
 
-    override fun saveAdditional(output: ValueOutput) {
-        super.saveAdditional(output)
+    override fun saveAdditional(tag: CompoundTag, registries: HolderLookup.Provider) {
+        super.saveAdditional(tag, registries)
+        val output = ValueOutput.of(tag, registries)
         if (!item.isEmpty) output.store("Item", ItemStack.CODEC, this.item)
     }
 
-    override fun loadAdditional(input: ValueInput) {
-        super.loadAdditional(input)
+    override fun loadAdditional(tag: CompoundTag, registries: HolderLookup.Provider) {
+        super.loadAdditional(tag, registries)
+        val input = ValueInput.of(tag, registries)
         this.item = input.read("Item", ItemStack.CODEC).orElse(ItemStack.EMPTY)?: ItemStack.EMPTY
     }
 
     override fun getContainerBlockEntity(): BlockEntity = this
 
 
-    override fun getScreenOpeningData(player: ServerPlayer): TimeMachineData = TimeMachineData(blockPos)
+    override fun getScreenOpeningData(player: ServerPlayer?): TimeMachineData = TimeMachineData(blockPos)
     override fun getDisplayName(): Component  = Component.translatable("block.plantz.time_machine")
     override fun createMenu(containerId: Int, inventory: Inventory, player: Player): AbstractContainerMenu = TimeMachineMenu(containerId, inventory, blockPos, this)
 

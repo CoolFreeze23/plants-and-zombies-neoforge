@@ -5,14 +5,13 @@ import com.mojang.serialization.codecs.RecordCodecBuilder
 import io.netty.buffer.ByteBuf
 import joshxviii.plantz.PazConfig
 import net.minecraft.ChatFormatting
-import net.minecraft.core.component.DataComponentGetter
 import net.minecraft.network.chat.Component
 import net.minecraft.network.codec.ByteBufCodecs
 import net.minecraft.network.codec.StreamCodec
 import net.minecraft.util.Mth
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.TooltipFlag
-import net.minecraft.world.item.component.TooltipProvider
+import net.minecraft.world.item.ItemStack
 import java.util.Optional
 import java.util.function.Consumer
 import kotlin.math.max
@@ -26,16 +25,16 @@ import kotlin.math.min
  */
 data class StoredSun(
     val storedSun: Int = 0,
-) : TooltipProvider {
+) {
 
     val max: Int
         get() = PazConfig.SUN_BATTERY_MAX
 
-    override fun addToTooltip(
+    fun addToTooltip(
         context: Item.TooltipContext,
         consumer: Consumer<Component>,
         flag: TooltipFlag,
-        components: DataComponentGetter
+        components: ItemStack
     ) {
         consumer.accept(Component.translatable("component.stored_sun.description").withStyle(ChatFormatting.DARK_GRAY).withStyle(ChatFormatting.ITALIC))
         consumer.accept(Component.translatable("component.stored_sun", storedSun, max).withStyle(ChatFormatting.YELLOW))

@@ -12,6 +12,7 @@ import net.minecraft.util.StringRepresentable
 import net.minecraft.Util
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
+import net.minecraft.world.ItemInteractionResult
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
@@ -19,10 +20,11 @@ import net.minecraft.world.item.context.BlockPlaceContext
 import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.LevelReader
-import net.minecraft.world.level.ScheduledTickAccess
+import net.minecraft.world.level.LevelAccessor
 import net.minecraft.world.level.block.*
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.RenderShape
 import net.minecraft.world.level.block.state.StateDefinition
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.level.block.state.properties.BooleanProperty
@@ -39,6 +41,9 @@ class GardenGnomeBlock(
     properties: Properties,
     color: GardenGnomeColor = GardenGnomeColor.BLUE
 ) : BaseEntityBlock(properties), SimpleWaterloggedBlock {
+    // 1.21.1 BaseEntityBlock defaults to INVISIBLE; 26.1 renders the block model
+    override fun getRenderShape(state: BlockState): RenderShape = RenderShape.MODEL
+
     companion object {
         val CODEC: MapCodec<GardenGnomeBlock> = simpleCodec(::GardenGnomeBlock)
         val SHAPE: VoxelShape = Util.make {
@@ -78,13 +83,13 @@ class GardenGnomeBlock(
         player: Player,
         hand: InteractionHand,
         hitResult: BlockHitResult
-    ): InteractionResult {
+    ): ItemInteractionResult {
         updatePose(level, state, pos, player)
-        return InteractionResult.SUCCESS
+        return ItemInteractionResult.SUCCESS
     }
 
     fun updatePose(level: Level, state: BlockState, pos: BlockPos, player: Player) {
-        level.playSound(null, pos, SoundEvents.COPPER_GOLEM_BECOME_STATUE, SoundSource.BLOCKS)
+        level.playSound(null, pos, SoundEvents.DECORATED_POT_INSERT /* 26.1 COPPER_GOLEM_BECOME_STATUE */, SoundSource.BLOCKS)
         level.setBlock(pos, state.setValue(POSE, state.getValue(POSE).getNextPose()), 3)
         level.gameEvent(player as Entity, GameEvent.BLOCK_CHANGE, pos)
     }
@@ -104,17 +109,16 @@ class GardenGnomeBlock(
 
     override fun updateShape(
         state: BlockState,
-        level: LevelReader,
-        ticks: ScheduledTickAccess,
-        pos: BlockPos,
         directionToNeighbour: Direction,
-        neighbourPos: BlockPos,
         neighbourState: BlockState,
-        random: RandomSource
+        level: LevelAccessor,
+        pos: BlockPos,
+        neighbourPos: BlockPos
     ): BlockState {
+        val ticks = level
         if (state.getValue(WATERLOGGED)) ticks.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level))
         return if (!state.canSurvive(level, pos)) Blocks.AIR.defaultBlockState()
-        else super.updateShape(state, level, ticks, pos, directionToNeighbour, neighbourPos, neighbourState, random)
+        else super.updateShape(state, directionToNeighbour, neighbourState, level, pos, neighbourPos)
     }
 
     override fun canSurvive(state: BlockState, level: LevelReader, pos: BlockPos): Boolean {

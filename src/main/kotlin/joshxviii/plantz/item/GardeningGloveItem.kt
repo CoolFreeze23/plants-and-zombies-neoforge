@@ -5,7 +5,6 @@ import joshxviii.plantz.removeItemFromInventory
 import net.minecraft.ChatFormatting
 import net.minecraft.core.Holder
 import net.minecraft.core.HolderSet
-import net.minecraft.core.component.DataComponentGetter
 import net.minecraft.core.component.DataComponents
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
@@ -17,7 +16,8 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.item.ItemEntity
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.ItemUseAnimation
+import net.minecraft.world.item.UseAnim
+import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.Tool
 import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.block.Block
@@ -30,14 +30,13 @@ class GardeningGloveItem(properties: Properties) : Item(properties) {
     companion object {
 
         fun createToolProperties(): Tool {
-            val registrationLookup = BuiltInRegistries.acquireBootstrapRegistrationLookup(BuiltInRegistries.BLOCK)
             return Tool(
-                listOf(Tool.Rule.overrideSpeed(registrationLookup.getOrThrow(BlockTags.CROPS), 15.0f)), 1.0f, 1, false
+                listOf(Tool.Rule.overrideSpeed(BlockTags.CROPS, 15.0f)), 1.0f, 1
             )
         }
 
-        fun addToTooltip(consumer: MutableList<Component>, components: DataComponentGetter, shiftKey: Component) {
-            val data = components.get(DataComponents.ENTITY_DATA)
+        fun addToTooltip(consumer: MutableList<Component>, components: ItemStack, shiftKey: Component) {
+            val data = components.entityDataType()
 
             if (data == null) {
                 consumer.add(1, Component.translatable("item.plantz.gardening_glove.description", shiftKey)
@@ -45,7 +44,7 @@ class GardeningGloveItem(properties: Properties) : Item(properties) {
                 return
             }
 
-            val id = BuiltInRegistries.ENTITY_TYPE.getKey(data.type())
+            val id = BuiltInRegistries.ENTITY_TYPE.getKey(data)
             val entityName = Component.translatable("entity.${id.namespace}.${id.path}")
                 .withStyle(ChatFormatting.DARK_GREEN)
 
@@ -55,20 +54,23 @@ class GardeningGloveItem(properties: Properties) : Item(properties) {
 
         fun hurtAndDropPlant(item: ItemStack, owner: LivingEntity, hand: InteractionHand) {
             if (item.nextDamageWillBreak()) {
-                item.get(DataComponents.ENTITY_DATA)?.let { data ->
-                    val breakItem = SeedPacketItem.stackFor(data.type())
+                item.entityDataType()?.let { data ->
+                    val breakItem = SeedPacketItem.stackFor(data)
                     ItemEntity(owner.level(), owner.x, owner.eyeY, owner.z, breakItem).let {
                         owner.level().addFreshEntity(it)
                     }
                 }
             }
-            item.hurtAndBreak(1, owner, hand)
+            item.hurtAndBreak(1, owner, LivingEntity.getSlotForHand(hand))
         }
     }
 
-    override fun getUseAnimation(itemStack: ItemStack): ItemUseAnimation {
-        return ItemUseAnimation.BRUSH
+    override fun getUseAnimation(itemStack: ItemStack): UseAnim {
+        return UseAnim.BRUSH
     }
+
+    // 26.1 repairable(LEATHER)
+    override fun isValidRepairItem(stack: ItemStack, repairCandidate: ItemStack): Boolean = repairCandidate.`is`(Items.LEATHER)
 
     override fun useOn(context: UseOnContext): InteractionResult {
         val stack = context.itemInHand
@@ -77,8 +79,8 @@ class GardeningGloveItem(properties: Properties) : Item(properties) {
         val isHolding = stack.has(DataComponents.ENTITY_DATA)
 
         val blockState = level.getBlockState(context.clickedPos)
-        val cropAge = blockState.getValueOrElse(CropBlock.AGE, 0)
-        val seedItem = blockState.getCloneItemStack(level, context.clickedPos, false).item
+        val cropAge = blockState.getOptionalValue(CropBlock.AGE).orElse(0)
+        val seedItem = blockState.block.getCloneItemStack(level, context.clickedPos, blockState).item
         if (cropAge >= 7 && (player?.hasInfiniteMaterials() ?: false || (player?.getItemCount(seedItem) ?: 0) > 0)) {
             if (isHolding) {
                 player?.sendOverlayMessage(Component.translatable("message.plantz.glove_full").withStyle(ChatFormatting.RED))
@@ -94,7 +96,7 @@ class GardeningGloveItem(properties: Properties) : Item(properties) {
             }
             return InteractionResult.SUCCESS
         }
-        if (!isHolding) return InteractionResult.TRY_WITH_EMPTY_HAND
+        if (!isHolding) return InteractionResult.PASS // 26.1 TRY_WITH_EMPTY_HAND
 
         if (level !is ServerLevel) return InteractionResult.SUCCESS
 

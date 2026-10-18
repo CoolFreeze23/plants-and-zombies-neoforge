@@ -1,6 +1,8 @@
 package joshxviii.plantz.block
 
 import com.mojang.math.OctahedralGroup
+import net.minecraft.world.Containers
+import net.minecraft.world.ItemInteractionResult
 import com.mojang.serialization.MapCodec
 import joshxviii.plantz.PazBlocks
 import joshxviii.plantz.PazComponents
@@ -21,10 +23,11 @@ import net.minecraft.world.item.context.BlockPlaceContext
 import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.LevelReader
-import net.minecraft.world.level.ScheduledTickAccess
+import net.minecraft.world.level.LevelAccessor
 import net.minecraft.world.level.block.*
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.RenderShape
 import net.minecraft.world.level.block.state.StateDefinition
 import net.minecraft.world.level.block.state.properties.AttachFace
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
@@ -41,6 +44,9 @@ import net.minecraft.world.phys.shapes.VoxelShape
 import java.util.function.ToIntFunction
 
 class SunBatteryBlock(properties: Properties) : BaseEntityBlock(properties), SimpleWaterloggedBlock  {
+    // 1.21.1 BaseEntityBlock defaults to INVISIBLE; 26.1 renders the block model
+    override fun getRenderShape(state: BlockState): RenderShape = RenderShape.MODEL
+
     companion object {
         val CODEC: MapCodec<SunBatteryBlock> = simpleCodec(::SunBatteryBlock)
         val FACE: EnumProperty<AttachFace> = BlockStateProperties.ATTACH_FACE
@@ -49,8 +55,8 @@ class SunBatteryBlock(properties: Properties) : BaseEntityBlock(properties), Sim
         val LEVEL: IntegerProperty = BlockStateProperties.LEVEL
         val LIGHT_EMISSION: ToIntFunction<BlockState> = { it.getValue(LightBlock.LEVEL) }
 
-        val SHAPE: VoxelShape = Shapes.rotate(column(8.0, 0.0, 11.0), OctahedralGroup.ROT_90_REF_X_NEG)
-        var SHAPES: Map<AttachFace, Map<Direction, VoxelShape>> = Shapes.rotateAttachFace(SHAPE)
+        val SHAPE: VoxelShape = PazShapes.rotate(column(8.0, 0.0, 11.0), OctahedralGroup.ROT_90_REF_X_NEG)
+        var SHAPES: Map<AttachFace, Map<Direction, VoxelShape>> = PazShapes.rotateAttachFace(SHAPE)
     }
 
     init {
@@ -65,14 +71,14 @@ class SunBatteryBlock(properties: Properties) : BaseEntityBlock(properties), Sim
         player: Player,
         hand: InteractionHand,
         hitResult: BlockHitResult
-    ): InteractionResult {
+    ): ItemInteractionResult {
         if (itemStack.`is`(PazItems.SUN)) {
             val blockEntity = level.getBlockEntity(pos)
             (blockEntity as? SunBatteryBlockEntity)?.let {
-                if (it.isFull()) return InteractionResult.FAIL
+                if (it.isFull()) return ItemInteractionResult.FAIL
                 it.addSun(1)
                 itemStack.consume(1, player)
-                return InteractionResult.SUCCESS
+                return ItemInteractionResult.SUCCESS
             }
         }
         return super.useItemOn(itemStack, state, level, pos, player, hand, hitResult)
@@ -129,6 +135,12 @@ class SunBatteryBlock(properties: Properties) : BaseEntityBlock(properties), Sim
         return SunBatteryBlockEntity(worldPosition, blockState)
     }
 
+    // 26.1 BlockEntity.preRemoveSideEffects dropped container contents (the battery item); 1.21.1 does it from the block
+    override fun onRemove(state: BlockState, level: Level, pos: BlockPos, newState: BlockState, movedByPiston: Boolean) {
+        Containers.dropContentsOnDestroy(state, newState, level, pos)
+        super.onRemove(state, level, pos, newState, movedByPiston)
+    }
+
     override fun playerWillDestroy(level: Level, pos: BlockPos, state: BlockState, player: Player): BlockState {
         val blockEntity = level.getBlockEntity(pos)
         (blockEntity as? SunBatteryBlockEntity)?.let {
@@ -141,19 +153,18 @@ class SunBatteryBlock(properties: Properties) : BaseEntityBlock(properties), Sim
 
     override fun updateShape(
         state: BlockState,
-        level: LevelReader,
-        ticks: ScheduledTickAccess,
-        pos: BlockPos,
         directionToNeighbour: Direction,
-        neighbourPos: BlockPos,
         neighbourState: BlockState,
-        random: RandomSource
+        level: LevelAccessor,
+        pos: BlockPos,
+        neighbourPos: BlockPos
     ): BlockState {
+        val ticks = level
         if (state.getValue(WATERLOGGED)) ticks.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level))
         return if (getConnectedDirection(state).opposite == directionToNeighbour && !state.canSurvive(level, pos)) {
             Blocks.AIR.defaultBlockState()
         } else
-            super.updateShape(state, level, ticks, pos, directionToNeighbour, neighbourPos, neighbourState, random)
+            super.updateShape(state, directionToNeighbour, neighbourState, level, pos, neighbourPos)
     }
 
     override fun canSurvive(state: BlockState, level: LevelReader, pos: BlockPos): Boolean {
@@ -174,13 +185,13 @@ class SunBatteryBlock(properties: Properties) : BaseEntityBlock(properties), Sim
     }
 
     override fun hasAnalogOutputSignal(state: BlockState): Boolean = state.getValue(LEVEL) > 0
-    override fun getAnalogOutputSignal(state: BlockState, level: Level, pos: BlockPos, direction: Direction): Int {
+    override fun getAnalogOutputSignal(state: BlockState, level: Level, pos: BlockPos): Int {
         return state.getValue(LEVEL)
     }
 
-    override fun getCloneItemStack(level: LevelReader, pos: BlockPos, state: BlockState, includeData: Boolean): ItemStack {
+    override fun getCloneItemStack(level: LevelReader, pos: BlockPos, state: BlockState): ItemStack {
         return (level.getBlockEntity(pos) as? SunBatteryBlockEntity)?.theItem?:
-        super.getCloneItemStack(level, pos, state, includeData)
+        super.getCloneItemStack(level, pos, state)
     }
 
     override fun codec(): MapCodec<out SunBatteryBlock> { return CODEC }

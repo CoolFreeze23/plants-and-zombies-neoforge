@@ -4,13 +4,12 @@ import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import io.netty.buffer.ByteBuf
 import net.minecraft.ChatFormatting
-import net.minecraft.core.component.DataComponentGetter
 import net.minecraft.network.chat.Component
 import net.minecraft.network.codec.ByteBufCodecs
 import net.minecraft.network.codec.StreamCodec
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.TooltipFlag
-import net.minecraft.world.item.component.TooltipProvider
+import net.minecraft.world.item.ItemStack
 import java.util.function.Consumer
 
 /**
@@ -23,12 +22,12 @@ import java.util.function.Consumer
 data class StoredWater(
     val storedWater: Int = 0,
     val maxCapacity: Int = DEFAULT_CAPACITY
-) : TooltipProvider {
-    override fun addToTooltip(
+) {
+    fun addToTooltip(
         context: Item.TooltipContext,
         consumer: Consumer<Component>,
         flag: TooltipFlag,
-        components: DataComponentGetter
+        components: ItemStack
     ) {
         consumer.accept(Component.translatable("component.stored_water.description").withStyle(ChatFormatting.DARK_GRAY).withStyle(ChatFormatting.ITALIC))
         //consumer.accept(Component.translatable("component.stored_water", storedWater, maxCapacity).withStyle(ChatFormatting.AQUA))

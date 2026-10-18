@@ -8,7 +8,7 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.stats.Stats
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionResultHolder
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.projectile.Projectile
@@ -20,7 +20,7 @@ import net.minecraft.world.level.Level
 
 class SunBottleItem(properties: Properties) : Item(properties), ProjectileItem {
 
-    override fun use(level: Level, player: Player, hand: InteractionHand): InteractionResult {
+    override fun use(level: Level, player: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
         val itemStack = player.getItemInHand(hand)
         level.playSound(
             null,
@@ -33,18 +33,15 @@ class SunBottleItem(properties: Properties) : Item(properties), ProjectileItem {
             0.4f / (level.getRandom().nextFloat() * 0.4f + 0.8f)
         )
         if (level is ServerLevel) {
-            Projectile.spawnProjectileFromRotation({ level: ServerLevel, mob: LivingEntity, itemStack: ItemStack ->
-                ThrownSunBottle(
-                    level,
-                    mob,
-                    itemStack
-                )
-            }, level, itemStack, player, -20.0f, 0.7f, 1.0f)
+            // 26.1 Projectile.spawnProjectileFromRotation(factory, level, stack, player, -20, 0.7, 1.0)
+            val projectile = ThrownSunBottle(level, player, itemStack.copyWithCount(1))
+            projectile.shootFromRotation(player, player.xRot, player.yRot, -20.0f, 0.7f, 1.0f)
+            level.addFreshEntity(projectile)
         }
 
         player.awardStat(Stats.ITEM_USED.get(this))
         itemStack.consume(1, player)
-        return InteractionResult.SUCCESS
+        return InteractionResultHolder.sidedSuccess(itemStack, level.isClientSide)
     }
 
     override fun asProjectile(
