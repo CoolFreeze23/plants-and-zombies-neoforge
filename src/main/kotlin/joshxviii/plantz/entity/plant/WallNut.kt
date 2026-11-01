@@ -3,12 +3,13 @@ package joshxviii.plantz.entity.plant
 import joshxviii.plantz.PazConfig
 import joshxviii.plantz.PazCriteria
 import joshxviii.plantz.PazDamageTypes
+import joshxviii.plantz.PazSounds
 import joshxviii.plantz.PazTags
+import joshxviii.plantz.PazTags.EntityTypes.IGNORE_WALLNUT_COLLISION
 import joshxviii.plantz.PazTags.EntityTypes.WALLNUT_DEFLECTABLE
 import joshxviii.plantz.applyImpulse
 import joshxviii.plantz.compat.ValueInput
 import joshxviii.plantz.compat.ValueOutput
-import joshxviii.plantz.entity.Sun
 import joshxviii.plantz.item.GardeningGloveItem
 import joshxviii.plantz.pazResource
 import joshxviii.plantz.rootOwner
@@ -20,6 +21,7 @@ import net.minecraft.network.syncher.SynchedEntityData
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.sounds.SoundSource
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.entity.Entity
@@ -46,6 +48,8 @@ open class WallNut(type: EntityType<out Plant>, level: Level) : Plant(type, leve
         val ROLLING: EntityDataAccessor<Boolean> = SynchedEntityData.defineId<Boolean>(WallNut::class.java, EntityDataSerializers.BOOLEAN)
         val ROLLING_ID: ResourceLocation = pazResource("rolling")
         private const val ROLL_FRICTION = 0.99
+        private val KNOCK_BACK_MODIFIER = AttributeModifier(ROLLING_ID, 99.0, AttributeModifier.Operation.ADD_VALUE)
+        private val STEP_HEIGHT_MODIFIER = AttributeModifier(ROLLING_ID, 0.75, AttributeModifier.Operation.ADD_VALUE)
     }
 
     private var rolledOverEntities: MutableSet<Int> = mutableSetOf()
@@ -59,9 +63,8 @@ open class WallNut(type: EntityType<out Plant>, level: Level) : Plant(type, leve
     fun roll(direction: Vec3 = Direction.fromYRot(yRot.toDouble()).unitVec3, power: Float = 0.51f) {
         isRolling = true
         applyImpulse(direction, pow = power, uncertainty = 0.1f, ignoreResistance = true)
-        getAttribute(Attributes.KNOCKBACK_RESISTANCE)!!.let {
-            if (!it.hasModifier(ROLLING_ID)) it.addTransientModifier(AttributeModifier(ROLLING_ID, 99.0, AttributeModifier.Operation.ADD_VALUE))
-        }
+        getAttribute(Attributes.KNOCKBACK_RESISTANCE)!!.let { if (!it.hasModifier(ROLLING_ID)) it.addTransientModifier(KNOCK_BACK_MODIFIER) }
+        getAttribute(Attributes.STEP_HEIGHT)!!.let { if (!it.hasModifier(ROLLING_ID)) it.addTransientModifier(STEP_HEIGHT_MODIFIER) }
     }
 
     fun stopRoll() {
@@ -74,13 +77,17 @@ open class WallNut(type: EntityType<out Plant>, level: Level) : Plant(type, leve
         getAttribute(Attributes.KNOCKBACK_RESISTANCE)!!.let {
             if (it.hasModifier(ROLLING_ID)) it.removeModifier(ROLLING_ID)
         }
+        getAttribute(Attributes.STEP_HEIGHT)!!.let {
+            if (it.hasModifier(ROLLING_ID)) it.removeModifier(ROLLING_ID)
+        }
     }
 
     fun resetRolledOverEntities() {
         rolledOverEntities.clear()
     }
 
-    override fun clampToGrid(): Boolean = !isRolling
+    override fun canLookAround(): Boolean = false
+    override fun clampToGrid(): Boolean = !isRolling && super.clampToGrid()
 
     override fun limitPistonMovement(vec: Vec3): Vec3 {
         val result = super.limitPistonMovement(vec)
@@ -107,7 +114,7 @@ open class WallNut(type: EntityType<out Plant>, level: Level) : Plant(type, leve
             )
         }
 
-        if (deltaMovement.horizontalDistance() < 0.085) stopRoll()
+        if (deltaMovement.horizontalDistance() < 0.085 && leashHolder==null) stopRoll()
     }
 
     override fun getLookControl(): LookControl = noLookControl
@@ -117,11 +124,12 @@ open class WallNut(type: EntityType<out Plant>, level: Level) : Plant(type, leve
         return super.isInvulnerableTo(source)
     }
 
-    override fun attackedWithGlove(player: Player, item: ItemStack, hand: InteractionHand) {
+    override fun attackedWithGlove(attacker: LivingEntity, item: ItemStack, hand: InteractionHand) {
+        if (hasPumpkinArmor()) return
         funnyBounce()
-        val direction = player.lookAngle.horizontal()
+        val direction = attacker.lookAngle.horizontal()
         roll(direction, power = 0.35f)
-        GardeningGloveItem.hurtAndDropPlant(item, player, hand)
+        GardeningGloveItem.hurtAndDropPlant(item, attacker, hand)
     }
 
     override fun doPush(entity: Entity) {
@@ -169,7 +177,7 @@ open class WallNut(type: EntityType<out Plant>, level: Level) : Plant(type, leve
 
         hurtOnCollide(other)
 
-        if (other is Sun) return false
+        if (other?.type?.`is`(IGNORE_WALLNUT_COLLISION) == true) return false
         return isAlive && other != attachedEntity
     }
 

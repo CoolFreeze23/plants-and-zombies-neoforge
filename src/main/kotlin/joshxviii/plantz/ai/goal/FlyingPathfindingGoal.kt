@@ -60,7 +60,7 @@ open class FlyingPathfindingGoal(
 
             val targetHover = (if (hoverGroundHeight > 0.0) hoverGroundHeight else 1.5)
             val surfaceY = level.getHeight(Heightmap.Types.WORLD_SURFACE, blockX, blockZ).toDouble()
-            val ry = surfaceY + targetHover + (entity.random.nextDouble() * 1.0 - 0.5) - 3.0
+            val ry = surfaceY + targetHover + (entity.random.nextDouble() * 1.0 - 0.5)
 
             if (ry <= level.minBuildHeight + 2 || ry >= (level.maxBuildHeight - 1) - 2) continue
 

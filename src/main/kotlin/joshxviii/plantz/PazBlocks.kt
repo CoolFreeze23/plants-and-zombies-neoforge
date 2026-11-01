@@ -2,7 +2,8 @@ package joshxviii.plantz
 
 import joshxviii.plantz.block.*
 import joshxviii.plantz.block.entity.*
-import joshxviii.plantz.item.component.BlocksProjectileDamage
+import joshxviii.plantz.item.FlagItem
+import joshxviii.plantz.item.component.ProtectsHeadDataComponent
 import joshxviii.plantz.item.component.StoredWater.Companion.DEFAULT_CAPACITY
 import com.google.common.collect.ImmutableSet
 import joshxviii.plantz.item.EquipableBlockItem
@@ -27,17 +28,15 @@ import net.minecraft.world.item.Item.BASE_ATTACK_DAMAGE_ID
 import net.minecraft.world.item.Item.BASE_ATTACK_SPEED_ID
 import net.minecraft.world.item.Rarity
 import net.minecraft.world.item.component.ItemAttributeModifiers
-import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.IronBarsBlock
-import net.minecraft.world.level.block.SlabBlock
-import net.minecraft.world.level.block.SoundType
-import net.minecraft.world.level.block.StairBlock
+import net.minecraft.world.level.block.*
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.level.block.state.BlockBehaviour
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.state.properties.BlockSetType
 import net.minecraft.world.level.block.state.properties.BooleanProperty
 import net.minecraft.world.level.block.state.properties.IntegerProperty
+import net.minecraft.world.level.block.state.properties.NoteBlockInstrument
 import net.minecraft.world.level.material.MapColor
 import net.minecraft.world.level.material.PushReaction
 
@@ -112,13 +111,15 @@ object PazBlocks {
     @JvmField val GREEN_GARDEN_GNOME: Block = registerBlock("green_garden_gnome", gardenGnomeProperties(MapColor.COLOR_GREEN), { GardenGnomeBlock(it, GardenGnomeColor.GREEN) })
     @JvmField val RED_GARDEN_GNOME: Block = registerBlock("red_garden_gnome", gardenGnomeProperties(MapColor.COLOR_RED), { GardenGnomeBlock(it, GardenGnomeColor.RED) })
     @JvmField val YELLOW_GARDEN_GNOME: Block = registerBlock("yellow_garden_gnome", gardenGnomeProperties(MapColor.COLOR_YELLOW), { GardenGnomeBlock(it, GardenGnomeColor.YELLOW) })
+    @JvmField val GOLDEN_GARDEN_GNOME: Block = registerBlock("golden_garden_gnome", gardenGnomeProperties(MapColor.COLOR_YELLOW), { GardenGnomeBlock(it, GardenGnomeColor.GOLDEN) })
     val GARDEN_GNOME_ENTITY: BlockEntityType<GardenGnomeBlockEntity> = registerBlockEntity(
         "garden_gnome",
         ::GardenGnomeBlockEntity,
         BLUE_GARDEN_GNOME,
         GREEN_GARDEN_GNOME,
         RED_GARDEN_GNOME,
-        YELLOW_GARDEN_GNOME
+        YELLOW_GARDEN_GNOME,
+        GOLDEN_GARDEN_GNOME
     )
 
     @JvmField val LAWN_FLAMINGO: Block = registerBlock(
@@ -188,16 +189,23 @@ object PazBlocks {
             .pushReaction(PushReaction.DESTROY),
         ::ConeBlock,
         Item.Properties()
-            .component(PazComponents.BLOCKS_PROJECTILE_DAMAGE, BlocksProjectileDamage(breakChance = 0.12f))
+            .component(PazComponents.PROTECTS_HEAD, ProtectsHeadDataComponent(
+                blockSound = PazSounds.PROJECTILE_HIT_CONE
+            ))
+            .component(PazComponents.BLOCKING_ITEM_BREAK_CHANCE, 0.08f)
             .component(
                 DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.builder()
                     .add(
                         Attributes.ARMOR,
-                        AttributeModifier(pazResource("cone_armor"), 0.5, AttributeModifier.Operation.ADD_VALUE),
+                        AttributeModifier(pazResource("cone_armor"), 4.0, AttributeModifier.Operation.ADD_VALUE),
+                        EquipmentSlotGroup.HEAD
+                    ).add(
+                        Attributes.ARMOR_TOUGHNESS,
+                        AttributeModifier(pazResource("cone_armor_toughness"), 1.5, AttributeModifier.Operation.ADD_VALUE),
                         EquipmentSlotGroup.HEAD
                     ).add(
                         Attributes.KNOCKBACK_RESISTANCE,
-                        AttributeModifier(pazResource("cone_knockback_resistance"), 0.1, AttributeModifier.Operation.ADD_VALUE),
+                        AttributeModifier(pazResource("cone_knockback_resistance"), 0.05, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL),
                         EquipmentSlotGroup.HEAD
                     ).build()
             ),
@@ -234,13 +242,32 @@ object PazBlocks {
     @JvmField val REINFORCED_BRAINZ_ALLOY_BLOCK: Block = registerBlock(
         "reinforced_brainz_alloy_block",
         BlockBehaviour.Properties.of().sound(SoundType.COPPER).requiresCorrectToolForDrops()
-            .strength(10.0F, 1200.0F),
+            .strength(14.0F, 1200.0F),
     )
     @JvmField val BRAINZ_ALLOY_FENCE: Block = registerBlock(
         "brainz_alloy_fence",
         BlockBehaviour.Properties.of().sound(SoundType.COPPER).requiresCorrectToolForDrops()
             .strength(3.0f, 6.0f).noOcclusion(),
         ::IronBarsBlock
+    )
+    @JvmField val BRAINZ_ALLOY_DOOR: Block = registerBlock(
+        "brainz_alloy_door",
+        BlockBehaviour.Properties.of()
+            .mapColor(BRAINZ_ALLOY_BLOCK.defaultMapColor())
+            .strength(5.0f)
+            .noOcclusion()
+            .pushReaction(PushReaction.DESTROY),
+        { DoorBlock(BlockSetType.COPPER, it) },
+    )
+    @JvmField val BRAINZ_ALLOY_TRAPDOOR: Block = registerBlock(
+        "brainz_alloy_trapdoor",
+        BlockBehaviour.Properties.of()
+            .mapColor(BRAINZ_ALLOY_BLOCK.defaultMapColor())
+            .requiresCorrectToolForDrops()
+            .strength(5.0f)
+            .noOcclusion()
+            .isValidSpawn(Blocks::never),
+        { TrapDoorBlock(BlockSetType.COPPER, it) },
     )
 
     @JvmField val BRAINZ_FLAG: Block = registerBlock(
@@ -262,11 +289,11 @@ object PazBlocks {
                         EquipmentSlotGroup.HAND
                     ).add(
                         Attributes.FOLLOW_RANGE,
-                        AttributeModifier(pazResource("zombie_leader_flag"), 0.5, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
+                        AttributeModifier(pazResource("zombie_leader_flag"), 0.2, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
                         EquipmentSlotGroup.HAND
                     ).build()
             ),
-        { block, props -> EquipableBlockItem(block, props, EquipmentSlot.OFFHAND, swappable = false) }
+        ::FlagItem
     )
     @JvmField val PLANTZ_FLAG: Block = registerBlock(
         "plantz_flag",
@@ -291,7 +318,7 @@ object PazBlocks {
                         EquipmentSlotGroup.HAND
                     ).build()
             ),
-        { block, props -> EquipableBlockItem(block, props, EquipmentSlot.OFFHAND, swappable = false) }
+        ::FlagItem
     )
     val FLAG_BLOCK_ENTITY: BlockEntityType<FlagBlockEntity> = registerBlockEntity(
         "flag_block",
@@ -304,7 +331,7 @@ object PazBlocks {
         "gravestone",
         BlockBehaviour.Properties.of()
             .sound(SoundType.TUFF_BRICKS)
-            .strength(19.5F)
+            .strength(23.5F)
             .pushReaction(PushReaction.BLOCK)
             .requiresCorrectToolForDrops(),
         ::GravestoneBlock,
@@ -320,7 +347,7 @@ object PazBlocks {
         properties: BlockBehaviour.Properties = BlockBehaviour.Properties.of(),
         blockFactory: (BlockBehaviour.Properties) -> Block = ::Block,
         itemProperties: Item.Properties? = Item.Properties(),
-        itemFactory: (Block, Item.Properties) -> Item = ::BlockItem,
+        blockItemFactory: (Block, Item.Properties) -> BlockItem = ::BlockItem,
     ): Block {
         val key = ResourceKey.create(Registries.BLOCK, pazResource(name))
         val block = blockFactory(properties)
@@ -329,7 +356,7 @@ object PazBlocks {
         // Also register the block item
         if (itemProperties!=null) {
             val itemKey = ResourceKey.create(Registries.ITEM, pazResource(name))
-            val blockItem = itemFactory(block, itemProperties)
+            val blockItem = blockItemFactory(block, itemProperties)
             Registry.register(BuiltInRegistries.ITEM, itemKey, blockItem)
         }
 

@@ -1,6 +1,13 @@
 package joshxviii.plantz
 
 import net.minecraft.core.registries.Registries
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.entity.item.ItemEntity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.storage.loot.LootParams
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams
 import net.neoforged.neoforge.event.LootTableLoadEvent
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.resources.ResourceKey
@@ -24,6 +31,7 @@ object PazLootTables {
     @JvmField val MAIL_REWARD_BUCKET = registerLootTable("raid/mail_reward_bucket")
     @JvmField val MAIL_REWARD_HALFTIME = registerLootTable("raid/mail_reward_halftime")
     @JvmField val MAIL_REWARD_WINTER = registerLootTable("raid/mail_reward_winter")
+    @JvmField val MAIL_REWARD_ZOMBOWEEN = registerLootTable("raid/mail_reward_zomboween")
     @JvmField val MAIL_REWARD_PIRATE = registerLootTable("raid/mail_reward_pirate")
     @JvmField val MAIL_REWARD_ARMY = registerLootTable("raid/mail_reward_army")
     @JvmField val MAIL_REWARD_LEAGUE = registerLootTable("raid/mail_reward_league")
@@ -35,7 +43,26 @@ object PazLootTables {
         return ResourceKey.create(Registries.LOOT_TABLE, pazResource(name) )
     }
 
+    /** 26.1 BuiltInLootTables.CARVE_PUMPKIN injection; 1.21.1 has no carving loot table, see PumpkinBlockCarveMixin. */
+    @JvmField
+    val CARVE_PUMPKIN = registerLootTable("injection/carve/pumpkin")
+
     fun initialize() {}
+
+    /** Drops the [CARVE_PUMPKIN] loot like the [seeds] that carving just dropped (26.1 drops all carve loot that way). */
+    @JvmStatic
+    fun dropCarveLoot(level: ServerLevel, state: BlockState, player: Player, seeds: ItemEntity) {
+        val params = LootParams.Builder(level)
+            .withParameter(LootContextParams.THIS_ENTITY, player)
+            .withParameter(LootContextParams.ORIGIN, seeds.position())
+            .withParameter(LootContextParams.BLOCK_STATE, state)
+            .create(LootContextParamSets.BLOCK_USE)
+        for (stack in level.server.reloadableRegistries().getLootTable(CARVE_PUMPKIN).getRandomItems(params)) {
+            val drop = ItemEntity(level, seeds.x, seeds.y, seeds.z, stack)
+            drop.deltaMovement = seeds.deltaMovement
+            level.addFreshEntity(drop)
+        }
+    }
 
     /** Fabric's LootTableEvents.MODIFY → NeoForge LootTableLoadEvent. */
     fun onLootTableLoad(event: LootTableLoadEvent) {

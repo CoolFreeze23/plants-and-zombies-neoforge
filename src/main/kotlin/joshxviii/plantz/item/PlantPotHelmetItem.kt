@@ -26,4 +26,7 @@ class PlantPotHelmetItem(properties: Properties) : Item(properties), Equipable {
         swapWithEquipmentSlot(level, player, hand, EquipmentSlot.HEAD)
 
     override fun isValidRepairItem(stack: ItemStack, repairCandidate: ItemStack): Boolean = repairCandidate.`is`(Items.BRICK)
+
+    // 26.1 enchantable(1)
+    override fun getEnchantmentValue(stack: ItemStack): Int = 1
 }

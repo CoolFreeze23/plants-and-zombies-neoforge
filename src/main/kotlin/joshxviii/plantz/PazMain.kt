@@ -4,6 +4,7 @@ import joshxviii.plantz.block.entity.MailboxBlockEntity
 import joshxviii.plantz.block.entity.MailboxManager
 import joshxviii.plantz.block.entity.getMailboxMailQueue
 import joshxviii.plantz.networking.ServerConfigResponsePayload
+import joshxviii.plantz.raid.ZombieRaids
 import joshxviii.plantz.raid.getZombieRaids
 import net.minecraft.core.registries.Registries
 import net.minecraft.server.level.ServerLevel
@@ -51,7 +52,7 @@ object PazMain {
 		val bus = NeoForge.EVENT_BUS
 		// clear client raid cache + load config
 		bus.addListener { _: ServerStartingEvent ->
-			PazNetwork.ZombieRaidClientCache.clear()
+			ZombieRaids.clearActiveRaidCenters()
 			PazConfig.load()
 		}
 		// config sync
@@ -111,5 +112,6 @@ object PazMain {
 		PazMenus.initialize()
 		PazJukeboxSongs.initialize()
 		PazBiomeModifiers.initialize()
+		PazEnchantments.initialize()
 	}
 }

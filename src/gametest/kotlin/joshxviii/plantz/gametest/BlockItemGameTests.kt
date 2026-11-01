@@ -1,5 +1,22 @@
 package joshxviii.plantz.gametest
 
+import net.minecraft.world.phys.AABB
+import net.minecraft.tags.EnchantmentTags
+import net.minecraft.resources.ResourceKey
+import net.minecraft.core.registries.Registries
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf
+import net.minecraft.world.level.block.TrapDoorBlock
+import net.minecraft.world.level.block.DoorBlock
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams
+import net.minecraft.world.level.storage.loot.LootParams
+import net.minecraft.world.phys.BlockHitResult
+import joshxviii.plantz.pazResource
+import joshxviii.plantz.item.entityDataOf
+import joshxviii.plantz.item.entityDataType
+import joshxviii.plantz.PazLootTables
+import joshxviii.plantz.item.component.LetterDataComponent
+import joshxviii.plantz.inventory.LetterMenu
 import joshxviii.plantz.PazBlocks
 import joshxviii.plantz.PazComponents
 import joshxviii.plantz.PazCreativeTab
@@ -329,8 +346,8 @@ object BlockItemGameTests {
         player.addEffect(MobEffectInstance(MobEffects.BAD_OMEN, 1200, 1))
 
         val flag = helper.getBlockEntity<FlagBlockEntity>(healing)
-        flag.hurt(100f)
-        helper.check(flag.health == FlagBlockEntity.MAX_HEALTH - 100f && flag.resetTime == FlagBlockEntity.HEAL_COOLDOWN_TIME) { "hurt flag: ${flag.health} / ${flag.resetTime}" }
+        flag.hurt(10f)
+        helper.check(flag.health == flag.maxHealth - 10f) { "hurt flag: ${flag.health} / ${flag.maxHealth}" }
         helper.getBlockEntity<FlagBlockEntity>(dying).hurt(FlagBlockEntity.MAX_HEALTH)
 
         helper.startSequence()
@@ -340,8 +357,8 @@ object BlockItemGameTests {
                 helper.check(player.hasEffect(PazEffects.ZOMBIE_OMEN) && !player.hasEffect(MobEffects.BAD_OMEN)) { "bad omen not replaced" }
                 helper.check(player.getEffect(PazEffects.ZOMBIE_OMEN)?.amplifier == 1) { "omen level lost" }
             }
-            .thenWaitUntil { helper.check(flag.health > FlagBlockEntity.MAX_HEALTH - 100f) { "flag not healing (${flag.health})" } }
-            .thenExecute { helper.check(flag.health == FlagBlockEntity.MAX_HEALTH - 96f) { "heal step ${flag.health}" } }
+            .thenWaitUntil { helper.check(flag.health > flag.maxHealth - 10f) { "flag not healing (${flag.health})" } }
+            .thenExecute { helper.check(flag.health == flag.maxHealth - 10f + flag.maxHealth * 0.01f) { "heal step ${flag.health}" } }
             .thenSucceed()
     }
 
@@ -512,7 +529,7 @@ object BlockItemGameTests {
         helper.check(player.getEquipmentSlotForItem(ItemStack(Items.WATER_BUCKET)) == EquipmentSlot.MAINHAND) { "water bucket is headgear" }
         val headSlot = player.inventoryMenu.getSlot(5)
         helper.check(headSlot.mayPlace(bucket) && !headSlot.mayPlace(ItemStack(Items.WATER_BUCKET))) { "helmet slot bucket rules" }
-        helper.check(bucket.get(PazComponents.BLOCKS_PROJECTILE_DAMAGE) != null) { "bucket blocks no projectiles" }
+        helper.check(bucket.get(PazComponents.PROTECTS_HEAD) != null) { "bucket does not protect the head" }
         helper.check(bucket.get(DataComponents.ATTRIBUTE_MODIFIERS)?.modifiers()?.any { it.attribute() == Attributes.ARMOR } == true) { "bucket gives no armor" }
 
         // shift-click an empty bucket from the inventory into the free helmet slot
@@ -580,6 +597,8 @@ object BlockItemGameTests {
         player.inventory.setItem(20, ItemStack(Items.RED_DYE, 16))
         blaster.use(level, player, InteractionHand.MAIN_HAND)
         helper.check(player.isUsingItem) { "dye blaster not in use" }
+        blaster.onUseTick(level, player, blaster.getUseDuration(player) - 1) // loads a dye
+        helper.check(blaster.has(DataComponents.CHARGED_PROJECTILES) && blaster.has(DataComponents.DYED_COLOR)) { "dye blaster not loaded" }
         blaster.onUseTick(level, player, blaster.getUseDuration(player) - 4)
         helper.check(helper.entitiesNear(PaintBall::class.java, BlockPos(7, 3, 3), 3.0).isNotEmpty()) { "no paint ball" }
         helper.check(blaster.damageValue == 2) { "blaster damage ${blaster.damageValue}" } // 1 per use tick + 1 per shot (ProjectileWeaponItem.shoot)
@@ -618,7 +637,112 @@ object BlockItemGameTests {
         val items = tab.displayItems.toList()
         helper.check(items.firstOrNull()?.let { SeedPacketItem.typeFromStack(it) } == PazEntities.SUNFLOWER) { "tab starts with ${items.firstOrNull()}" }
         helper.check(items.any { it.`is`(PazItems.WATERING_CAN) } && items.any { it.`is`(PazBlocks.MAIL_COLLECTION_BOX.asItem()) }) { "tab misses items" }
-        helper.check(items.count { it.`is`(PazItems.SEED_PACKET) } == 29) { "tab has ${items.count { it.`is`(PazItems.SEED_PACKET) }} seed packets" }
+        helper.check(items.count { it.`is`(PazItems.SEED_PACKET) } == 30) { "tab has ${items.count { it.`is`(PazItems.SEED_PACKET) }} seed packets" }
+        helper.succeed()
+    }
+
+    // --- letters, carving, doors, enchanting ---
+
+    /** A letter opens its menu; an attachment put in it is stored on the letter, and a signed letter takes none. */
+    @JvmStatic
+    @GameTest(template = PLATFORM, batch = BATCH)
+    fun letterMenuStoresAttachment(helper: GameTestHelper) {
+        val level = helper.level
+        val player = helper.mockPlayer(Vec3(7.5, 2.0, 7.5))
+        val letter = player.hold(ItemStack(PazItems.LETTER))
+        letter.use(level, player, InteractionHand.MAIN_HAND)
+        val menu = player.containerMenu as? LetterMenu ?: throw GameTestAssertException("letter menu not open: ${player.containerMenu}")
+        helper.check(menu.editable) { "new letter is not editable" }
+        menu.attachmentSlot.set(ItemStack(Items.DIAMOND))
+        val data = letter.get(PazComponents.LETTER_DATA)
+        helper.check(data != null && data.item.`is`(Items.DIAMOND)) { "attachment not stored: $data" }
+        // components need value equality: the same data with a copied attachment is equal
+        val copy = data!!.copy(item = data.item.copy())
+        helper.check(copy == data && copy.hashCode() == data.hashCode()) { "letter data equality" }
+        player.closeContainer()
+
+        val signed = player.hold(ItemStack(PazItems.LETTER).apply {
+            set(PazComponents.LETTER_DATA, LetterDataComponent(pages = listOf("Hi"), signed = true, author = "Crazy Dave"))
+        })
+        signed.use(level, player, InteractionHand.MAIN_HAND)
+        val signedMenu = player.containerMenu as? LetterMenu ?: throw GameTestAssertException("signed letter menu not open")
+        helper.check(!signedMenu.editable && !signedMenu.attachmentSlot.mayPlace(ItemStack(Items.DIAMOND))) { "signed letter takes attachments" }
+        player.closeContainer()
+        helper.succeed()
+    }
+
+    /** Carving a pumpkin still drops its seeds and rolls the carve loot table, which sometimes gives a Pumpkin seed packet. */
+    @JvmStatic
+    @GameTest(template = PLATFORM, batch = BATCH)
+    fun pumpkinCarvingLoot(helper: GameTestHelper) {
+        val level = helper.level
+        val pos = BlockPos(7, 2, 7)
+        helper.setBlock(pos, Blocks.PUMPKIN)
+        val player = helper.mockPlayer(Vec3(7.5, 2.0, 4.5))
+        player.hold(ItemStack(Items.SHEARS))
+        val abs = helper.absolutePos(pos)
+        val hit = BlockHitResult(Vec3.atCenterOf(abs).relative(Direction.NORTH, 0.5), Direction.NORTH, abs, false)
+        val result = level.getBlockState(abs).useItemOn(player.mainHandItem, level, player, InteractionHand.MAIN_HAND, hit)
+        helper.check(result.consumesAction()) { "pumpkin not carved: $result" }
+        helper.assertBlockPresent(Blocks.CARVED_PUMPKIN, pos)
+        helper.check(helper.entitiesNear(ItemEntity::class.java, pos, 2.0).any { it.item.`is`(Items.PUMPKIN_SEEDS) }) { "no pumpkin seeds" }
+
+        val table = level.server.reloadableRegistries().getLootTable(PazLootTables.CARVE_PUMPKIN)
+        val params = LootParams.Builder(level)
+            .withParameter(LootContextParams.THIS_ENTITY, player)
+            .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(abs))
+            .withParameter(LootContextParams.BLOCK_STATE, Blocks.PUMPKIN.defaultBlockState())
+            .create(LootContextParamSets.BLOCK_USE)
+        val drops = (1..1000).flatMap { table.getRandomItems(params) }
+        helper.check(drops.all { it.`is`(PazItems.SEED_PACKET) && it.entityDataType() == PazEntities.PUMPKIN }) { "carve loot: $drops" }
+        helper.check(drops.size in 15..80) { "${drops.size} pumpkin packets in 1000 carvings (4% chance)" }
+        helper.succeed()
+    }
+
+    /** The brainz alloy door and trapdoor open by hand, like copper ones. */
+    @JvmStatic
+    @GameTest(template = PLATFORM, batch = BATCH)
+    fun brainzAlloyDoorAndTrapdoorOpen(helper: GameTestHelper) {
+        val player = helper.mockPlayer(Vec3(7.5, 2.0, 4.5))
+        val door = BlockPos(5, 2, 7)
+        val lower = PazBlocks.BRAINZ_ALLOY_DOOR.defaultBlockState()
+        helper.setBlock(door, lower)
+        helper.setBlock(door.above(), lower.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER))
+        val trapdoor = BlockPos(9, 2, 7)
+        helper.setBlock(trapdoor, PazBlocks.BRAINZ_ALLOY_TRAPDOOR)
+        helper.useBlock(door, player)
+        helper.useBlock(trapdoor, player)
+        helper.assertBlockProperty(door, DoorBlock.OPEN, true)
+        helper.assertBlockProperty(door.above(), DoorBlock.OPEN, true)
+        helper.assertBlockProperty(trapdoor, TrapDoorBlock.OPEN, true)
+        helper.succeed()
+    }
+
+    /** Enchantability (26.1 enchantable(n)); the gardening glove takes Lobbing at the enchanting table, and a lobbing glove throws the plant it holds. */
+    @JvmStatic
+    @GameTest(template = PLATFORM, batch = BATCH)
+    fun gardeningGloveLobbing(helper: GameTestHelper) {
+        val level = helper.level
+        val values = mapOf(PazItems.GARDENING_GLOVE to 10, PazItems.DUCKY_TUBE to 1, PazItems.DYE_BLASTER to 1, PazItems.PLANT_POT_HELMET to 1)
+        for ((item, value) in values) helper.check(ItemStack(item).enchantmentValue == value) { "$item enchantability ${ItemStack(item).enchantmentValue}" }
+
+        val lobbing = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(ResourceKey.create(Registries.ENCHANTMENT, pazResource("lobbing")))
+        val glove = ItemStack(PazItems.GARDENING_GLOVE)
+        helper.check(glove.isEnchantable && lobbing.value().isSupportedItem(glove)) { "glove can't take lobbing" }
+        helper.check(lobbing.`is`(EnchantmentTags.IN_ENCHANTING_TABLE)) { "lobbing not at the enchanting table" }
+
+        val player = helper.mockPlayer(Vec3(7.5, 2.0, 3.5))
+        glove.enchant(lobbing, 1)
+        glove.set(DataComponents.ENTITY_DATA, entityDataOf(PazEntities.PEA_SHOOTER))
+        player.hold(glove)
+        glove.use(level, player, InteractionHand.MAIN_HAND)
+        helper.check(player.isUsingItem) { "glove with a plant not in use" }
+        glove.onUseTick(level, player, glove.getUseDuration(player) - 1)
+        helper.check(!glove.has(DataComponents.ENTITY_DATA)) { "plant still in the glove" }
+        val thrown = level.getEntities(PazEntities.PEA_SHOOTER, AABB(helper.absolutePos(BlockPos(7, 2, 3))).inflate(4.0)) { true }
+        helper.check(thrown.isNotEmpty()) { "no plant thrown" }
+        player.stopUsingItem()
+        thrown.forEach { it.discard() }
         helper.succeed()
     }
 }

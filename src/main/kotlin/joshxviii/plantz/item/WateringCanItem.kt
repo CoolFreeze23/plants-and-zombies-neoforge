@@ -53,7 +53,7 @@ class WateringCanItem(properties: Properties) : BlockItem(PazBlocks.WATERING_CAN
                     if (storedWaterComponent?.let { it.storedWater >= it.maxCapacity } == true) return InteractionResult.PASS
                     itemStack.set(PazComponents.STORED_WATER, storedWaterComponent?.addWater())
                     level.gameEvent(player, GameEvent.FLUID_PICKUP, pos)
-                    level.playSound(null, pos, SoundEvents.BOTTLE_FILL, SoundSource.BLOCKS, 1.0f, 0.9f)
+                    level.playSound(null, pos, SoundEvents.BOTTLE_FILL, SoundSource.NEUTRAL, 1.0f, 0.9f)
                     return InteractionResult.SUCCESS
                 }
                 else if (level.getFluidState(pos).`is`(FluidTags.LAVA)) {

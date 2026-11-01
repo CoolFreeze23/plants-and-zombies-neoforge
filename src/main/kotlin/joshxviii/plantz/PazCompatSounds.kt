@@ -21,6 +21,7 @@ enum class PazCompatSounds(
 ) {
     COPPER_CHEST_OPEN("block.copper_chest.open", "block.copper_trapdoor.open"),
     COPPER_CHEST_CLOSE("block.copper_chest.close", "block.copper_trapdoor.close"),
+    COPPER_GOLEM_STEP("entity.copper_golem.step", "block.copper.step"),
     COPPER_GOLEM_BECOME_STATUE("entity.copper_golem_become_statue", "block.decorated_pot.insert", "entity.copper_golem.become_statue"),
     CREAKING_ACTIVATE("entity.creaking.activate", "block.hanging_roots.break"),
     HAPPY_GHAST_UNEQUIP("entity.happy_ghast.unequip", "item.armor.equip_generic"),

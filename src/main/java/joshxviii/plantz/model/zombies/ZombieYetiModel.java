@@ -1,8 +1,11 @@
 package joshxviii.plantz.model.zombies;
 
+import joshxviii.plantz.renderer.ModelCompatUtils;
 import joshxviii.plantz.animation.zombies.ZombieYetiAnimation;
 import joshxviii.plantz.renderer.entity.zombie.PazZombieRenderState;
 import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
+import joshxviii.plantz.renderer.entity.zombie.ZombieYetiRenderState;
+import net.minecraft.client.model.AnimationUtils;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -14,10 +17,12 @@ import static joshxviii.plantz.UtilsKt.pazResource;
 public class ZombieYetiModel<S extends PazZombieRenderState> extends PazZombieModel<S> {
 	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(pazResource("zombie_yeti"), "main");
 	private final KeyframeAnimation actionAnimation;
+	private final KeyframeAnimation walkAnimation;
 
 	public ZombieYetiModel(final ModelPart root) {
 		super(null, root);
 		this.actionAnimation = KeyframeAnimation.bake(ZombieYetiAnimation.action, root);
+		this.walkAnimation = KeyframeAnimation.bake(ZombieYetiAnimation.walk, root);
 	}
 
 	public static LayerDefinition createBodyLayer() {
@@ -26,10 +31,10 @@ public class ZombieYetiModel<S extends PazZombieRenderState> extends PazZombieMo
 
 		PartDefinition root = partdefinition.addOrReplaceChild("root", CubeListBuilder.create(), PartPose.offset(0.0F, 13.0F, 0.0F));
 
-		PartDefinition body = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(42, 56).addBox(-6.5F, -9.5F, -5.5F, 13.0F, 10.0F, 10.0F, new CubeDeformation(0.0F))
-				.texOffs(38, 41).addBox(-6.5F, -16.5F, -3.5F, 13.0F, 7.0F, 8.0F, new CubeDeformation(0.0F))
-				.texOffs(0, 51).addBox(-6.0F, -9.0F, -5.0F, 12.0F, 9.0F, 9.0F, new CubeDeformation(0.0F))
-				.texOffs(0, 37).addBox(-6.0F, -16.0F, -3.0F, 12.0F, 7.0F, 7.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 0.0F, 0.0F));
+		PartDefinition body = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(42, 56).addBox(-6.5F, 4.5F, -5.5F, 13.0F, 10.0F, 10.0F, new CubeDeformation(0.0F))
+				.texOffs(38, 41).addBox(-6.5F, -2.5F, -3.5F, 13.0F, 7.0F, 8.0F, new CubeDeformation(0.0F))
+				.texOffs(0, 51).addBox(-6.0F, 5.0F, -5.0F, 12.0F, 9.0F, 9.0F, new CubeDeformation(0.0F))
+				.texOffs(0, 37).addBox(-6.0F, -2.0F, -3.0F, 12.0F, 7.0F, 7.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, -14.0F, 0.0F));
 
 		PartDefinition head = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 0).addBox(-4.0F, -7.0F, -6.0F, 8.0F, 8.0F, 8.0F, new CubeDeformation(0.0F))
 				.texOffs(35, 0).addBox(-4.5F, -7.5F, -6.5F, 9.0F, 9.0F, 9.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, -15.0F, 0.0F));
@@ -53,7 +58,12 @@ public class ZombieYetiModel<S extends PazZombieRenderState> extends PazZombieMo
 
 	@Override
 	public void setupAnim(@NotNull S state) {
+		if (!(state instanceof ZombieYetiRenderState yetiState)) return;
 		super.setupAnim(state);
-		actionAnimation.applyWalk(state.attackTime*4, 1.0f, 1.0f, 1.0f);
+		resetPose();
+		ModelCompatUtils.animateZombieArms(this.leftArm, this.rightArm, false, state);
+
+		walkAnimation.applyWalk(state.walkAnimationPos, state.walkAnimationSpeed, 1.5f, 2f);
+		actionAnimation.apply(yetiState.getBashAnimationState(), state.ageInTicks);
 	}
 }

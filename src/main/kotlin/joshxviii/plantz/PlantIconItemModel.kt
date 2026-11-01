@@ -61,7 +61,7 @@ object PlantIconItemModel {
 
     fun overlayIdFor(type: EntityType<*>): ResourceLocation {
         val id = BuiltInRegistries.ENTITY_TYPE.getKey(type)
-        return pazResource("item/plant_icon/${id.path}")
+        return ResourceLocation.fromNamespaceAndPath(id.namespace, "item/plant_icon/${id.path}")
     }
 
     private fun standalone(id: ResourceLocation) = ModelResourceLocation.standalone(id)

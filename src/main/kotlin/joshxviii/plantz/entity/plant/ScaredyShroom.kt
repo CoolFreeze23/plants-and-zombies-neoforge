@@ -1,6 +1,7 @@
 package joshxviii.plantz.entity.plant
 
 import joshxviii.plantz.PazSounds
+import joshxviii.plantz.PazTags
 import joshxviii.plantz.ai.goal.ProjectileAttackGoal
 import joshxviii.plantz.entity.projectile.Spore
 import net.minecraft.network.syncher.EntityDataAccessor
@@ -18,6 +19,7 @@ import net.minecraft.world.entity.monster.Enemy
 import net.minecraft.world.entity.monster.Zombie
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.Level
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 import java.util.function.Predicate
 
@@ -109,4 +111,9 @@ class ScaredyShroom(type: EntityType<out Plant>, level: Level) : Plant(type, lev
         }
     }
 
+    override fun canSurviveOn(block: BlockState): Boolean {
+        return super.canSurviveOn(block) || block.`is`(PazTags.BlockTags.CAVE_SPAWNABLE_ON)
+    }
+
+    override fun canPlaceOn(block: BlockState): Boolean = super.canSurviveOn(block)
 }

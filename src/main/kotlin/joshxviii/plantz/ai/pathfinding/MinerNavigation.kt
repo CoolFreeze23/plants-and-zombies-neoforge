@@ -4,13 +4,12 @@ import joshxviii.plantz.canReachTarget
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.entity.PathfinderMob
-import net.minecraft.world.entity.ai.navigation.GroundPathNavigation
 import net.minecraft.world.level.GameRules
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.pathfinder.Path
 import net.minecraft.world.level.pathfinder.PathFinder
 
-class MinerNavigation(entity: PathfinderMob, level: Level) : GroundPathNavigation(entity, level) {
+class MinerNavigation(entity: PathfinderMob, level: Level) : PazGroundPathNavigation(entity, level) {
 
     override fun createPathFinder(maxVisitedNodes: Int): PathFinder {
         this.nodeEvaluator = MinerNodeEvaluator()

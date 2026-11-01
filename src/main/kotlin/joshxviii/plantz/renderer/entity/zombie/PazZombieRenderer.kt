@@ -7,10 +7,10 @@ import joshxviii.plantz.entity.zombie.*
 import joshxviii.plantz.model.zombies.PazZombieModel
 import joshxviii.plantz.renderer.getEmissiveTextureLocation
 import joshxviii.plantz.renderer.getTextureLocation
-import joshxviii.plantz.renderer.isMagicName
 import joshxviii.plantz.compat.client.model.ArmorModelSet
 import joshxviii.plantz.compat.client.model.CompatModelLayers
 import joshxviii.plantz.compat.client.model.EntityModel
+import joshxviii.plantz.renderer.validMagicName
 import net.minecraft.client.model.geom.ModelLayerLocation
 import joshxviii.plantz.compat.client.renderer.SubmitNodeCollector
 import joshxviii.plantz.compat.client.renderer.AbstractZombieRenderer
@@ -150,11 +150,13 @@ open class PazZombieRenderState : ZombieRenderState() {
     val actionAnimationState: AnimationState = AnimationState()
 
     fun getSuffixes(): MutableList<String> {
-        val magicName = this.isMagicName(customName)
+        val magicName = this.validMagicName(customName)
         val suffixes = mutableListOf<String>().apply {
-            textureExtra.forEach                { add(it) }
-            if (isBaby)                         add("baby")
-            else if (magicName.isNotEmpty())    add(magicName)
+            if (magicName!=null)      add(magicName)
+            else {
+                textureExtra.forEach  { add(it) }
+                if (isBaby)           add("baby")
+            }
         }.filter { it.isNotEmpty() }.toMutableList()
         return suffixes
     }

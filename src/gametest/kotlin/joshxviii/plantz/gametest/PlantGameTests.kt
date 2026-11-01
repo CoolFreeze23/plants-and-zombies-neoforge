@@ -1,5 +1,9 @@
 package joshxviii.plantz.gametest
 
+import net.minecraft.world.level.GameType
+import joshxviii.plantz.entity.plant.processSeedPacketInteraction
+import joshxviii.plantz.entity.plant.PacketInteractionResult
+import joshxviii.plantz.item.entityDataType
 import joshxviii.plantz.GardenHeroRewards
 import joshxviii.plantz.PazBlocks
 import joshxviii.plantz.PazCriteria
@@ -673,7 +677,7 @@ object PlantGameTests {
         helper.assertTrue(SeedMutationManager.get(level, PazEntities.SUNFLOWER) == null, "unexpected sunflower mutation data")
 
         val nut = helper.spawn(PazEntities.EXPLODE_O_NUT, 7, 2, 7)
-        val results = (1..300).map { SeedMutationManager.resolve(nut) }.toSet()
+        val results = (1..300).map { SeedMutationManager.resolve(nut).entityDataType() }.toSet()
         helper.assertTrue(results == setOf(PazEntities.WALL_NUT, PazEntities.EXPLODE_O_NUT), "explode-o-nut mutations: $results")
 
         val thunder = SeedMutationManager.get(level, PazEntities.ELECTRIC_PEA_SHOOTER)!!.mutations.first()
@@ -1055,12 +1059,35 @@ object PlantGameTests {
         helper.assertTrue(player.hasPazAdvancement("receive_hero_mail"), "receive_hero_mail")
         PazCriteria.WIN_ZOMBIE_RAID.trigger(player, true)
         helper.assertTrue(player.hasPazAdvancement("win_zombie_raid"), "win_zombie_raid")
-        PazCriteria.START_HARDEST_RAID.trigger(player, true)
-        helper.assertTrue(player.hasPazAdvancement("start_hardest_raid"), "start_hardest_raid")
+        PazCriteria.WIN_HARDEST_RAID.trigger(player, true)
+        helper.assertTrue(player.hasPazAdvancement("win_hardest_raid"), "win_hardest_raid")
         PazCriteria.RELOCATION.trigger(player, false)
         helper.assertFalse(player.hasPazAdvancement("relocation"), "relocation granted for a failed dig")
         for (wave in 1..10) PazCriteria.RAID_WAVE_TRIGGER.trigger(player, wave)
         helper.assertTrue(player.hasPazAdvancement("taco_time"), "taco_time")
+        helper.removeMockPlayer(player)
+        helper.succeed()
+    }
+
+    // ---- pumpkin ----
+
+    /** A Pumpkin seed packet on the owner's plant gives it pumpkin armor, which takes hits in place of the plant. */
+    @JvmStatic
+    @GameTest(template = PLATFORM)
+    fun pumpkinArmorShieldsPlant(helper: GameTestHelper) {
+        val level = helper.level
+        val plant = helper.spawnWithNoFreeWill(PazEntities.PEA_SHOOTER, 7, 2, 7)
+        val player = helper.mockPlayer(7.5, 2.0, 4.5)
+        player.setGameMode(GameType.CREATIVE)
+        plant.tame(player)
+        val packet = SeedPacketItem.stackFor(PazEntities.PUMPKIN)
+        val result = plant.processSeedPacketInteraction(player, packet, InteractionHand.MAIN_HAND)
+        helper.assertTrue(result == PacketInteractionResult.SUCCESS && plant.hasPumpkinArmor(), "pumpkin armor not applied ($result)")
+        val health = plant.health
+        val armor = plant.pumpkinArmor
+        plant.hurt(level.damageSources().generic(), 2f)
+        helper.assertTrue(plant.health == health && plant.pumpkinArmor == armor - 2f, "hit not taken by the pumpkin: health ${plant.health}, armor ${plant.pumpkinArmor}")
+        helper.assertTrue(plant.processSeedPacketInteraction(player, packet, InteractionHand.MAIN_HAND) == PacketInteractionResult.NO_INTERACTION, "second pumpkin applied")
         helper.removeMockPlayer(player)
         helper.succeed()
     }

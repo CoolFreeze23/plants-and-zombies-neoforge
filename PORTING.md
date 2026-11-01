@@ -1,6 +1,6 @@
 # How the port is structured
 
-Upstream: [joshxviii/plants-and-zombies](https://github.com/joshxviii/plants-and-zombies) @ `e92d5937` (Fabric, MC 26.1.2, Kotlin + Java).
+Upstream: [joshxviii/plants-and-zombies](https://github.com/joshxviii/plants-and-zombies) @ `88ddc959` (1.5.2; Fabric, MC 26.1.2, Kotlin + Java).
 This port: NeoForge 21.1 / MC 1.21.1, Java 21, Kotlin 2.3 via Kotlin for Forge 5.11, TerraBlender 4.1.
 
 The goal is to keep upstream's code recognisable so upstream changes can be carried over. Most files are upstream's with
@@ -15,7 +15,7 @@ the minimum changes 1.21.1 forces; the newer vanilla APIs upstream relies on are
 | `src/main/kotlin/joshxviii/plantz/integration/**` | Optional Iris, Vanilla Backport, Copper Age Backport and Backported Spears support (registry lookups with 1.21.1 fallbacks, so nothing links against the backports) |
 | `src/main/kotlin/joshxviii/plantz/client/GraveyardAmbience.kt` | The graveyard's 26.1 environment attributes (fog, clouds, sunrise, light) |
 | `src/main/resources/resourcepacks/{vanillabackport,copperagebackport}_compat` | Built-in data packs, each enabled only when its backport is installed (they override different files) |
-| `src/gametest/**` | Dev-only GameTests (not packaged), 132 tests covering plants, zombies, raids, blocks/items and data |
+| `src/gametest/**` | Dev-only GameTests (not packaged), 142 tests covering plants, zombies, raids, blocks/items, protection and data |
 
 ## Entry points
 - `PazMain` (`@Mod`): wires NeoForge events. All `Paz*.initialize()` objects still register eagerly with
@@ -46,6 +46,17 @@ Mirrors 26.1 names and semantics, so upstream code ports with import changes:
   The baby armor uses `CompatModelLayers.ZOMBIE_BABY_ARMOR_26_1` (26.1 UVs) when its texture is there.
 - `client.OnShelfDisplay` + `META-INF/enumextensions.json` + `CopperShelfRendererMixin` (optional, `require = 0`): 26.1's
   `on_shelf` display context, used by Copper Age Backport's shelves.
+- Item blocking: 26.1's `BLOCKS_ATTACKS` (newspaper) is a 1.21.1 shield (`ItemAbilities.SHIELD_BLOCK`) whose 26.1 arc,
+  reduction, block sound and break chance come from `NewspaperItem.onShieldBlock` (NeoForge `LivingShieldBlockEvent`);
+  26.1's `applyItemBlocking` head protection (`plantz:protects_head`) is `LivingEntityProtectsHeadMixin`, on the damage
+  left after shield blocking in `LivingEntity.hurt`.
+- Item models: 26.1 item definitions became 1.21.1 models with `overrides` on the predicates in
+  `data/PazItemModelProperties` (26.1 `has_component` / `select` / `range_dispatch`); 26.1 `tints` are per-item color
+  handlers there (dyed dye blaster, closed letter). `PlantIconItemModel` and `DoorShieldItemModel` are baked-model
+  wrappers for upstream's custom item model types (`plantz:plant_icon`, `plantz:door_shield_model`).
+- `gui.LetterEditBox` + `MultiLineEditBoxMixin`: 26.1's `MultiLineEditBox.builder()` options (no frame, black text, line limit).
+- 26.1 per-item enchantability (`enchantable(n)`) is a `getEnchantmentValue` override; 26.1's carve loot table is rolled by
+  `PumpkinBlockCarveMixin` (`plantz:injection/carve/pumpkin`, a `block_use` table).
 - `client.*`: the 26.1 render-state pipeline running immediate-mode on 1.21.1:
   - `state.*` render states (26.1 fields, plus `compatEntity`/`compatPartialTick` for the frame being drawn, and
     Fabric-style `setData/getData` keyed by `RenderStateDataKey`).

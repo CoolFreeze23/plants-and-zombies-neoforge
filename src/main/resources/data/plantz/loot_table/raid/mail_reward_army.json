@@ -9,7 +9,7 @@
       "entries": [
         {
           "type": "minecraft:loot_table",
-          "value": "plantz:raid/default_hard/materials",
+          "value": "plantz:raid/army/materials",
           "weight": 20
         },
         {
@@ -19,7 +19,7 @@
         },
         {
           "type": "minecraft:loot_table",
-          "value": "plantz:raid/default_hard/treasure",
+          "value": "plantz:raid/army/treasure",
           "weight": 10
         }
       ],

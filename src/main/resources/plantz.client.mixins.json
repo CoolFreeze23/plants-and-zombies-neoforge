@@ -17,6 +17,7 @@
     "HumanoidModelMixin",
     "LivingEntityRendererMixin",
     "LivingEntityRendererVanillaMixin",
+    "MultiLineEditBoxMixin",
     "MusicManagerAccessor",
     "SoundManagerMixin",
     "SoundOptionsScreenMixin",

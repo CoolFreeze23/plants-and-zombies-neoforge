@@ -1,5 +1,6 @@
 package joshxviii.plantz.entity.plant
 
+import joshxviii.plantz.PazTags
 import joshxviii.plantz.ai.goal.ProjectileAttackGoal
 import joshxviii.plantz.entity.projectile.Spore
 import net.minecraft.world.entity.EntityType
@@ -9,6 +10,7 @@ import net.minecraft.world.entity.monster.Creeper
 import net.minecraft.world.entity.monster.Enemy
 import net.minecraft.world.entity.monster.Zombie
 import net.minecraft.world.level.Level
+import net.minecraft.world.level.block.state.BlockState
 
 class PuffShroom(type: EntityType<out Plant>, level: Level) : Plant(type, level) {
     override fun registerGoals() {
@@ -25,4 +27,10 @@ class PuffShroom(type: EntityType<out Plant>, level: Level) : Plant(type, level)
                     || (target is Enemy && isTame))
         })
     }
+
+    override fun canSurviveOn(block: BlockState): Boolean {
+        return super.canSurviveOn(block) || block.`is`(PazTags.BlockTags.CAVE_SPAWNABLE_ON)
+    }
+
+    override fun canPlaceOn(block: BlockState): Boolean = super.canSurviveOn(block)
 }

@@ -3,11 +3,13 @@ package joshxviii.plantz.gui
 import joshxviii.plantz.PazBlocks
 import joshxviii.plantz.PazConfig
 import joshxviii.plantz.PazNetwork
-import joshxviii.plantz.ZombieRaider
+import joshxviii.plantz.entity.isActiveInRaid
 import joshxviii.plantz.entity.zombie.PazZombie
 import joshxviii.plantz.mixin.client.GameRendererAccessor
+import joshxviii.plantz.getHeldBalloons
 import joshxviii.plantz.renderer.entity.zombie.PazZombieRenderer
 import joshxviii.plantz.compat.client.model.HumanoidModel
+import net.minecraft.client.DeltaTracker
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.resources.ResourceLocation
@@ -29,16 +31,16 @@ object ZombieHudMarkers {
     private const val MIN_DISTANCE = 10.0
     private const val MAX_DISTANCE = 96.0
 
-    fun renderIcons(graphics: GuiGraphics, delta: Float) {
+    fun renderIcons(graphics: GuiGraphics, deltaTracker: DeltaTracker) {
         val mc = Minecraft.getInstance()
         if (mc.level == null || mc.player == null) return
         if (!PazConfig.ALWAYS_SHOW_HEAD_MARKERS) PazNetwork.ZombieRaidClientCache.get()
-            //?.let { if (it.waveTimer > 1200) return }
             ?: return
 
         val markers = collect(mc)
         if (markers.isEmpty()) return
         // 26.1 Camera.fov; 1.21.1 only has the private GameRenderer.getFov
+        val delta = deltaTracker.getGameTimeDeltaPartialTick(true)
         val fov = (mc.gameRenderer as GameRendererAccessor).`plantz$getFov`(mc.gameRenderer.mainCamera, delta, true)
 
         for ((worldPos, zombie) in markers) {
@@ -89,7 +91,7 @@ object ZombieHudMarkers {
         if (zombie.mainHandItem.`is`(PazBlocks.BRAINZ_FLAG.asItem()) || zombie.offhandItem.`is`(PazBlocks.BRAINZ_FLAG.asItem())) submitItem(graphics,
             PazBlocks.BRAINZ_FLAG.asItem().defaultInstance, cx, cy, baseScale)
 
-        val balloon = pazZombie.balloons.firstOrNull()
+        val balloon = pazZombie.getHeldBalloons().firstOrNull()
         if (balloon != null) submitItem(graphics, balloon.pickResult, cx, cy-8, baseScale)
     }
 
@@ -130,8 +132,7 @@ object ZombieHudMarkers {
                 if (entity !is Zombie) continue
 
                 if (!PazConfig.ALWAYS_SHOW_HEAD_MARKERS) {
-                    val isFromRaid = (entity as? ZombieRaider)?.`plantz$getIsFromRaid`()?: false
-                    if (!isFromRaid) continue
+                    if (!entity.isActiveInRaid()) continue
                 }
                 if (!isViewObscured(cam, entity)) continue
 

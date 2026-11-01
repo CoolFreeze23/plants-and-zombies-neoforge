@@ -39,6 +39,7 @@ class Cactus(type: EntityType<out Plant>, level: Level) : Plant(type, level) {
 
         this.goalSelector.addGoal(2, ProjectileAttackGoal(
             usingEntity = this,
+            aimAtBalloons = true,
             projectileFactory = { Needle(level(), this) },
             velocity = 1.5,
             cooldownTime = 40,

@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
+import joshxviii.plantz.block.entity.FlagBlockEntity
 import joshxviii.plantz.pazResource
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Holder
@@ -14,16 +15,27 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.util.VisibleForDebug
 import net.minecraft.world.entity.monster.Zombie
+import net.minecraft.world.Difficulty
+import net.minecraft.resources.ResourceKey
 import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.LevelAccessor
+import net.minecraft.world.level.ServerLevelAccessor
 import net.minecraft.world.level.dimension.DimensionType
 import net.minecraft.world.level.GameRules
 import net.minecraft.world.level.saveddata.SavedData
 import net.minecraft.core.HolderLookup
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Function
 
 fun ServerLevel.getZombieRaids(): ZombieRaids {
     return dataStorage.computeIfAbsent(ZombieRaids.TYPE, ZombieRaids.FILE_NAME)
+}
+
+fun LevelAccessor.isNearRaid(pos: BlockPos): Boolean {
+    val dimension = (this as? ServerLevelAccessor)?.level?.dimension() ?: return false
+    return ZombieRaids.isNearActiveRaid(dimension, pos)
 }
 
 class ZombieRaids(
@@ -37,10 +49,7 @@ class ZombieRaids(
     }
 
     private constructor(raids: MutableList<ZombieRaidWithId>, nextId: Int, tick: Int) : this() {
-        for (raid in raids) {
-            zombieRaidMap.put(raid.id, raid.raid)
-        }
-
+        for ((id, raid1) in raids) zombieRaidMap.put(id, raid1)
         this.nextId = nextId
         this.tick = tick
     }
@@ -61,13 +70,16 @@ class ZombieRaids(
 
         while (raidIterator.hasNext()) {
             val raid = raidIterator.next()
-            if (level.gameRules.getBoolean(GameRules.RULE_DISABLE_RAIDS)) raid.stop()
+            if (level.gameRules.getBoolean(GameRules.RULE_DISABLE_RAIDS) || level.difficulty == Difficulty.PEACEFUL) raid.stop()
 
             if (raid.isStopped()) {
+                (level.getBlockEntity(raid.center) as? FlagBlockEntity)?.setMaxHealth(refill = true)
                 raidIterator.remove()
                 setDirty()
             } else raid.tick(level)
         }
+
+        activeRaidCenters[level.dimension()] = zombieRaidMap.values.filter { !it.isStopped() }.map { it.center }
 
         if (tick % 200 == 0) setDirty()
     }
@@ -77,20 +89,18 @@ class ZombieRaids(
         if (flagPosition == null) return null
         else {
             val level = player.serverLevel()
-            if (level.gameRules.getBoolean(GameRules.RULE_DISABLE_RAIDS)) return null
+            if (level.gameRules.getBoolean(GameRules.RULE_DISABLE_RAIDS) || level.difficulty == Difficulty.PEACEFUL) return null
 
             val raid = getOrCreateRaid(level, flagPosition)
+
             if (raid.startedBy == null) raid.startedBy = player.uuid
 
-            if (!raid.started && !zombieRaidMap.containsValue(raid)) {
+            if (raid.status == ZombieRaid.ZombieRaidStatus.INIT && !zombieRaidMap.containsValue(raid)) {
                 zombieRaidMap.put(uniqueId, raid)
-                level.players().filter { it.blockPosition().distSqr(flagPosition) < 96*96 } .forEach {
+                level.players().filter { it.blockPosition().distSqr(flagPosition) < ZombieRaid.RAID_DISTANCE*ZombieRaid.RAID_DISTANCE } .forEach {
                     it.sendSystemMessage(ZombieRaid.getStartMessage(player.seenCredits))
                     raid.zombieRaidEvent.addPlayer(it)
                 }
-            }
-
-            if (!raid.started || raid.zombieRaidOmenLevel > 0) {
                 raid.absorbRaidOmen(player)
             }
 
@@ -101,17 +111,17 @@ class ZombieRaids(
     }
 
     private fun getOrCreateRaid(level: ServerLevel, pos: BlockPos): ZombieRaid {
-        val zombieRaid = level.getZombieRaids().getNearbyRaid(pos, 64)
-        return zombieRaid ?: ZombieRaid(center = pos, difficulty = level.difficulty)
+        val zombieRaid = level.getZombieRaids().getNearbyRaid(pos, 16)
+        return zombieRaid ?: ZombieRaid(center = pos)
     }
 
     private val uniqueId: Int
         get() = ++nextId
 
-    fun getNearbyRaid(pos: BlockPos, maxDistSqr: Int): ZombieRaid? {
+    fun getNearbyRaid(pos: BlockPos, maxDist: Int): ZombieRaid? {
         if (zombieRaidMap.isEmpty()) return null
         var closest: ZombieRaid? = null
-        var closestDistanceSqr = maxDistSqr.toDouble()
+        var closestDistanceSqr = (maxDist * maxDist).toDouble()
 
         for (raid in zombieRaidMap.values) {
             val distance = raid.center.distSqr(pos)
@@ -175,6 +185,14 @@ class ZombieRaids(
         val TYPE: SavedData.Factory<ZombieRaids> =
             SavedData.Factory<ZombieRaids>({ ZombieRaids() }, { tag, _ -> load(tag) }, null)
 
+        private val activeRaidCenters = ConcurrentHashMap<ResourceKey<Level>, List<BlockPos>>()
+
+        fun isNearActiveRaid(dimension: ResourceKey<Level>, pos: BlockPos): Boolean {
+            val maxDistSqr = (ZombieRaid.RAID_DISTANCE * ZombieRaid.RAID_DISTANCE).toDouble()
+            return activeRaidCenters[dimension]?.any { it.distSqr(pos) < maxDistSqr } ?: false
+        }
+
+        fun clearActiveRaidCenters() = activeRaidCenters.clear()
 
         fun getType(type: Holder<DimensionType>): SavedData.Factory<ZombieRaids> {
             return TYPE

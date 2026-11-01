@@ -16,8 +16,7 @@ public class SoundManagerMixin {
     @Inject(method = "reload", at = @At("TAIL"))
     public void restartRaidMusic(CallbackInfo ci) {
         if (PazNetwork.ZombieRaidClientCache.INSTANCE.isActive()) {
-            RaidMusicManager.INSTANCE.stop();
-            RaidMusicManager.INSTANCE.start();
+            RaidMusicManager.INSTANCE.restart();
         }
     }
 }

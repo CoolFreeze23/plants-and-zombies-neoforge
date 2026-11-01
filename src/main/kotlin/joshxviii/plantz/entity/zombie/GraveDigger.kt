@@ -76,8 +76,6 @@ class GraveDigger(type: EntityType<out GraveDigger>, level: Level) : PazZombie(t
     }
 
     override fun getMoveControl(): MoveControl = if (digTime>0) noMoveControl else super.getMoveControl()
-    override fun getLookControl(): LookControl = if (digTime>0) noLookControl else super.getLookControl()
-    override fun isWithinMeleeAttackRange(target: LivingEntity): Boolean = if (digTime>0) false else super.isWithinMeleeAttackRange(target)
 
     override fun registerGoals() {
         super.registerGoals()
@@ -132,7 +130,7 @@ class GraveDigger(type: EntityType<out GraveDigger>, level: Level) : PazZombie(t
         setItemSlot(EquipmentSlot.MAINHAND, Items.STONE_SHOVEL.defaultInstance)
         setDropChance(EquipmentSlot.MAINHAND, 0.0f)
 
-        maxGraves = random.nextIntBetweenInclusive(4, 6)
+        maxGraves = random.nextIntBetweenInclusive(2, 5)
 
         return data
     }
@@ -141,12 +139,13 @@ class GraveDigger(type: EntityType<out GraveDigger>, level: Level) : PazZombie(t
         val gravedigger: GraveDigger,
     ) : Goal() {
         companion object {
-            const val DIG_DELAY_TIME = 78
+            const val DIG_DELAY_TIME = 260
         }
-        var digTime = gravedigger.random.nextInt(20,60)
+        var digTime = gravedigger.random.nextInt(40,100)
 
         override fun canUse(): Boolean {
             val level = gravedigger.level() as ServerLevel
+            level.getNearestPlayer(gravedigger, 14.0) ?: return false
             if (!level.gameRules.getBoolean(GameRules.RULE_MOBGRIEFING)) return false
             if (!gravedigger.mainHandItem.`is`(ItemTags.SHOVELS)) return false
             if (gravedigger.dugGraves >= gravedigger.maxGraves) return false
@@ -177,7 +176,7 @@ class GraveDigger(type: EntityType<out GraveDigger>, level: Level) : PazZombie(t
 
         private fun tryDigGrave(gravePos: BlockPos, angleToTarget: Double) {
             gravedigger.dugGraves++
-            digTime = DIG_DELAY_TIME + gravedigger.random.nextInt(20)
+            digTime = DIG_DELAY_TIME + gravedigger.random.nextInt(160)
             val level = gravedigger.level() as ServerLevel
             val graveStone = createFallingBlock(level, gravePos.center, PazBlocks.GRAVESTONE.defaultBlockState().setValue(FACING, Direction.fromYRot(angleToTarget * Mth.RAD_TO_DEG - 90)))?: return
             graveStone.setHurtsEntities(2.5f, 10)

@@ -10,6 +10,7 @@ import net.minecraft.sounds.SoundEvents
 object PazSounds {
 
     @JvmField val WATERING_CAN = register("item.watering_can")
+    @JvmField val DYE_BLASTER = register("item.dye_blaster")
 
     @JvmField val BALLOON_INFLATE = register("item.balloon.inflate")
     @JvmField val BALLOON_POP = register("item.balloon.pop")
@@ -17,9 +18,10 @@ object PazSounds {
     @JvmField val PROJECTILE_SHOOT = register("entity.projectile.shoot")
     @JvmField val PROJECTILE_HIT_CONE = register("entity.projectile.hit_cone")
     @JvmField val PROJECTILE_HIT_BUCKET = register("entity.projectile.hit_bucket")
-    @JvmField val PROJECTILE_HIT_PAPER = register("entity.projectile.hit_paper")
+    @JvmField val PROJECTILE_HIT_PAPER = registerForHolder("entity.projectile.hit_paper")
 
     @JvmField val ELECTRIC_ZAP = register("entity.projectile.electric_zap")
+    @JvmField val MISSILE_EXPLODE = registerForHolder("entity.projectile.missile.explode")
 
     @JvmField val CHOMPER_ATTACK = register("entity.chomper.attack")
     @JvmField val SCAREDYSHROOM_HIDE = register("entity.scaredyshroom.hide")
@@ -30,9 +32,6 @@ object PazSounds {
     @JvmField val BROWNCOAT_AMBIENT = register("entity.browncoat.ambient")
     @JvmField val BROWNCOAT_HURT = register("entity.browncoat.hurt")
     @JvmField val BROWNCOAT_DEATH = register("entity.browncoat.death")
-    @JvmField val NEWSPAPER_ZOMBIE_AMBIENT = register("entity.newspaper_zombie.ambient")
-    @JvmField val NEWSPAPER_ZOMBIE_HURT = register("entity.newspaper_zombie.hurt")
-    @JvmField val NEWSPAPER_ZOMBIE_DEATH = register("entity.newspaper_zombie.death")
     @JvmField val DIGGER_ZOMBIE_AMBIENT = register("entity.digger_zombie.ambient")
     @JvmField val DIGGER_ZOMBIE_HURT = register("entity.digger_zombie.hurt")
     @JvmField val DIGGER_ZOMBIE_DEATH = register("entity.digger_zombie.death")
@@ -54,10 +53,21 @@ object PazSounds {
     @JvmField val ALL_STAR_HURT = register("entity.all_star.hurt")
     @JvmField val ALL_STAR_DEATH = register("entity.all_star.death")
     @JvmField val ALL_STAR_WHISTLE = register("entity.all_star.whistle")
+    @JvmField val PIRATE_CAPTAIN_AMBIENT = register("entity.pirate_captain.ambient")
+    @JvmField val PIRATE_CAPTAIN_HURT = register("entity.pirate_captain.hurt")
+    @JvmField val PIRATE_CAPTAIN_DEATH = register("entity.pirate_captain.death")
+    @JvmField val PIRATE_CAPTAIN_GHOST_AMBIENT = register("entity.pirate_captain_ghost.ambient")
+    @JvmField val PIRATE_CAPTAIN_GHOST_HURT = register("entity.pirate_captain_ghost.hurt")
+    @JvmField val ZOMBIE_TURRET_SHOOT = register("entity.zombie_turret.shoot")
+    @JvmField val ROBO_ZOMBIE_AMBIENT = register("entity.robo_zombie.ambient")
+    @JvmField val ROBO_ZOMBIE_HURT = register("entity.robo_zombie.hurt")
+    @JvmField val ROBO_ZOMBIE_DEATH = register("entity.robo_zombie.death")
+    @JvmField val ROBO_ZOMBIE_SHOOT = register("entity.robo_zombie.shoot")
     @JvmField val SUPER_BRAINZ_AMBIENT = register("entity.super_brainz.ambient")
     @JvmField val SUPER_BRAINZ_HURT = register("entity.super_brainz.hurt")
     @JvmField val SUPER_BRAINZ_DEATH = register("entity.super_brainz.death")
     @JvmField val SUPER_BRAINZ_PUNCH = register("entity.super_brainz.punch")
+    @JvmField val SUPER_BRAINZ_LAZER = register("entity.super_brainz.lazer")
     @JvmField val GARGANTUAR_AMBIENT = register("entity.gargantuar.ambient")
     @JvmField val GARGANTUAR_HURT = register("entity.gargantuar.hurt")
     @JvmField val GARGANTUAR_DEATH = register("entity.gargantuar.death")
@@ -73,7 +83,6 @@ object PazSounds {
     @JvmField val POTATOMINE_EXPLODE = registerForHolder("entity.potatomine.explode")
     @JvmField val SNOWCHUNK_HIT = registerForHolder("entity.snowchunk")
 
-    @JvmField val SPECIAL_WAVE = registerForHolder("event.raid.special_wave")
     @JvmField var TACO_REWARD = register("event.raid.taco_reward")
 
     @JvmField val MUSIC_DISC_GRASSY_GROOVE = registerForHolder("music_disc.grassy_groove")
@@ -84,10 +93,15 @@ object PazSounds {
     @JvmField val RAID_MUSIC_BUCKET = registerForHolder("music.raid.bucket")
     @JvmField val RAID_MUSIC_HALFTIME = registerForHolder("music.raid.halftime")
     @JvmField val RAID_MUSIC_WINTER = registerForHolder("music.raid.winter")
+    @JvmField val RAID_MUSIC_ZOMBOWEEN = registerForHolder("music.raid.zomboween")
     @JvmField val RAID_MUSIC_PIRATE = registerForHolder("music.raid.pirate")
     @JvmField val RAID_MUSIC_ARMY = registerForHolder("music.raid.army")
     @JvmField val RAID_MUSIC_LEAGUE = registerForHolder("music.raid.league")
     @JvmField val RAID_MUSIC_ZOMBOSS = registerForHolder("music.raid.zomboss")
+
+    @JvmField val SPECIAL_WAVE = registerForHolder("event.raid.special_wave")
+    @JvmField val RAID_VICTORY = registerForHolder("event.raid.victory")
+    @JvmField val RAID_DEFEAT = registerForHolder("event.raid.defeat")
 
     private fun registerGnomeSoundVariants(): Map<GnomeSoundVariant, GnomeSoundVariant.GnomeSoundSet> {
         return GnomeSoundVariant.entries.associateWith { soundVariant ->

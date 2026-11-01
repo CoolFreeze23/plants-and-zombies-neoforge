@@ -1,18 +1,18 @@
 # Plants & Zombies: NeoForge 1.21.1 port
 
 Unofficial backport of [joshxviii/plants-and-zombies](https://github.com/joshxviii/plants-and-zombies) (Fabric, MC 26.1.2,
-upstream commit `e92d5937`, mod version 1.5) to **NeoForge 21.1 / Minecraft 1.21.1**. Licensed MPL-2.0 like upstream.
+upstream commit `88ddc959`, mod version 1.5.2) to **NeoForge 21.1 / Minecraft 1.21.1**. Licensed MPL-2.0 like upstream.
 `PORTING.md` explains how the port is structured.
 
 ## Install
-Put `build/libs/plants-and-zombies-neoforge-1.5-neoforge.1.jar` in `mods/` together with:
+Put `build/libs/plants-and-zombies-neoforge-1.5.2-neoforge.1.jar` in `mods/` together with:
 - Kotlin for Forge 5.11.0 or newer (NeoForge build)
 - TerraBlender for NeoForge 1.21.1 (4.1.0.x)
 
 Optional, detected automatically:
 - **A 26.1 or newer Minecraft install** (vanilla launcher or Prism Launcher, on the same computer): 26.1's baby armor
-  textures and the 26.1 sounds the mod uses (copper chest, copper golem statue, creaking, happy ghast harness, HUD
-  bubble, lead snap) are game assets 1.21.1 doesn't have, and the mod doesn't redistribute Mojang's files. When it finds
+  textures and the 26.1 sounds the mod uses (copper chest, copper golem statue and steps, creaking, happy ghast harness,
+  HUD bubble, lead snap) are game assets 1.21.1 doesn't have, and the mod doesn't redistribute Mojang's files. When it finds
   a 26.1+ game (the version's client jar, and its asset index for the sounds), a built-in resource pack serves those
   files from it; the log says "Using 26.1 assets from Minecraft <version>". Without one the 1.21.1 substitutes play
   (with 26.1's subtitles) and baby armor maps the adult textures. Installing 26.1 from the launcher once is enough.
@@ -22,9 +22,9 @@ Optional, detected automatically:
   data pack (auto-enabled) adds pale moss, leaf litter and firefly bushes to the graveyard, pale oak dead trees with
   pale moss and leaf litter, gravestones on pale moss, and leaf-litter tint; tags pick up pale moss carpet and the pale
   garden; its creaking and happy ghast sounds are used for the tangle kelp and the plant pot. Tested with Vanilla Backport 1.1.7.10 + Platform 1.3.3.
-- **Copper Age Backport**: brings back the 26.1 copper content. Gnomes spawn with copper axes and pickaxes, gravestone
-  treasure has copper nuggets again, the relocation advancement shows a copper shovel (built-in data pack,
-  auto-enabled), its copper chest and copper golem statue sounds are used for the mailboxes and garden gnomes, and
+- **Copper Age Backport**: brings back the 26.1 copper content. Gnomes spawn with copper axes and pickaxes, the
+  relocation advancement shows a copper shovel (built-in data pack, auto-enabled), its copper chest and copper golem
+  statue and step sounds are used for the mailboxes, garden gnomes and robo zombie, and
   Plants & Zombies items on its shelves use their 26.1 `on_shelf` transforms. Copper golems are immune to electric plants. Tested with Copper Age Backport 0.1.5 (0.1.4 crashes on startup on current NeoForge 21.1, a bug fixed in 0.1.5); works alongside Vanilla Backport.
 - **Backported Spears**: brings back the 26.1 spears. Gnomes spawn with spears again (a copper spear with Copper Age
   Backport installed too, since Backported Spears only adds copper spears then; otherwise a stone spear), gnomes and
@@ -45,11 +45,12 @@ Optional, detected automatically:
 - Every upstream source and resource file was compared against the port; differences are restored or listed below.
 - Every Plants & Zombies tag expands to the same blocks, items and entities as upstream does against 26.1's vanilla tags
   (1.21.1's `#minecraft:dirt` and carver tags hold different blocks, so the port uses 26.1's contents).
-- **All 132 required GameTests pass** (repeated runs): every plant's behaviour, all special zombies and blueprint machines, ownership, a full zombie
-  raid (waves, victory, rewards), mailboxes (delivery, queue, full/discard), collection box, sun battery, time machine,
-  flags, gravestones, garden gnomes, pots, watering can, gardening glove, seed packets and cooldowns, wearables
-  (incl. the bucket), dispensers, blueprints, every upstream recipe, loot tables, advancements, tags, worldgen
-  features, seed mutations and villager trades.
+- **All 142 required GameTests pass** (repeated runs): every plant's behaviour, all special zombies and blueprint machines, ownership, a full zombie
+  raid (waves, victory, rewards, boss types), mailboxes (delivery, queue, full/discard), collection box, sun battery, time machine,
+  flags, gravestones, garden gnomes, pots, watering can, gardening glove (incl. Lobbing), seed packets and cooldowns, wearables
+  (incl. the bucket) and their head protection, the newspaper shield, letters, pumpkin armor and carving loot, the
+  brainz alloy door and trapdoor, zombie bats, dispensers, blueprints, every upstream recipe, loot tables,
+  advancements, tags, worldgen features, seed mutations and villager trades.
 - Dedicated server + client over the network: config sync, a zombie raid with its HUD, boss bar and head markers.
 - Dev client: every entity and block entity renderer, item icons, screens (mailbox, collection box, time machine),
   raid overlay, particles, graveyard ambience; with Iris + a shader pack; with Vanilla Backport.
@@ -58,8 +59,8 @@ Optional, detected automatically:
 
 ## Differences from the 26.1 original (things 1.21.1 doesn't have)
 - Without Backported Spears there are no spears, and gnomes that would carry a spear get a stone sword.
-- Without Copper Age Backport: gnomes use stone tools instead of copper ones, copper nuggets in loot become an
-  equivalent chance of a copper ingot, and the relocation advancement icon is an iron shovel.
+- Without Copper Age Backport: gnomes use stone tools instead of copper ones and the relocation advancement icon is an
+  iron shovel.
 - 26.1 sounds and baby armor textures need a local 26.1+ game install (see Install); without one, close 1.21.1 sounds
   play and baby armor maps the adult armor textures onto the 26.1 baby shapes.
 - 26.1's UI sound category is a "UI" slider the port adds to Music & Sounds (1.21.1's sound categories can't be
@@ -72,6 +73,10 @@ Optional, detected automatically:
 - Block models: 26.1 element rotations (any angle, x/y/z rotations) load through a port mixin, so the upstream models are
   unchanged. 26.1's `on_shelf` display context is `plantz:on_shelf` (NeoForge requires a namespaced name), falling
   back to `fixed`; 1.21.1 only has shelves through Copper Age Backport.
+- The newspaper blocks like a 1.21.1 shield (raised after a quarter second, axes disable it) with 26.1's numbers: 90%
+  of a hit from within 80 degrees of where its holder looks. Head protection (bucket, cone, football helmet) applies
+  right after shield blocking, where 26.1 applies it.
+- The door shield item shows the door it was made from with that door's item model, like upstream.
 
 The worn bucket uses the mod's own `plantz:item/bucket_head` model in the head layers instead of overriding the
 vanilla bucket model like upstream, so resource packs that retexture the bucket (e.g. Alittle Axolotl) no longer hide it.

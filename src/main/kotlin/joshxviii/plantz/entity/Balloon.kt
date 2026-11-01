@@ -12,6 +12,7 @@ import joshxviii.plantz.entity.zombie.PazZombie
 import joshxviii.plantz.item.BalloonItem
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.syncher.EntityDataAccessor
+import net.minecraft.network.syncher.EntityDataSerializers
 import net.minecraft.network.syncher.SynchedEntityData
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.util.Mth
@@ -19,6 +20,7 @@ import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.entity.*
 import net.minecraft.world.entity.Leashable.LeashData
 import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.item.ItemStack
@@ -34,19 +36,7 @@ class Balloon(
 ) : LeashableEntity(type, level) {
     companion object {
         val DYE_COLOR: EntityDataAccessor<DyeColor> = SynchedEntityData.defineId(Balloon::class.java, DATA_DYE_COLOR)
-
-        val browncoatBallons = mapOf(
-            BrownCoatVariant.BROWN to listOf(DyeColor.RED, DyeColor.YELLOW, DyeColor.BLUE),
-            BrownCoatVariant.DESERT to listOf(DyeColor.ORANGE, DyeColor.BROWN),
-            BrownCoatVariant.SNOW to listOf(DyeColor.LIGHT_BLUE, DyeColor.WHITE),
-            BrownCoatVariant.BUCCANEER to listOf(DyeColor.BLACK, DyeColor.RED)
-        )
-
-        val impBallons = mapOf(
-            ImpVariant.IMP to listOf(DyeColor.RED, DyeColor.YELLOW, DyeColor.BLUE),
-            ImpVariant.YETI to listOf(DyeColor.LIGHT_BLUE, DyeColor.WHITE),
-            ImpVariant.PIRATE to listOf(DyeColor.BLACK, DyeColor.RED)
-        )
+        val TIME_UNLEASHED: EntityDataAccessor<Int> = SynchedEntityData.defineId(Balloon::class.java, EntityDataSerializers.INT)
 
         private const val MAX_PULL_PITCH = 25.0f
         private const val PITCH_SPEED_MULTIPLIER = 180.0f
@@ -55,7 +45,7 @@ class Balloon(
         private const val MIN_ROTATION_SPEED = 0.001f
         private const val HOLDER_GRAVITY_LIFT_MULTIPLIER = 0.25
         private const val HOLDER_PULL_STIFFNESS = 0.004
-        private const val MAX_HOLDER_PULL_FORCE = 0.04
+        private const val MAX_HOLDER_PULL_FORCE = 0.08
         private const val MAX_HOLDER_UPWARD_VELOCITY = 0.08
         private const val POPPING_HEIGHT = 96
     }
@@ -68,6 +58,10 @@ class Balloon(
     var dyeColor: DyeColor
         get() = this.entityData.get(DYE_COLOR)
         set(value) = this.entityData.set(DYE_COLOR, value)
+
+    var timeUnleashed: Int
+        get() = this.entityData.get(TIME_UNLEASHED)
+        set(value) = this.entityData.set(TIME_UNLEASHED, value)
 
     fun pop() {
         val level = level() as? ServerLevel ?: return
@@ -84,8 +78,9 @@ class Balloon(
     private fun checkPoppingHeight() {
         if (tickCount > 200) {
             val floorHeight = y - level().getHeight(Heightmap.Types.WORLD_SURFACE, blockPosition().x, blockPosition().z).toDouble()
-            if (floorHeight > POPPING_HEIGHT) pop()
+            if (floorHeight > POPPING_HEIGHT * if (isLeashed) 1f else 0.5f) pop()
         }
+        if (timeUnleashed > 2400) pop()
     }
 
     // 26.1 getInterpolation(): 1.21.1 routes position updates through lerpTo
@@ -96,24 +91,24 @@ class Balloon(
     override fun lerpTargetXRot(): Float = interpolation.xRot()
     override fun lerpTargetYRot(): Float = interpolation.yRot()
 
+    override fun save(tag: CompoundTag): Boolean {
+        tag.putInt("unleash_time", timeUnleashed)
+        return super.save(tag)
+    }
+
     override fun load(tag: CompoundTag) {
         super.load(tag)
-        val holder = leashHolder
-        if (holder is PazZombie && !holder.balloons.contains(this)) {
-            holder.balloons.add(this)
-        }
+        timeUnleashed = tag.getInt("unleash_time")
     }
 
     override fun getLeashHolder(): Entity? {
         val holder = super.getLeashHolder()
-        if (holder is PazZombie && !holder.balloons.contains(this)) {
-            holder.balloons.add(this)
-        }
         return holder
     }
 
     override fun defineSynchedData(entityData: SynchedEntityData.Builder) {
         entityData.define(DYE_COLOR, DyeColor.WHITE)
+        entityData.define(TIME_UNLEASHED, 0)
     }
 
     override fun baseTick() {
@@ -125,6 +120,8 @@ class Balloon(
     override fun tick() {
         super.tick()
         checkPoppingHeight()
+        if (leashHolder == null) timeUnleashed++
+        else timeUnleashed = 0
         while (yRot - yRotO < -180.0f) yRotO -= 360.0f
         while (yRot - yRotO >= 180.0f) yRotO += 360.0f
 
@@ -153,27 +150,33 @@ class Balloon(
             deltaMovement = deltaMovement.scale(0.98)
         }
 
-        val holder = leashHolder as? LivingEntity ?: return
+        val holder = leashHolder as? LivingEntity?: return
         if ((holder as? Player)?.abilities?.flying == true) return
         if (y < holder.y) return
+        val isFlyingMob = (holder is Mob && holder.navigation is FlyingPathNavigation)
         val verticalStretch = y - holder.y - 2.0
         if (verticalStretch <= 0.0) return
 
         val holderFloorHeight = (holder.y - level().getHeight(Heightmap.Types.WORLD_SURFACE, holder.blockPosition().x, holder.blockPosition().z).toDouble()).coerceAtLeast(0.0)
-        val maxLiftHeight = if (holder is PazZombie) 2.5 else 5.0
+        val maxLiftHeight = if (isFlyingMob) 1.0 else 32.0
         val heightLimitForce = (holderFloorHeight / maxLiftHeight).coerceIn(0.0, 1.0)
 
-        val crouchMultiplier = if (holder.isCrouching) 0.55 else 1.0
         val gravityLift = holder.getAttributeValue(Attributes.GRAVITY) * HOLDER_GRAVITY_LIFT_MULTIPLIER
         val springLift = verticalStretch * HOLDER_PULL_STIFFNESS
-        val totalLift = ((gravityLift + springLift) * (crouchMultiplier - heightLimitForce))
+        val totalLift = ((gravityLift + springLift) * (1.0 - heightLimitForce))
             .coerceAtMost(MAX_HOLDER_PULL_FORCE)
 
         val currentYVelocity = holder.deltaMovement.y
         val availableLift = (MAX_HOLDER_UPWARD_VELOCITY - currentYVelocity).coerceAtLeast(0.0)
-        val appliedLift = totalLift.coerceAtMost(availableLift)
+        val appliedLift = totalLift.coerceAtMost(availableLift) * if (isFlyingMob) 0.15 else 1.0
 
-        if (appliedLift > 0.0) {
+        if (holder.isCrouching) {
+            holder.deltaMovement = Vec3(holder.deltaMovement.x, holder.deltaMovement.y * 0.9, holder.deltaMovement.z)
+            holder.hasImpulse = true // 26.1 needsSync
+            holder.checkSlowFallDistance() // 26.1 checkFallDistanceAccumulation
+            holder.checkSlowFallDistance()
+        }
+        else if (appliedLift > 0.0) {
             holder.addDeltaMovement(Vec3(0.0, appliedLift, 0.0))
             holder.hasImpulse = true
             holder.checkSlowFallDistance()
@@ -228,25 +231,6 @@ class Balloon(
     override fun isPickable(): Boolean = true
     override fun getDefaultGravity(): Double = -0.005
     override fun leashElasticDistance(): Double = 3.0
-    override fun leashTooFarBehaviour() {
-        super.leashTooFarBehaviour()
-    }
-    override fun closeRangeLeashBehaviour(leashHolder: Entity) {
-        super.closeRangeLeashBehaviour(leashHolder)
-    }
-
-    override fun onElasticLeashPull() {
-        super.onElasticLeashPull()
-    }
-
-    override fun setLeashedTo(holder: Entity, synch: Boolean) {
-        super.setLeashedTo(holder, synch)
-    }
-
-    override fun onLeashRemoved() {
-        val holder = this.leashHolder
-        super.onLeashRemoved()
-    }
 
     override fun hurt(
         source: DamageSource,

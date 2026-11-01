@@ -48,14 +48,6 @@ class SeedPacketItem(properties: Properties) : Item(properties) {
         return Component.translatable("item.plantz.seed_packet.entity", entityName)
     }
 
-    override fun interactLivingEntity(itemStack: ItemStack, player: Player, target: LivingEntity, type: InteractionHand): InteractionResult {
-        val result = Companion.interactLivingEntity(itemStack, player, target, type)
-        return if (result == InteractionResult.PASS)
-            super.interactLivingEntity(itemStack, player, target, type)
-        else
-            result
-    }
-
     override fun use(level: Level, player: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
         val stack = player.getItemInHand(hand)
         val stackBeforeUse = stack.copy()
@@ -75,26 +67,6 @@ class SeedPacketItem(properties: Properties) : Item(properties) {
     }
 
     companion object {
-
-        fun interactLivingEntity(
-            itemStack: ItemStack,
-            player: Player,
-            target: LivingEntity,
-            type: InteractionHand
-        ): InteractionResult {
-            if (SeedPacketCooldowns.isOnCooldown(player, itemStack)) return InteractionResult.PASS
-            if (target is Plant) {
-                val result = target.processSeedPacketInteraction(player, itemStack)
-                if (result == PacketInteractionResult.SUCCESS) {
-                    itemStack.consume(1, player)
-                    applyCooldown(itemStack, player)
-                    return InteractionResult.sidedSuccess(player.level().isClientSide)
-                }
-                if (result == PacketInteractionResult.FAIL) return InteractionResult.CONSUME
-            }
-            return InteractionResult.PASS
-        }
-
         fun use(level: Level, player: Player, hand: InteractionHand): InteractionResult {
             val itemStack = player.getItemInHand(hand)
             // 26.1 vanilla skipped use() while the cooldown group of the stack was active
@@ -206,9 +178,9 @@ class SeedPacketItem(properties: Properties) : Item(properties) {
                             horizontalDir.opposite.toYRot()
                     else
                         horizontalDir.opposite.toYRot()
+                entity.yRot = yaw
                 entity.yHeadRot = yaw
                 entity.yBodyRot = yaw
-                entity.yRot = yaw
             }
 
             entity.let {
@@ -295,7 +267,7 @@ class SeedPacketItem(properties: Properties) : Item(properties) {
                 SeedPacketCooldowns.addCooldown(player, group, (cooldownTime*20).toInt())
             } else {
                 SeedPacketCooldowns.removeCooldown(player, group)
-                itemStack.set(PazComponents.USE_COOLDOWN, UseCooldown(0f))
+                itemStack.remove(PazComponents.USE_COOLDOWN)
             }
         }
 

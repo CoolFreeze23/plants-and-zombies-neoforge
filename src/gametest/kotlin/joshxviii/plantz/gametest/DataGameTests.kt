@@ -1,5 +1,6 @@
 package joshxviii.plantz.gametest
 
+import joshxviii.plantz.api.SeedMutationResult
 import joshxviii.plantz.PazCompatSounds
 import joshxviii.plantz.PazEntities
 import joshxviii.plantz.PazRegistries
@@ -107,9 +108,11 @@ object DataGameTests {
         R("brainz_alloy", false, 9, 1, listOf("plantz:brainzium", "minecraft:copper_ingot", "minecraft:copper_ingot", "minecraft:copper_ingot", "minecraft:copper_ingot", "minecraft:iron_ingot", "minecraft:iron_ingot", "minecraft:iron_ingot", "minecraft:iron_ingot"), "plantz:brainz_alloy", 16),
         R("brainz_alloy_block", true, 3, 3, listOf("plantz:brainz_alloy", "plantz:brainz_alloy", "plantz:brainz_alloy", "plantz:brainz_alloy", "plantz:brainz_alloy", "plantz:brainz_alloy", "plantz:brainz_alloy", "plantz:brainz_alloy", "plantz:brainz_alloy"), "plantz:brainz_alloy_block", 1),
         R("brainz_alloy_by_block", false, 1, 1, listOf("plantz:brainz_alloy_block"), "plantz:brainz_alloy", 9),
+        R("brainz_alloy_door", true, 3, 3, listOf("plantz:brainz_alloy", "plantz:brainz_alloy", "", "plantz:brainz_alloy", "plantz:brainz_alloy", "", "plantz:brainz_alloy", "plantz:brainz_alloy", ""), "plantz:brainz_alloy_door", 3),
         R("brainz_alloy_fence", true, 3, 2, listOf("plantz:brainz_alloy", "plantz:brainz_alloy", "plantz:brainz_alloy", "plantz:brainz_alloy", "plantz:brainz_alloy", "plantz:brainz_alloy"), "plantz:brainz_alloy_fence", 16),
         R("brainz_alloy_slab", true, 3, 1, listOf("plantz:brainz_alloy_block", "plantz:brainz_alloy_block", "plantz:brainz_alloy_block"), "plantz:brainz_alloy_slab", 6),
         R("brainz_alloy_stairs", true, 3, 3, listOf("plantz:brainz_alloy_block", "", "", "plantz:brainz_alloy_block", "plantz:brainz_alloy_block", "", "plantz:brainz_alloy_block", "plantz:brainz_alloy_block", "plantz:brainz_alloy_block"), "plantz:brainz_alloy_stairs", 4),
+        R("brainz_alloy_trapdoor", true, 2, 2, listOf("plantz:brainz_alloy", "plantz:brainz_alloy", "plantz:brainz_alloy", "plantz:brainz_alloy"), "plantz:brainz_alloy_trapdoor", 1),
         R("mail_collection_box", true, 3, 3, listOf("plantz:brainz_alloy", "plantz:brainz_alloy", "plantz:brainz_alloy", "plantz:brainz_alloy", "plantz:newspaper", "plantz:brainz_alloy", "minecraft:redstone", "#plantz:mailboxes", "minecraft:redstone"), "plantz:mail_collection_box", 1),
         R("mailbox/black_mailbox", false, 2, 1, listOf("plantz:mailbox", "minecraft:black_dye"), "plantz:black_mailbox", 1),
         R("mailbox/blue_mailbox", false, 2, 1, listOf("plantz:black_mailbox", "minecraft:blue_dye"), "plantz:blue_mailbox", 1),
@@ -204,22 +207,19 @@ object DataGameTests {
         return out.filter { !it.isEmpty }
     }
 
-    /** Gravestone treasure rolls only upstream's items (its copper nuggets are copper ingots without Copper Age Backport). */
+    /** Gravestone treasure rolls only upstream's items. */
     @JvmStatic
     @GameTest(template = PLATFORM)
     fun gravestoneTreasureRollsUpstreamItems(helper: GameTestHelper) {
-        val copper = if (copperAgeBackport) "minecraft:copper_nugget" else "minecraft:copper_ingot"
         val allowed = setOf(
-            copper, "minecraft:copper_ingot", "minecraft:emerald", "minecraft:gold_ingot", "minecraft:gold_nugget",
-            "minecraft:iron_ingot", "minecraft:iron_nugget", "minecraft:ominous_bottle", "minecraft:rotten_flesh",
-            "plantz:brainz_alloy", "plantz:cone", "plantz:ducky_tube", "plantz:newspaper",
+            "minecraft:copper_ingot", "minecraft:emerald", "minecraft:gold_ingot", "minecraft:iron_ingot",
+            "minecraft:ominous_bottle", "minecraft:rotten_flesh", "plantz:brainz_alloy", "plantz:cone", "plantz:ducky_tube", "plantz:newspaper",
         )
         val drops = roll(helper, "plantz:chests/gravestone_treasure", 400, chestParams(helper))
         val ids = drops.map(::itemId).toSet()
         helper.assertTrue(allowed.containsAll(ids), "unexpected treasure: ${ids - allowed}")
-        helper.assertTrue(ids.containsAll(listOf("minecraft:rotten_flesh", copper, "plantz:cone", "plantz:brainz_alloy", "minecraft:ominous_bottle")),
+        helper.assertTrue(ids.containsAll(listOf("minecraft:rotten_flesh", "minecraft:copper_ingot", "plantz:cone", "plantz:brainz_alloy", "minecraft:ominous_bottle")),
             "treasure never rolled: ${allowed - ids}")
-        if (copperAgeBackport) helper.assertTrue(drops.filter { itemId(it) == copper }.all { it.count in 1..4 }, "copper nuggets outside 1-4")
         val bottle = drops.first { it.`is`(Items.OMINOUS_BOTTLE) }
         helper.assertTrue(bottle.has(DataComponents.OMINOUS_BOTTLE_AMPLIFIER), "ominous bottle without an amplifier")
         helper.succeed()
@@ -304,6 +304,7 @@ object DataGameTests {
 
     // generated from upstream data/plantz/advancement/**.json
     private val ADVANCEMENTS = listOf(
+        A("plantz:all_gnomes", "plantz:taco_time", listOf("has_time_machine"), 1, listOf(), listOf(), 0),
         A("plantz:big_three", "plantz:cone_head", listOf("plantz:all_star", "plantz:disco_zombie", "plantz:zombie_yeti"), 3, listOf(), listOf(), 0),
         A("plantz:bigger_three", "plantz:big_three", listOf("plantz:all_star", "plantz:disco_zombie", "plantz:zombie_yeti"), 3, listOf(), listOf(), 0),
         A("plantz:cone_head", "plantz:root", listOf("wearing_cone"), 1, listOf(), listOf(), 0),
@@ -311,23 +312,14 @@ object DataGameTests {
         A("plantz:disco_hypno", "plantz:big_three", listOf("disco_hypno"), 1, listOf(), listOf(), 0),
         A("plantz:grave_buster_bust", "plantz:grow_plant_seeds", listOf("grave_buster_bust"), 1, listOf(), listOf(), 0),
         A("plantz:grow_plant_seeds", "plantz:relocation", listOf("grow_seeds"), 1, listOf(), listOf(), 0),
-        A("plantz:plant_all_plants", "plantz:grave_buster_bust", listOf("plantz:bonkchoy", "plantz:cabbagepult", "plantz:cactus", "plantz:cherrybomb", "plantz:chomper", "plantz:coffeebean", "plantz:doomshroom", "plantz:electric_peashooter", "plantz:explode_o_nut", "plantz:fire_peashooter", "plantz:fumeshroom", "plantz:grave_buster", "plantz:hypnoshroom", "plantz:ice_peashooter", "plantz:iceshroom", "plantz:kernelpult", "plantz:lightning_reed", "plantz:melonpult", "plantz:peashooter", "plantz:potatomine", "plantz:puffshroom", "plantz:repeater", "plantz:scaredyshroom", "plantz:seashroom", "plantz:sunflower", "plantz:sunshroom", "plantz:tanglekelp", "plantz:wallnut", "plantz:winter_melon"), 29, listOf(), listOf(), 0),
+        A("plantz:plant_all_plants", "plantz:grave_buster_bust", listOf("plantz:bonkchoy", "plantz:cabbagepult", "plantz:cactus", "plantz:cherrybomb", "plantz:chomper", "plantz:coffeebean", "plantz:doomshroom", "plantz:electric_peashooter", "plantz:explode_o_nut", "plantz:fire_peashooter", "plantz:fumeshroom", "plantz:grave_buster", "plantz:hypnoshroom", "plantz:ice_peashooter", "plantz:iceshroom", "plantz:kernelpult", "plantz:lightning_reed", "plantz:melonpult", "plantz:peashooter", "plantz:potatomine", "plantz:puffshroom", "plantz:pumpkin", "plantz:repeater", "plantz:scaredyshroom", "plantz:seashroom", "plantz:sunflower", "plantz:sunshroom", "plantz:tanglekelp", "plantz:wallnut", "plantz:winter_melon"), 30, listOf(), listOf(), 0),
         A("plantz:plant_pot_minecart", "plantz:grow_plant_seeds", listOf("plant_pot_minecart"), 1, listOf(), listOf(), 0),
         A("plantz:read_newspaper", "plantz:root", listOf("read_newspaper"), 1, listOf(), listOf(), 0),
         A("plantz:receive_hero_mail", "plantz:send_mail", listOf("receive_hero_mail"), 1, listOf(), listOf(), 0),
-        A("plantz:relocation", "plantz:root", listOf("relocate"), 1, listOf(), listOf(), 0),
-        A("plantz:root", "", listOf("has_sun"), 1, listOf(), listOf(), 0),
-        A("plantz:send_mail", "plantz:read_newspaper", listOf("send_mail"), 1, listOf(), listOf(), 0),
-        A("plantz:solar_power", "plantz:plant_pot_minecart", listOf("has_sun_battery"), 1, listOf(), listOf(), 0),
-        A("plantz:start_hardest_raid", "plantz:win_zombie_raid", listOf("start_hardest_raid"), 1, listOf(), listOf(), 0),
-        A("plantz:taco_time", "plantz:craft_plant_flag", listOf("wave_1", "wave_10", "wave_2", "wave_3", "wave_4", "wave_5", "wave_6", "wave_7", "wave_8", "wave_9"), 10, listOf(), listOf(), 0),
-        A("plantz:time_machine", "plantz:solar_power", listOf("has_time_machine"), 1, listOf(), listOf(), 0),
-        A("plantz:wallnut_bowling", "plantz:plant_pot_minecart", listOf("bowl"), 1, listOf(), listOf(), 0),
-        A("plantz:win_zombie_raid", "plantz:craft_plant_flag", listOf("win_zombie_raid"), 1, listOf(), listOf(), 0),
         A("plantz:recipes/balloon", "minecraft:recipes/root", listOf("has_the_recipe", "has_wind_charge"), 1, listOf("plantz:balloon/balloon"), listOf(), 0),
         A("plantz:recipes/balloon_dyes", "plantz:recipes/balloon", listOf("has_balloon", "has_the_recipe"), 1, listOf("plantz:balloon/black_balloon", "plantz:balloon/blue_balloon", "plantz:balloon/brown_balloon", "plantz:balloon/cyan_balloon", "plantz:balloon/gray_balloon", "plantz:balloon/green_balloon", "plantz:balloon/light_blue_balloon", "plantz:balloon/light_gray_balloon", "plantz:balloon/lime_balloon", "plantz:balloon/magenta_balloon", "plantz:balloon/orange_balloon", "plantz:balloon/pink_balloon", "plantz:balloon/purple_balloon", "plantz:balloon/red_balloon", "plantz:balloon/white_balloon", "plantz:balloon/yellow_balloon"), listOf(), 0),
         A("plantz:recipes/brainz_alloy", "minecraft:recipes/root", listOf("has_brainz_alloy_block", "has_the_recipe"), 1, listOf("plantz:brainz_alloy_by_block"), listOf(), 0),
-        A("plantz:recipes/brainz_alloy_blocks", "minecraft:recipes/root", listOf("has_brainz_alloy", "has_the_recipe"), 1, listOf("plantz:brainz_alloy_block", "plantz:brainz_alloy_by_block", "plantz:brainz_alloy_fence", "plantz:brainz_alloy_slab", "plantz:brainz_alloy_stairs", "plantz:reinforced_brainz_alloy_block", "plantz:sun_battery", "plantz:treaded_brainz_alloy_block"), listOf(), 0),
+        A("plantz:recipes/brainz_alloy_blocks", "minecraft:recipes/root", listOf("has_brainz_alloy", "has_the_recipe"), 1, listOf("plantz:brainz_alloy_block", "plantz:brainz_alloy_by_block", "plantz:brainz_alloy_door", "plantz:brainz_alloy_fence", "plantz:brainz_alloy_slab", "plantz:brainz_alloy_stairs", "plantz:brainz_alloy_trapdoor", "plantz:reinforced_brainz_alloy_block", "plantz:sun_battery", "plantz:treaded_brainz_alloy_block"), listOf(), 0),
         A("plantz:recipes/brainzium_crafting", "minecraft:recipes/root", listOf("has_brainzium", "has_the_recipe"), 1, listOf("plantz:brainz_alloy", "plantz:time_machine"), listOf(), 0),
         A("plantz:recipes/mail_collection_box", "minecraft:recipes/root", listOf("has_brainz_alloy", "has_mailbox", "has_the_recipe"), 1, listOf("plantz:mail_collection_box"), listOf(), 0),
         A("plantz:recipes/mailbox", "minecraft:recipes/root", listOf("has_newspaper", "has_the_recipe"), 1, listOf("plantz:mailbox/mailbox"), listOf(), 0),
@@ -337,8 +329,17 @@ object DataGameTests {
         A("plantz:recipes/plantz_flag", "minecraft:recipes/root", listOf("has_flag", "has_the_recipe"), 1, listOf("plantz:plantz_flag"), listOf(), 0),
         A("plantz:recipes/sun", "minecraft:recipes/root", listOf("has_sun_bottle", "has_the_recipe"), 1, listOf("plantz:sun"), listOf(), 0),
         A("plantz:recipes/sun_bottle", "minecraft:recipes/root", listOf("has_glass_bottle", "has_the_recipe"), 1, listOf("plantz:sun_bottle"), listOf(), 0),
-        A("plantz:recipes/taco", "minecraft:recipes/root", listOf("has_cooked_beef", "has_the_recipe"), 1, listOf("plantz:taco"), listOf(), 0),
+        A("plantz:recipes/taco", "minecraft:recipes/root", listOf("has_ingredients", "has_the_recipe"), 1, listOf("plantz:taco"), listOf(), 0),
         A("plantz:recipes/zen_plant_pot", "minecraft:recipes/root", listOf("has_plant_pot", "has_the_recipe"), 1, listOf("plantz:zen_plant_pot"), listOf(), 0),
+        A("plantz:relocation", "plantz:root", listOf("relocate"), 1, listOf(), listOf(), 0),
+        A("plantz:root", "", listOf("has_sun"), 1, listOf(), listOf(), 0),
+        A("plantz:send_mail", "plantz:read_newspaper", listOf("send_mail"), 1, listOf(), listOf(), 0),
+        A("plantz:solar_power", "plantz:plant_pot_minecart", listOf("has_sun_battery"), 1, listOf(), listOf(), 0),
+        A("plantz:taco_time", "plantz:craft_plant_flag", listOf("wave_1", "wave_10", "wave_2", "wave_3", "wave_4", "wave_5", "wave_6", "wave_7", "wave_8", "wave_9"), 10, listOf(), listOf(), 0),
+        A("plantz:time_machine", "plantz:solar_power", listOf("has_time_machine"), 1, listOf(), listOf(), 0),
+        A("plantz:wallnut_bowling", "plantz:plant_pot_minecart", listOf("bowl"), 1, listOf(), listOf(), 0),
+        A("plantz:win_hardest_raid", "plantz:win_zombie_raid", listOf("win_hardest_raid"), 1, listOf(), listOf(), 0),
+        A("plantz:win_zombie_raid", "plantz:craft_plant_flag", listOf("win_zombie_raid"), 1, listOf(), listOf(), 0),
     )
 
     /** Every upstream advancement loads with the same parent, criteria, requirement count and rewards. */
@@ -513,16 +514,22 @@ object DataGameTests {
         val expected = mapOf(
             "electric_peashooter" to listOf("plantz:electric_peashooter", "plantz:peashooter"),
             "explode_o_nut" to listOf("plantz:wallnut"),
+            "fire_peashooter" to listOf("plantz:fire_peashooter", "plantz:peashooter"),
             "melonpult" to listOf("plantz:winter_melon"),
             "peashooter" to listOf("plantz:electric_peashooter", "plantz:fire_peashooter", "plantz:repeater"),
-            "repeater" to listOf("plantz:peashooter"),
             "wallnut" to listOf("plantz:explode_o_nut"),
             "winter_melon" to listOf("plantz:winter_melon", "plantz:melonpult"),
         )
         helper.assertTrue(mutations.keySet().map { it.toString() }.toSet() == expected.keys.map { "plantz:$it" }.toSet(), "seed mutations: ${mutations.keySet()}")
         for ((name, results) in expected) {
             val rules = mutations.get(pazResource(name))!!.mutations
-            helper.assertTrue(rules.map { it.result.unwrapKey().get().location().toString() } == results, "$name mutation results")
+            val ids = rules.map {
+                when (val result = it.result) {
+                    is SeedMutationResult.EntityTypeResult -> result.entityType.unwrapKey().get().location().toString()
+                    is SeedMutationResult.ItemStackResult -> result.item.unwrapKey().get().location().toString()
+                }
+            }
+            helper.assertTrue(ids == results, "$name mutation results: $ids")
         }
         val pea = mutations.get(pazResource("peashooter"))!!.mutations
         helper.assertTrue(pea[0].weather.isPresent && pea[1].biomes.isPresent && pea[1].biomes.get().size() > 0 && pea[2].chance == 0.1f, "peashooter mutation rules")

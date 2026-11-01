@@ -55,6 +55,7 @@ object PazCreativeTab {
                 output.accept(SeedPacketItem.stackFor(PazEntities.SEA_SHROOM))
                 output.accept(SeedPacketItem.stackFor(PazEntities.COFFEE_BEAN))
                 output.accept(SeedPacketItem.stackFor(PazEntities.GRAVE_BUSTER))
+                output.accept(SeedPacketItem.stackFor(PazEntities.PUMPKIN))
 
                 // machine blueprints
                 if (PazConfig.SHOW_HIDDEN_ITEMS) {
@@ -79,6 +80,8 @@ object PazCreativeTab {
                 output.accept(PazItems.ROBO_ZOMBIE_SPAWN_EGG)
                 output.accept(PazItems.PIRATE_CAPTAIN_SPAWN_EGG)
                 output.accept(PazItems.SUPER_BRAINZ_SPAWN_EGG)
+                if (PazConfig.SHOW_HIDDEN_ITEMS) output.accept(PazItems.ZOMBIE_BAT_SPAWN_EGG)
+                if (PazConfig.SHOW_HIDDEN_ITEMS) output.accept(PazItems.BARON_VON_BATS_SPAWN_EGG)
                 output.accept(PazItems.GARGANTUAR_SPAWN_EGG)
 
                 // gnome
@@ -102,6 +105,7 @@ object PazCreativeTab {
                 output.accept(PazBlocks.BRAINZ_FLAG)
                 output.accept(PazBlocks.PLANTZ_FLAG)
                 output.accept(PazItems.TACO)
+                output.accept(PazItems.DOOR_SHIELD)
                 output.accept(PazItems.BRAINZ_ALLOY)
                 if (PazConfig.SHOW_HIDDEN_ITEMS) {
                     output.accept(PazItems.BRAINZIUM)
@@ -125,11 +129,14 @@ object PazCreativeTab {
                 output.accept(PazBlocks.TREADED_BRAINZ_ALLOY_BLOCK)
                 output.accept(PazBlocks.REINFORCED_BRAINZ_ALLOY_BLOCK)
                 output.accept(PazBlocks.BRAINZ_ALLOY_FENCE)
+                output.accept(PazBlocks.BRAINZ_ALLOY_DOOR)
+                output.accept(PazBlocks.BRAINZ_ALLOY_TRAPDOOR)
                 output.accept(PazBlocks.GRAVESTONE)
                 output.accept(PazBlocks.BLUE_GARDEN_GNOME)
                 output.accept(PazBlocks.GREEN_GARDEN_GNOME)
                 output.accept(PazBlocks.RED_GARDEN_GNOME)
                 output.accept(PazBlocks.YELLOW_GARDEN_GNOME)
+                output.accept(PazBlocks.GOLDEN_GARDEN_GNOME)
                 output.accept(PazBlocks.LAWN_FLAMINGO)
                 if (PazConfig.SHOW_HIDDEN_ITEMS) output.accept(PazBlocks.TIME_MACHINE)
             }

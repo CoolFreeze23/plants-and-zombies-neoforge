@@ -1,7 +1,10 @@
 package joshxviii.plantz
 
+import net.minecraft.core.component.DataComponentPatch
+import net.minecraft.resources.ResourceLocation
 import joshxviii.plantz.PazEntities.ALL_STAR
 import joshxviii.plantz.PazEntities.BACKUP_DANCER
+import joshxviii.plantz.PazEntities.BARON_VON_BATS
 import joshxviii.plantz.PazEntities.BROWN_COAT
 import joshxviii.plantz.PazEntities.DIGGER_ZOMBIE
 import joshxviii.plantz.PazEntities.DISCO_ZOMBIE
@@ -15,19 +18,28 @@ import joshxviii.plantz.PazEntities.PIRATE_CAPTAIN
 import joshxviii.plantz.PazEntities.ROBO_ZOMBIE
 import joshxviii.plantz.PazEntities.SOLDIER_ZOMBIE
 import joshxviii.plantz.PazEntities.SUPER_BRAINZ
+import joshxviii.plantz.PazEntities.ZOMBIE_BAT
 import joshxviii.plantz.PazEntities.ZOMBIE_YETI
+import joshxviii.plantz.PazTags.ItemTags.BUCKET_WEARABLE
 import joshxviii.plantz.entity.zombie.PazZombie
 import joshxviii.plantz.item.*
 import joshxviii.plantz.item.component.*
 import joshxviii.plantz.item.crafting.TransmuteRecipe
 import net.minecraft.core.Direction
+import net.minecraft.core.Holder
+import net.minecraft.core.HolderSet
 import net.minecraft.core.Registry
+import net.minecraft.core.component.DataComponentMap
 import net.minecraft.core.component.DataComponents
 import net.minecraft.core.dispenser.BlockSource
 import net.minecraft.core.dispenser.DefaultDispenseItemBehavior
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.registries.Registries
 import net.minecraft.resources.ResourceKey
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.tags.DamageTypeTags
+import net.minecraft.tags.ItemTags
+import net.minecraft.world.damagesource.DamageType
 import net.minecraft.world.entity.*
 import net.minecraft.world.entity.ai.attributes.AttributeModifier
 import net.minecraft.world.entity.ai.attributes.Attributes
@@ -42,6 +54,7 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import net.neoforged.neoforge.common.DeferredSpawnEggItem
 import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent
+import java.util.*
 import java.util.function.Function
 
 object PazItems {
@@ -76,7 +89,7 @@ object PazItems {
         properties = Item.Properties()
             .stacksTo(1)
             .rarity(Rarity.UNCOMMON)
-            .durability(325)
+            .durability(325) // 26.1 enchantable(10): GardeningGloveItem.getEnchantmentValue
             .component(DataComponents.TOOL, GardeningGloveItem.createToolProperties())
             .attributes(
                 ItemAttributeModifiers.builder()
@@ -100,17 +113,21 @@ object PazItems {
     val NEWSPAPER: Item = registerItem(
         "newspaper", ::NewspaperItem,
         properties = Item.Properties()
-            .component(PazComponents.BLOCKS_PROJECTILE_DAMAGE, BlocksProjectileDamage(
-                slot = EquipmentSlotGroup.HAND,
-                breakChance = 0.1f,
-                mustBeUsing = true
-            )
-            ) // 26.1 BREAK_SOUND (shield break): NewspaperItem.getBreakingSound
+            // 26.1 BLOCKS_ATTACKS (80 degrees, 90% of the damage, paper block sound): NewspaperItem.onShieldBlock
+            // 26.1 BREAK_SOUND (shield break): NewspaperItem.getBreakingSound
+            .component(PazComponents.BLOCKING_ITEM_BREAK_CHANCE, 0.08f)
     )
     @JvmField
     val TACO: Item = registerItem(
         "taco",
         properties = Item.Properties().food(FoodProperties.Builder().nutrition(9).saturationModifier(1.1f).build())
+    )
+    @JvmField
+    val DOOR_SHIELD: Item = registerItem(
+        "door_shield",
+        properties = Item.Properties()
+            .stacksTo(1)
+            .component(PazComponents.DOOR_SHIELD, DoorShield())
     )
     const val DUCKY_TUBE_DAMAGE_INTERVAL = 45
     @JvmField
@@ -118,6 +135,7 @@ object PazItems {
         "ducky_tube", ::DuckyTubeItem, // 26.1 EQUIPPABLE(LEGS) + repairable(PHANTOM_MEMBRANE): see DuckyTubeItem
         properties = Item.Properties()
             .durability(200)
+            // 26.1 enchantable(1): DuckyTubeItem.getEnchantmentValue
             .attributes(
                 ItemAttributeModifiers.builder()
                     .add(
@@ -165,7 +183,7 @@ object PazItems {
     val DYE_BLASTER: Item = registerItem(
         "dye_blaster", ::DyeBlasterItem, // 26.1 repairable(BRAINZ_ALLOY): DyeBlasterItem.isValidRepairItem
         properties = Item.Properties()
-            .durability(435)
+            .durability(685) // 26.1 enchantable(1): DyeBlasterItem.getEnchantmentValue
             .stacksTo(1)
     )
     @JvmField
@@ -173,18 +191,22 @@ object PazItems {
         "football_helmet", ::FootballHelmetItem, // 26.1 humanoidArmor(CHAINMAIL, HELMET) + EQUIPPABLE(HEAD): see FootballHelmetItem
         properties = Item.Properties()
             .durability(FootballHelmetItem.DURABILITY)
-            .component(PazComponents.BLOCKS_PROJECTILE_DAMAGE, BlocksProjectileDamage(
-                breakChance = 0.025f)
+            .component(PazComponents.PROTECTS_HEAD, ProtectsHeadDataComponent()
             )
+            .component(PazComponents.BLOCKING_ITEM_BREAK_CHANCE, 0.015f)
             .component(
                 DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.builder()
                     .add(
                         Attributes.ARMOR,
-                        AttributeModifier(pazResource("football_armor"), 4.0, AttributeModifier.Operation.ADD_VALUE),
+                        AttributeModifier(pazResource("football_armor"), 10.0, AttributeModifier.Operation.ADD_VALUE),
+                        EquipmentSlotGroup.HEAD
+                    ).add(
+                        Attributes.ARMOR_TOUGHNESS,
+                        AttributeModifier(pazResource("football_armor_toughness"), 2.0, AttributeModifier.Operation.ADD_VALUE),
                         EquipmentSlotGroup.HEAD
                     ).add(
                         Attributes.KNOCKBACK_RESISTANCE,
-                        AttributeModifier(pazResource("football_knockback_resistance"), 0.1, AttributeModifier.Operation.ADD_VALUE),
+                        AttributeModifier(pazResource("football_knockback_resistance"), 0.15, AttributeModifier.Operation.ADD_VALUE),
                         EquipmentSlotGroup.HEAD
                     ).build()
             )
@@ -199,8 +221,9 @@ object PazItems {
     )
     @JvmField
     val LETTER: Item = registerItem(
-        "letter",
-        properties = Item.Properties()
+        "letter", ::LetterItem,
+        properties = Item.Properties().stacksTo(1)
+            .component(PazComponents.LETTER_DATA, LetterDataComponent())
     )
     @JvmField
     val SEED_PACKET: Item = registerItem(
@@ -218,7 +241,7 @@ object PazItems {
     val PLANT_POT_HELMET: Item = registerItem(
         "plant_pot_helmet", ::PlantPotHelmetItem, // 26.1 EQUIPPABLE(HEAD) + repairable(BRICK): see PlantPotHelmetItem
         properties = Item.Properties()
-            .durability(185)
+            .durability(185) // 26.1 enchantable(1): PlantPotHelmetItem.getEnchantmentValue
             .rarity(Rarity.UNCOMMON)
     )
     @JvmField
@@ -241,6 +264,8 @@ object PazItems {
     @JvmField val PIRATE_CAPTAIN_SPAWN_EGG: Item = registerSpawnEgg(PIRATE_CAPTAIN)
     @JvmField val SUPER_BRAINZ_SPAWN_EGG: Item = registerSpawnEgg(SUPER_BRAINZ)
     @JvmField val IMP_SPAWN_EGG: Item = registerSpawnEgg(IMP)
+    @JvmField val ZOMBIE_BAT_SPAWN_EGG: Item = registerSpawnEgg(ZOMBIE_BAT)
+    @JvmField val BARON_VON_BATS_SPAWN_EGG: Item = registerSpawnEgg(BARON_VON_BATS)
     @JvmField val GARGANTUAR_SPAWN_EGG: Item = registerSpawnEgg(GARGANTUAR)
 
     @JvmField val GNOME_SPAWN_EGG: Item = registerSpawnEgg(GNOME)
@@ -267,27 +292,41 @@ object PazItems {
 
     /**
      * Fabric's `DefaultItemComponentEvents.MODIFY`, called from the mod-bus `ModifyDefaultComponentsEvent`.
-     * 26.1 also gave the bucket EQUIPPABLE(HEAD, iron equip sound): on 1.21.1 that is BucketItemHelmetMixin (head slot)
-     * and LivingEntityBucketEquipSoundMixin (equip sound).
+     * 26.1 applied [bucketHeadItem] to the #plantz:bucket_wearable tag; this event runs before tags load, so it uses the
+     * items that tag lists. 26.1's EQUIPPABLE(HEAD, iron equip sound) is BucketItemHelmetMixin (head slot, by the tag)
+     * and LivingEntityBucketEquipSoundMixin (equip sound) on 1.21.1.
      */
     @JvmStatic
     fun modifyDefaultComponents(event: ModifyDefaultComponentsEvent) {
-        event.modify(Items.BUCKET) { builder ->
-            builder.set(PazComponents.BLOCKS_PROJECTILE_DAMAGE, BlocksProjectileDamage(breakChance = .05f))
-
-            val armorModifier = ItemAttributeModifiers.builder()
-                .add(
-                    Attributes.ARMOR,
-                    AttributeModifier(pazResource("bucket_armor"), 1.0, AttributeModifier.Operation.ADD_VALUE),
-                    EquipmentSlotGroup.HEAD
-                ).add(
-                    Attributes.KNOCKBACK_RESISTANCE,
-                    AttributeModifier(pazResource("bucket_knockback_resistance"), 0.05, AttributeModifier.Operation.ADD_VALUE),
-                    EquipmentSlotGroup.HEAD
-                ).build()
-
-            builder.set(DataComponents.ATTRIBUTE_MODIFIERS, armorModifier)
+        for (id in BUCKET_WEARABLE_ITEMS) {
+            val item = BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse(id)).orElse(null) ?: continue
+            event.modify(item) { builder -> bucketHeadItem(builder, item) }
         }
+    }
+
+    /** The items data/plantz/tags/item/bucket_wearable.json lists. */
+    private val BUCKET_WEARABLE_ITEMS = listOf("minecraft:bucket", "farmersdelight:skillet")
+
+    fun bucketHeadItem(builder: DataComponentPatch.Builder, item: Item) {
+        builder.set(PazComponents.PROTECTS_HEAD, ProtectsHeadDataComponent(
+            blockSound = PazSounds.PROJECTILE_HIT_BUCKET
+        ))
+        builder.set(PazComponents.BLOCKING_ITEM_BREAK_CHANCE, 0.02f)
+        builder.set(DataComponents.ATTRIBUTE_MODIFIERS, item.components().getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY)
+            .withModifierAdded(
+                Attributes.ARMOR,
+                AttributeModifier(pazResource("bucket_armor"), 8.0, AttributeModifier.Operation.ADD_VALUE),
+                EquipmentSlotGroup.HEAD
+            ).withModifierAdded(
+                Attributes.ARMOR_TOUGHNESS,
+                AttributeModifier(pazResource("bucket_armor_toughness"), 2.0, AttributeModifier.Operation.ADD_VALUE),
+                EquipmentSlotGroup.HEAD
+            ).withModifierAdded(
+                Attributes.KNOCKBACK_RESISTANCE,
+                AttributeModifier(pazResource("bucket_knockback_resistance"), 0.1, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL),
+                EquipmentSlotGroup.HEAD
+            )
+        )
     }
 
     fun initialize() {
@@ -341,8 +380,6 @@ object PazItems {
                         balloonEntity.moveTo(center.x, center.y, center.z)
                         balloonEntity.applyImpulse(Vec3.atLowerCornerOf(facing.normal), pow = 0.15f, uncertainty = 20.0f)
 
-                        //TODO make the balloon attach to any entity in front of the dispenser
-
                         if (level.addFreshEntity(balloonEntity)) {
                             balloonEntity.playSound(PazSounds.BALLOON_INFLATE)
                             dispensed.shrink(1)
@@ -354,7 +391,7 @@ object PazItems {
                                 EntitySelector.NO_SPECTATORS
                             )) {
                                 if (entity is PazZombie && !entity.canEquipBalloons()) continue
-                                balloonEntity.setLeashedTo(entity, true)
+                                if (entity != null) balloonEntity.setLeashedTo(entity, true)
                                 break
                             }
 

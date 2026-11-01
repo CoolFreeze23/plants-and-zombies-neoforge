@@ -1,6 +1,7 @@
 package joshxviii.plantz.model.zombies;
 
 import joshxviii.plantz.animation.zombies.PirateCaptainAnimation;
+import joshxviii.plantz.renderer.RenderingUtilsKt;
 import joshxviii.plantz.renderer.entity.zombie.PazZombieRenderState;
 import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
 import net.minecraft.client.model.AnimationUtils;
@@ -16,10 +17,12 @@ import static joshxviii.plantz.UtilsKt.pazResource;
 public class PirateCaptainModel<S extends PazZombieRenderState> extends PazZombieModel<S> {
     public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(pazResource("pirate_captain"), "main");
     private final KeyframeAnimation walkAnimation;
+    ModelPart pirate_hat;
 
     public PirateCaptainModel(final ModelPart root) {
         super(null, root);
         this.walkAnimation = KeyframeAnimation.bake(PirateCaptainAnimation.walk, root);
+        this.pirate_hat = RenderingUtilsKt.getChildOrNull(this.getHead(), "pirate_hat");
     }
 
     @Override
@@ -72,6 +75,7 @@ public class PirateCaptainModel<S extends PazZombieRenderState> extends PazZombi
     public void setupAnim(@NotNull S state) {
         super.setupAnim(state);
         this.resetPose();
+        if (this.pirate_hat != null) this.pirate_hat.visible = (state.headItem.isEmpty() && state.headEquipment.isEmpty());
         this.head.xRot = state.xRot * (float) (Math.PI / 180.0);
         this.head.yRot = state.yRot * (float) (Math.PI / 180.0);
 

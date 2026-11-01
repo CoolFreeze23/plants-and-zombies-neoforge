@@ -56,14 +56,11 @@ public abstract class GuiMixin {
         });
         if (player.hasEffect(PazEffects.CHILLED)) renderTextureOverlay(graphics, FREEZE_OUTLINE_LOCATION, 0.15f);
         if (player.hasEffect(PazEffects.FROZEN)) renderTextureOverlay(graphics, FREEZE_OUTLINE_LOCATION, 1.0f);
-
-        ZombieHudMarkers.INSTANCE.renderIcons(graphics, deltaTracker.getGameTimeDeltaPartialTick(false));
     }
 
     @Unique
     private void extractPaintOverlay(final GuiGraphics graphics, RandomSource random, int color, int amplifier, float alpha) {
         float srcWidth = Math.min(graphics.guiWidth(), graphics.guiHeight());
-
 
         for (int i = 0; i < amplifier+1; i++) {
             float scale = 0.2f * (random.nextFloat() + 1.5f);

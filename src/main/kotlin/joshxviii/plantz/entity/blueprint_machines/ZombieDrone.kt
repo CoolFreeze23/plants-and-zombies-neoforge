@@ -6,10 +6,14 @@ import joshxviii.plantz.ai.goal.NavigateToTargetGoal
 import joshxviii.plantz.entity.zombie.ZombieRobot
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
+import net.minecraft.world.DifficultyInstance
 import net.minecraft.world.damagesource.DamageTypes
+import net.minecraft.world.entity.MobSpawnType
 import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.SpawnGroupData
 import net.minecraft.world.entity.ai.control.BodyRotationControl
 import net.minecraft.world.level.Level
+import net.minecraft.world.level.ServerLevelAccessor
 import net.minecraft.world.level.block.state.BlockState
 
 class ZombieDrone(type: EntityType<out ZombieDrone>, level: Level) : ZombieRobot(type, level) {
@@ -19,7 +23,6 @@ class ZombieDrone(type: EntityType<out ZombieDrone>, level: Level) : ZombieRobot
 
     override fun tick() {
         super.tick()
-        isFlying = true
 
         if (actionTime>0 || swinging) {
             actionAnimation.startIfStopped(tickCount)
@@ -62,4 +65,14 @@ class ZombieDrone(type: EntityType<out ZombieDrone>, level: Level) : ZombieRobot
 
     override fun noLookControl() {}
     override fun clampToGrid(): Boolean = false
+
+    override fun finalizeSpawn(
+        level: ServerLevelAccessor,
+        difficulty: DifficultyInstance,
+        spawnReason: MobSpawnType,
+        groupData: SpawnGroupData?
+    ): SpawnGroupData? {
+        isFlying = true
+        return super.finalizeSpawn(level, difficulty, spawnReason, groupData)
+    }
 }

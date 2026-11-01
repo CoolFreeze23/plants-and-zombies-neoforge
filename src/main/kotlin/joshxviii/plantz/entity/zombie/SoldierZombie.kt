@@ -3,6 +3,7 @@ package joshxviii.plantz.entity.zombie
 import net.minecraft.nbt.CompoundTag
 import joshxviii.plantz.PazDataSerializers.DATA_DYE_COLOR
 import joshxviii.plantz.PazItems
+import joshxviii.plantz.PazSounds
 import joshxviii.plantz.ai.goal.NavigateToTargetGoal
 import joshxviii.plantz.ai.goal.ProjectileAttackGoal
 import joshxviii.plantz.entity.projectile.PaintBall
@@ -54,8 +55,8 @@ class SoldierZombie(type: EntityType<out SoldierZombie>, level: Level) : PazZomb
             usingEntity = this,
             projectileFactory =  { PaintBall(level(), this, color = dyeColor, damage = 1f) },
             velocity = 1.1,
-            actionDelay = 22,
-            soundEvent = null,
+            actionDelay = 40,
+            soundEvent = PazSounds.DYE_BLASTER,
             actionEndEffect = {
 
             }))

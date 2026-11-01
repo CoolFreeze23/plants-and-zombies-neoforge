@@ -28,6 +28,7 @@ import net.minecraft.world.level.ServerLevelAccessor
 import net.minecraft.world.level.levelgen.Heightmap
 import joshxviii.plantz.compat.ValueInput
 import joshxviii.plantz.compat.ValueOutput
+import net.minecraft.world.phys.Vec3
 import kotlin.jvm.optionals.getOrDefault
 
 class SuperBrainz(type: EntityType<out SuperBrainz>, level: Level) : PazZombie(type, level) {
@@ -56,11 +57,6 @@ class SuperBrainz(type: EntityType<out SuperBrainz>, level: Level) : PazZombie(t
     var yCapeO = 0.0f
     var zCapeO = 0.0f
 
-    @Suppress("PROPERTY_HIDES_JAVA_FIELD") // 1.21.1 Entity still has its own walkDist fields; the cape uses these
-    var walkDist = 0f
-    @Suppress("PROPERTY_HIDES_JAVA_FIELD")
-    var walkDistO = 0f
-
     val laserAttackAnimation : AnimationState = AnimationState()
     val rightPunchAnimation : AnimationState = AnimationState()
     val leftPunchAnimation : AnimationState = AnimationState()
@@ -86,30 +82,26 @@ class SuperBrainz(type: EntityType<out SuperBrainz>, level: Level) : PazZombie(t
         set(value) = this.entityData.set(BEAM_COOLDOWN_ID, value)
 
     fun removeBeamModifiers() {
-        getAttribute(Attributes.MOVEMENT_SPEED)!!.removeModifier(BEAM_MODE_SPEED_ID)
+        getAttribute(Attributes.MOVEMENT_SPEED)!!.let { if (it.hasModifier(BEAM_MODE_SPEED_ID)) it.removeModifier(BEAM_MODE_SPEED_ID) }
     }
     fun applyBeamModifiers() {
-        getAttribute(Attributes.MOVEMENT_SPEED)!!.addTransientModifier(BEAM_MODE_SPEED)
+        getAttribute(Attributes.MOVEMENT_SPEED)!!.let { if (!it.hasModifier(BEAM_MODE_SPEED_ID)) it.addTransientModifier(BEAM_MODE_SPEED) }
     }
 
     override fun tick() {
         super.tick()
+
         if (beamCooldown>0) beamCooldown--
-        if(beamAttackTime>0 && !isFlying) {
+        if(beamAttackTime>0) {
             if (beamAttackTime==1) applyBeamModifiers()
             laserAttackAnimation.startIfStopped(tickCount)
-            val laserStart = calculateUpVector(this.xRot + 95, this.yHeadRot + 25).scale(0.9).add(eyePosition)
-            (level() as? ServerLevel)?.sendParticles(
-                ParticleTypes.ELECTRIC_SPARK, laserStart.x, laserStart.y, laserStart.z,
-                4, 0.0, 0.0, 0.0, 0.5
-            )
             if (beamAttackTime++>BEAM_MODE_TIME) {
                 laserAttackAnimation.stop()
                 beamAttackTime=0
                 beamCooldown = BEAM_COOLDOWN + random.nextInt(20)
                 removeBeamModifiers()
             }
-        }
+        } else laserAttackAnimation.stop()
         if(punchTime>0) {
             if (useLeft) leftPunchAnimation.startIfStopped(tickCount)
             else rightPunchAnimation.startIfStopped(tickCount)
@@ -155,14 +147,14 @@ class SuperBrainz(type: EntityType<out SuperBrainz>, level: Level) : PazZombie(t
         super.addAdditionalSaveData(tag)
         val output = ValueOutput.of(tag, registryAccess())
         output.store("variant", SuperBrainzVariant.CODEC, variant)
-        output.putInt("beamCooldown", beamCooldown)
+        output.putInt("beam_cooldown", beamCooldown)
     }
 
     override fun readAdditionalSaveData(tag: CompoundTag) {
         super.readAdditionalSaveData(tag)
         val input = ValueInput.of(tag, registryAccess())
         variant = input.read("variant", SuperBrainzVariant.CODEC).getOrDefault(SuperBrainzVariant.pickRandomVariant())
-        beamCooldown = input.getIntOr("beamCooldown", BEAM_COOLDOWN)
+        beamCooldown = input.getIntOr("beam_cooldown", BEAM_COOLDOWN)
     }
 
     override fun registerGoals() {
@@ -180,34 +172,60 @@ class SuperBrainz(type: EntityType<out SuperBrainz>, level: Level) : PazZombie(t
             },
             actionStartEffect = {
                 punchTime=1
+            },
+            afterHitEntityEffect = {
+                when (variant) {
+                    SuperBrainzVariant.SUPER -> {}
+                    SuperBrainzVariant.TOXIC -> it.addEffect(MobEffectInstance(MobEffects.POISON, 45, 0))
+                    SuperBrainzVariant.ELECTRO -> it.addEffect(MobEffectInstance(PazEffects.ELECTRIFIED, 30, 0))
+                }
+                (level() as? ServerLevel)?.sendParticles(
+                    PazServerParticles.POP,
+                    it.getRandomX(0.2), it.randomY, it.getRandomZ(0.2),
+                    1, 0.0, 0.0, 0.0, 0.0
+                )
             }
         ))
         goalSelector.addGoal(4, BeamAttackGoal(
             this,
             beamRange = 12.0,
             beamWidth = 1.0,
-            actionDelay = 10,
+            actionDelay = 25,
             doNotExtendPastTarget = true,
             damageType = PazDamageTypes.ZOMBIE_ENERGY,
-            damageMultiplier = 0.2f,
+            damageMultiplier = 0.5f,
+            actionSuccessEffect = {
+                if (beamAttackTime<=0) beamAttackTime = 1
+            },
             actionPredicate = {
                 !isFlying && beamCooldown<=0 && punchTime<=0
             },
             particleFactory = { startPos, endPos ->
                 val laserStart = calculateUpVector(this.xRot + 95, this.yHeadRot + 25).scale(0.9).add(startPos)
+
+                (level() as? ServerLevel)?.sendParticles(
+                    PlasmaBurstOptions(color = variant.beamColor, scale = 1.25f), laserStart.x, laserStart.y, laserStart.z,
+                    1, 0.0, 0.0, 0.0, 0.0
+                )
+                (level() as? ServerLevel)?.sendParticles(
+                    ParticleTypes.ELECTRIC_SPARK, laserStart.x, laserStart.y, laserStart.z,
+                    20, 0.0, 0.0, 0.0, 0.525
+                )
+
                 if (variant == SuperBrainzVariant.ELECTRO) {
                     playSound(PazSounds.ELECTRIC_ZAP)
                     (level() as ServerLevel).sendParticles(
                         ElectricArcParticleOptions(endPos.offsetRandom(random, .25f),
-                            color = variant.beamColor, width = 0.14f),
+                            color = variant.beamColor, width = 0.17f),
                         laserStart.x, laserStart.y, laserStart.z,
                         1, 0.0, 0.0, 0.0, 0.0
                     )
                 }
                 else {
+                    playSound(PazSounds.SUPER_BRAINZ_LAZER)
                     (level() as ServerLevel).sendParticles(
                         BeamParticleOptions(endPos.offsetRandom(random, .25f),
-                            color = variant.beamColor, width = 0.28f, lifeTime = 10),
+                            color = variant.beamColor, width = 0.3f, lifeTime = 10),
                         laserStart.x, laserStart.y, laserStart.z,
                         1, 0.0, 0.0, 0.0, 0.0
                     )
@@ -222,9 +240,12 @@ class SuperBrainz(type: EntityType<out SuperBrainz>, level: Level) : PazZombie(t
                     endPos.x, endPos.y, endPos.z,
                     2, 0.0, 0.0, 0.0, 0.0
                 )
+                (level() as? ServerLevel)?.sendParticles(
+                    PlasmaBurstOptions(color = variant.beamColor, scale = 1.5f), endPos.x, endPos.y, endPos.z,
+                    1, 0.0, 0.0, 0.0, 0.0
+                )
             },
             afterHitEntityEffect = {
-                if (beamAttackTime<=0) beamAttackTime = 1
                 when (variant) {
                     SuperBrainzVariant.SUPER -> {}
                     SuperBrainzVariant.TOXIC -> it.addEffect(MobEffectInstance(MobEffects.POISON, 100, 0))
@@ -258,9 +279,6 @@ class SuperBrainz(type: EntityType<out SuperBrainz>, level: Level) : PazZombie(t
     }
 
     fun updateCapeState() {
-        walkDistO = walkDist
-        val delta = deltaMovement
-
         xCapeO = xCape
         yCapeO = yCape
         zCapeO = zCape
@@ -281,9 +299,6 @@ class SuperBrainz(type: EntityType<out SuperBrainz>, level: Level) : PazZombie(t
             yCape += dy * 0.25f
             zCape += dz * 0.25f
         }
-
-        val horizontalSpeed = delta.horizontalDistance()
-        walkDist += horizontalSpeed.toFloat()
     }
 
     override fun finalizeSpawn(

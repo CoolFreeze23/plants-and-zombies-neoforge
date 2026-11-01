@@ -13,6 +13,7 @@ import joshxviii.plantz.PazSounds.RAID_MUSIC_WINTER
 import joshxviii.plantz.PazSounds.RAID_MUSIC_ZOMBOSS
 import joshxviii.plantz.client.NowPlayingToast
 import joshxviii.plantz.mixin.client.MusicManagerAccessor
+import joshxviii.plantz.PazSounds.RAID_MUSIC_ZOMBOWEEN
 import joshxviii.plantz.networking.ZombieRaidClientData
 import joshxviii.plantz.raid.WaveType
 import joshxviii.plantz.raid.ZombieRaid
@@ -38,6 +39,7 @@ enum class RaidMusicLayer(
     BUCKET(RAID_MUSIC_BUCKET, 3, "bucket"),
     HALFTIME(RAID_MUSIC_HALFTIME, 4, "halftime"),
     WINTER(RAID_MUSIC_WINTER, 5, "winter"),
+    ZOMBOWEEN(RAID_MUSIC_ZOMBOWEEN, 6, "zomboween"),
     PIRATE(RAID_MUSIC_PIRATE, 6, "pirate"),
     ARMY(RAID_MUSIC_ARMY, 7, "army"),
     LEAGUE(RAID_MUSIC_LEAGUE, 8, "league"),
@@ -54,6 +56,9 @@ object RaidMusicManager {
     var activeLayers: MutableMap<RaidMusicLayer, RaidMusicSoundInstance> = mutableMapOf()
     var targetMusicLayer: RaidMusicLayer? = null
     var raidEvent: ZombieRaidClientData? = null
+    var pitch = 1.0f
+    var targetPitch = 1.0f
+    var tick = 0
 
     fun tick() {
         raidEvent = ZombieRaidClientCache.get().also { event ->
@@ -91,9 +96,21 @@ object RaidMusicManager {
                     layer.volume -= fadeOutStep
             }
         }
+
+        if (shouldChangePitch()) {
+            val step = (targetPitch - pitch) / TRANSITION_TIME.coerceAtLeast(1)
+            pitch += step
+        }
+
+        if (tick >0) tick++
     }
 
-    fun start() {
+    fun restart() {
+        stop()
+        start()
+    }
+
+    private fun start() {
         // to avoid resetting the music, only start if there are no active layers already
         if (activeLayers.isNotEmpty()) return
         stop()
@@ -104,9 +121,11 @@ object RaidMusicManager {
             activeLayers[it] = layer
             minecraft.soundManager.play(layer)
         }
+        tick = 1
     }
 
-    fun stop() {
+    private fun stop() {
+        tick = -1
         activeLayers.forEach { (_, layer) ->
             layer.stopLayer()
         }
@@ -114,6 +133,7 @@ object RaidMusicManager {
         NowPlayingToast.hide()
         activeLayers.clear()
         targetMusicLayer = null
+        targetPitch = 1.0f
     }
 
     private var nowPlayingPending = false
@@ -136,8 +156,8 @@ object RaidMusicManager {
 
     fun getMusicFromRaidContext(raidEvent: ZombieRaidClientData): RaidMusicLayer {
         val totalWaves = raidEvent.numWaves
-        val currentWave = raidEvent.wavesSpawned
-        val waveType = raidEvent.currentWaveType
+        val currentWave = raidEvent.currentWaveNumber()
+        val waveType = raidEvent.currentWaveType()
 
         return when (waveType) {
             WaveType.DEFAULT -> when {
@@ -151,10 +171,12 @@ object RaidMusicManager {
             WaveType.BUCKET_BRIGADE -> RaidMusicLayer.BUCKET
             WaveType.HALFTIME_SHOWDOWN -> RaidMusicLayer.HALFTIME
             WaveType.WINTER_WONDERLAND -> RaidMusicLayer.WINTER
+            WaveType.ZOMBOWEEN -> RaidMusicLayer.ZOMBOWEEN
             WaveType.PIRATE_INVASION -> RaidMusicLayer.PIRATE
             WaveType.ROBO_ARMY -> RaidMusicLayer.ARMY
             WaveType.LEAGUE_OF_AWESOME -> RaidMusicLayer.LEAGUE
             WaveType.ZOMBOSS -> RaidMusicLayer.ZOMBOSS
+            else -> RaidMusicLayer.LOW
         }
     }
 
@@ -168,6 +190,19 @@ object RaidMusicManager {
         }
         return false
     }
+
+    private fun shouldChangePitch(): Boolean {
+        raidEvent?.let {
+            if (it.isFinalWave() || it.bossIsAlive()) {
+                targetPitch = when (it.waveTimer) {
+                    in -1..600 -> 1.26f
+                    in 601..1200 -> 1.12f
+                    else -> 1.0f
+                }
+            } else targetPitch = 1.0f
+        }
+        return targetPitch != pitch
+    }
 }
 
 class RaidMusicSoundInstance(
@@ -180,6 +215,10 @@ class RaidMusicSoundInstance(
         delay = 0
         attenuation = Attenuation.NONE
         relative = true
+    }
+
+    override fun getPitch(): Float {
+        return RaidMusicManager.pitch
     }
 
     fun setVolume(volume: Float) {

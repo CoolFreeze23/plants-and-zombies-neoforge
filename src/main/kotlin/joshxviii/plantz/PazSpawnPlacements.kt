@@ -37,7 +37,7 @@ object PazSpawnPlacements {
 
         addBiomeSpawn(PazTags.Biomes.HAS_FUMESHROOM, PazEntities.FUME_SHROOM,
             weight = 8, minGroupSize = 1, maxGroupSize = 1)
-        registerSpawnPlacement(PazEntities.FUME_SHROOM, Plant::checkPlantSpawnRules)
+        registerSpawnPlacement(PazEntities.FUME_SHROOM, Plant::checkMushroomSpawnRules)
 
         addBiomeSpawn(PazTags.Biomes.HAS_HYPNOSHROOM, PazEntities.HYPNOSHROOM,
             weight = 2, minGroupSize = 1, maxGroupSize = 1)
@@ -89,7 +89,7 @@ object PazSpawnPlacements {
 
         addBiomeSpawn(PazTags.Biomes.HAS_SCAREDYSHROOM, PazEntities.SCAREDY_SHROOM,
             weight = 7, minGroupSize = 1, maxGroupSize = 1)
-        registerSpawnPlacement(PazEntities.SCAREDY_SHROOM, Plant::checkPlantSpawnRules)
+        registerSpawnPlacement(PazEntities.SCAREDY_SHROOM, Plant::checkMushroomSpawnRules)
 
         addBiomeSpawn(PazTags.Biomes.HAS_SUNFLOWER, PazEntities.SUNFLOWER,
             weight = 8, minGroupSize = 1, maxGroupSize = 3)
@@ -99,7 +99,7 @@ object PazSpawnPlacements {
 
         addBiomeSpawn(PazTags.Biomes.HAS_PUFFSHROOM, PazEntities.PUFF_SHROOM,
             weight = 12, minGroupSize = 1, maxGroupSize = 4)
-        registerSpawnPlacement(PazEntities.PUFF_SHROOM, Plant::checkPlantSpawnRules)
+        registerSpawnPlacement(PazEntities.PUFF_SHROOM, Plant::checkMushroomSpawnRules)
 
         addBiomeSpawn(PazTags.Biomes.HAS_WALLNUT, PazEntities.WALL_NUT,
             weight = 5, minGroupSize = 1, maxGroupSize = 1)
@@ -109,7 +109,7 @@ object PazSpawnPlacements {
             weight = 16, minGroupSize = 1, maxGroupSize = 3)
         addBiomeSpawn(PazTags.Biomes.HAS_SUNFLOWER, PazEntities.SUN_SHROOM,
             weight = 1, minGroupSize = 1, maxGroupSize = 4)
-        registerSpawnPlacement(PazEntities.SUN_SHROOM, Plant::checkPlantSpawnRules)
+        registerSpawnPlacement(PazEntities.SUN_SHROOM, Plant::checkMushroomSpawnRules)
 
         addBiomeSpawn(PazTags.Biomes.HAS_COFFEE_BEAN, PazEntities.COFFEE_BEAN,
             weight = 5, minGroupSize = 2, maxGroupSize = 5)

@@ -1,18 +1,18 @@
 package joshxviii.plantz.entity.blueprint_machines
 
 import joshxviii.plantz.PazDamageTypes
+import joshxviii.plantz.PazSounds
 import joshxviii.plantz.ai.goal.ProjectileAttackGoal
 import joshxviii.plantz.entity.projectile.LaserBullet
 import joshxviii.plantz.entity.zombie.ZombieRobot
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.Level
 import net.minecraft.world.phys.Vec2
 
 class ZombieTurret(type: EntityType<out ZombieTurret>, level: Level) : ZombieRobot(type, level) {
-
-    companion object {
-    }
 
     override fun tick() {
         super.tick()
@@ -31,9 +31,10 @@ class ZombieTurret(type: EntityType<out ZombieTurret>, level: Level) : ZombieRob
         goalSelector.addGoal(1, ProjectileAttackGoal(
             usingEntity = this,
             velocity = 1.1,
-            actionDelay = 5,
+            actionDelay = 9,
             inaccuracy = 5.2f,
             leadShots = false,
+            soundEvent = PazSounds.ZOMBIE_TURRET_SHOOT,
             projectileFactory = {
                 LaserBullet(
                     level(),
@@ -43,7 +44,7 @@ class ZombieTurret(type: EntityType<out ZombieTurret>, level: Level) : ZombieRob
                 )
             },
             usePredicate = { actionTime<=0 },
-            actionStartEffect = { actionTime=1 }
+            actionStartEffect = { actionTime=1 },
         ))
     }
 

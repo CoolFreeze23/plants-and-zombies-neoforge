@@ -6,6 +6,7 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.crafting.RecipeType
 import net.minecraft.world.item.context.UseOnContext
+import net.minecraft.world.level.block.LevelEvent
 import net.minecraft.world.level.gameevent.GameEvent
 
 class SunItem(properties: Properties) : Item(properties) {
@@ -22,7 +23,7 @@ class SunItem(properties: Properties) : Item(properties) {
         if (BoneMealItem.applyBonemeal(sunStack, level, pos, context.player)) {
             if (!level.isClientSide && context.player!=null) {
                 sunStack.causeUseVibration(context.player!!, GameEvent.ITEM_INTERACT_FINISH)
-                level.levelEvent(1505, pos, 15)
+                level.levelEvent(LevelEvent.PARTICLES_AND_SOUND_PLANT_GROWTH, pos, 15)
             }
 
             return InteractionResult.SUCCESS
@@ -38,7 +39,7 @@ class SunItem(properties: Properties) : Item(properties) {
             ) {
                 if (!level.isClientSide && context.player!=null) {
                     sunStack.causeUseVibration(context.player!!, GameEvent.ITEM_INTERACT_FINISH)
-                    level.levelEvent(1505, relative, 15)
+                    level.levelEvent(LevelEvent.PARTICLES_AND_SOUND_PLANT_GROWTH, relative, 15)
                 }
 
                 return InteractionResult.SUCCESS

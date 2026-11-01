@@ -3,6 +3,7 @@ package joshxviii.plantz.entity.projectile
 import joshxviii.plantz.NukeSmokeParticleOptions
 import joshxviii.plantz.PazDamageTypes
 import joshxviii.plantz.PazEntities
+import joshxviii.plantz.PazSounds
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.level.Level
 import net.minecraft.world.phys.HitResult
@@ -30,6 +31,6 @@ class Missile(
 
     override fun onHit(hitResult: HitResult) {
         super.onHit(hitResult)
-        explode(3f)
+        explode(2.5f, PazSounds.MISSILE_EXPLODE)
     }
 }

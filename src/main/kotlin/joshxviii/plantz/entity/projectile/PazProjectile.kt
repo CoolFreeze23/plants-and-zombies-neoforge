@@ -1,12 +1,17 @@
 package joshxviii.plantz.entity.projectile
 
 import joshxviii.plantz.*
+import joshxviii.plantz.PazTags.EntityTypes.IGNORE_PAZ_PROJECTILES
+import joshxviii.plantz.entity.Balloon
+import joshxviii.plantz.entity.plant.ExplosivePlant.Companion.scaledExplosion
 import joshxviii.plantz.entity.plant.Plant
 import joshxviii.plantz.entity.plant.headLookAngle
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.core.Holder
 import net.minecraft.core.particles.ParticleOptions
 import net.minecraft.core.particles.ParticleTypes
+import net.minecraft.core.component.DataComponents
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.EntityDataSerializers
@@ -25,6 +30,8 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.projectile.Projectile
 import net.minecraft.world.entity.projectile.ProjectileDeflection
 import net.minecraft.world.entity.projectile.ProjectileUtil
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.ExplosionDamageCalculator
 import net.minecraft.world.level.Level
@@ -36,6 +43,7 @@ import java.util.*
 import java.util.Arrays.sort
 import java.util.function.Predicate
 import kotlin.math.sign
+import kotlin.math.sqrt
 
 abstract class PazProjectile(
     type: EntityType<out PazProjectile>,
@@ -44,7 +52,7 @@ abstract class PazProjectile(
     val spawnOffset: Vec2 = Vec2.ZERO,
     val damageType: ResourceKey<DamageType> = PazDamageTypes.PLANT,
     var damage : Float = entityOwner?.attributes?.getValue(Attributes.ATTACK_DAMAGE)?.toFloat()?:1.0f,
-    var knockback : Double = entityOwner?.attributes?.getValue(Attributes.ATTACK_KNOCKBACK)?:0.0
+    var knockback : Double = entityOwner?.attributes?.getValue(Attributes.ATTACK_KNOCKBACK)?:0.0,
 ) : Projectile(type, level) {
 
     protected var inGroundTime: Int = 0
@@ -119,7 +127,13 @@ abstract class PazProjectile(
 
         val PIERCE_LEVEL: EntityDataAccessor<Byte> = SynchedEntityData.defineId(PazProjectile::class.java, EntityDataSerializers.BYTE)
         val IN_GROUND: EntityDataAccessor<Boolean> = SynchedEntityData.defineId(PazProjectile::class.java, EntityDataSerializers.BOOLEAN)
+        val SCALE: EntityDataAccessor<Float> = SynchedEntityData.defineId(PazProjectile::class.java, EntityDataSerializers.FLOAT)
     }
+
+
+    var scale : Float
+        get() = this.entityData.get(SCALE)
+        set(value) { this.entityData.set(SCALE, value) }
 
     init {
         if (entityOwner != null) {
@@ -134,6 +148,7 @@ abstract class PazProjectile(
                 entityOwner.xRot,
                 entityOwner.yRot
             )
+            scale = entityOwner.getAttribute(Attributes.SCALE)?.value?.toFloat()?:1.0f
         }
     }
 
@@ -324,6 +339,7 @@ abstract class PazProjectile(
     override fun defineSynchedData(entityData: SynchedEntityData.Builder) {
         entityData.define(IN_GROUND, false)
         entityData.define(PIERCE_LEVEL, 0.toByte())
+        entityData.define(SCALE, 1.0f)
     }
 
     fun setInGround(inGround: Boolean) = this.entityData.set(IN_GROUND, inGround)
@@ -371,30 +387,20 @@ abstract class PazProjectile(
         }
     }
 
-    protected fun explode(radius: Float = 2.0f) {
+    protected fun explode(radius: Float = 2.0f, sound: Holder<SoundEvent> = PazSounds.PLANT_EXPLODE) {
         val level = this.level()
         level.explode(
             getOwner(),
             damageSources().source(damageType, getOwner()),
             EXPLOSION_CALCULATOR, x, y, z,
-            radius,
+            radius*sqrt(scale),
             false,
             Level.ExplosionInteraction.MOB,
             ParticleTypes.LARGE_SMOKE,
             ParticleTypes.EXPLOSION,
-            PazSounds.PLANT_EXPLODE
+            sound
         )
-        if (level is ServerLevel) {
-            level.sendParticles(NukeWaveParticleOptions(color = 0xD0370D, scale = radius * 1f),
-                x, y, z, 1, 0.0, 0.0, 0.0, 0.0
-            )
-            level.sendParticles(NukeBlastParticleOptions(color = 0xFFE88D, scale = radius * 0.5f),
-                x, y, z, 1, 0.0, 0.0, 0.0, 0.0
-            )
-            level.sendParticles(NukeSmokeParticleOptions(color = 0xB87878, scale = radius * 0.3f),
-                x, y+1, z, 16, 0.0, 0.5, 0.0, 0.0
-            )
-        }
+        scaledExplosion(scale = scale)
     }
 
     private fun applyInertia() {
@@ -439,9 +445,11 @@ abstract class PazProjectile(
 
     override fun canHitEntity(entity: Entity): Boolean {
         if (entity is Projectile) return false
+        if (entity.type.`is`(IGNORE_PAZ_PROJECTILES)) return false
         if (piercingIgnoreEntityIds.contains(entity.id)) return false
         val owner = entityOwner ?: return super.canHitEntity(entity)
-        if ((entity is Plant && owner is Plant && entity.owner !is Enemy) || (entity is Enemy && owner is Enemy && !owner.isHypnotized() && extractRootOwner(owner) !is Player)) return false
+        if (entity is Balloon && ((owner is Plant && entity.getLeashHolder() is Plant) || (owner is Enemy && entity.getLeashHolder() is Enemy))) return false
+        if ((entity is Plant && owner is Plant && entity.owner !is Enemy) || (entity.type.`is`(PazTags.EntityTypes.ZOMBIE_RAIDERS) && owner.type.`is`(PazTags.EntityTypes.ZOMBIE_RAIDERS) && !owner.isHypnotized() && extractRootOwner(owner) !is Player)) return false
         if (owner.hasSameRootOwner(entity)) return false
         return super.canHitEntity(entity)
     }
@@ -462,5 +470,3 @@ abstract class PazProjectile(
         )
     }
 }
-
-

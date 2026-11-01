@@ -1,0 +1,28 @@
+{
+  "loader": "neoforge:separate_transforms",
+  "gui_light": "front",
+  "textures": {
+    "particle": "plantz:item/dye_blaster_empty"
+  },
+  "base": {
+    "parent": "plantz:item/dye_blaster_empty",
+    "textures": {
+      "layer0": "plantz:item/dye_blaster_liquid",
+      "layer1": "plantz:item/dye_blaster_empty"
+    }
+  },
+  "perspectives": {
+    "head": {
+      "parent": "plantz:block/dye_vat"
+    }
+  },
+  "display": {
+    "plantz:on_shelf": {
+      "rotation": [
+        0,
+        -180,
+        0
+      ]
+    }
+  }
+}

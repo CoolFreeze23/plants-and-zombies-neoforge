@@ -10,6 +10,7 @@ import joshxviii.plantz.compat.ValueOutput
 import joshxviii.plantz.compat.ai.SpearUseGoal
 import joshxviii.plantz.entity.plant.Plant
 import joshxviii.plantz.integration.PazCopperAgeBackportCompat
+import joshxviii.plantz.isHypnotized
 import net.minecraft.core.BlockPos
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.syncher.EntityDataAccessor
@@ -104,12 +105,12 @@ class Gnome(type: EntityType<out Gnome>, level: Level) :Monster(type, level) {
         this.goalSelector.addGoal(3, WaterAvoidingRandomStrollGoal(this, 0.6))
         this.goalSelector.addGoal(4, FindAndRideAnimalGoal(this))
         //this.goalSelector.addGoal(7, FollowMobGoal(this, 1.0, 3.0f, 7.0f))
-        this.targetSelector.addGoal(1, HurtByTargetGoal(this, Gnome::class.java).setAlertOthers())
+        this.targetSelector.addGoal(1, HurtByTargetGoal(this).setAlertOthers())
         this.targetSelector.addGoal(2, NearestAttackableTargetGoal(this, LivingEntity::class.java, true) { target ->
-            target !is Gnome
-                    && target is Plant
+            !(target is Gnome && !target.isHypnotized())
+                    && (target is Plant
                     || target is Zombie
-                    || target is Player
+                    || target is Player)
         })
     }
 

@@ -16,7 +16,6 @@ import joshxviii.plantz.entity.gnome.Gnome
 import joshxviii.plantz.entity.plant.*
 import joshxviii.plantz.entity.projectile.*
 import joshxviii.plantz.entity.zombie.*
-import joshxviii.plantz.raid.ZombieRaid
 import net.minecraft.core.Registry
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.registries.Registries
@@ -31,7 +30,6 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal
 import net.minecraft.world.entity.monster.Zombie
 import net.minecraft.world.entity.monster.ZombifiedPiglin
 import net.minecraft.world.entity.projectile.Projectile
-import net.minecraft.world.scores.Team
 
 object PazEntities {
 
@@ -42,15 +40,14 @@ object PazEntities {
         if (entity is Zombie) entity.targetSelector.addGoal(4, NearestAttackableTargetGoal(entity, Gnome::class.java, 5, true, false, null))
 
         if (entity is PathfinderMob && entity.type.`is`(ZOMBIE_RAIDERS)) {
-            entity.goalSelector.addGoal(0, PathfindToFlagGoal(entity, minimumDistance = ZombieRaid.SPAWN_DISTANCE * 1.5))
+            entity.goalSelector.addGoal(1, PathfindToFlagGoal(entity))
             entity.goalSelector.addGoal(2, DestroyFlagGoal(entity))
-            entity.goalSelector.addGoal(3, PathfindToFlagGoal(entity))
         }
 
         if (entity is Mob && entity.type.`is`(ATTACKS_PLANTS) && entity !is ZombifiedPiglin) {
-            entity.targetSelector.addGoal(2, NearestAttackableTargetGoal(entity, WallNut::class.java, 6, true, true) { target -> ((target as? WallNut)?.let { it.distanceToSqr(entity) < 3.5 } ?: false)})
-            entity.targetSelector.addGoal(3, NearestAttackableTargetGoal(entity, Plant::class.java, 5, true, false) { target ->
-                target !is WallNut && !target.type.`is`(IGNORED_BY_PLANT_ATTACKERS) })
+            entity.targetSelector.addGoal(1, NearestAttackableTargetGoal(entity, WallNut::class.java, 6, true, true) { target -> ((target as? WallNut)?.let { it.distanceToSqr(entity) < 3.5 } ?: false)})
+            // same priority as player
+            entity.targetSelector.addGoal(2, NearestAttackableTargetGoal(entity, Plant::class.java, 5, true, false) { target -> !target.type.`is`(IGNORED_BY_PLANT_ATTACKERS) })
         }
     }
 
@@ -341,6 +338,14 @@ object PazEntities {
             followRange = 1.0
         )
     )
+    @JvmField val PUMPKIN: EntityType<Pumpkin> = registerPlant(
+        "pumpkin", EntityType.Builder.of(::Pumpkin, MobCategory.CREATURE),
+        width = 0.85f,
+        height = 0.5f,
+        attributes = Plant.Companion.PlantAttributes(
+            maxHealth = PazConfig.PUMPKIN_ARMOR_AMOUNT.toDouble(),
+        )
+    )
     // endregion
 
     // region Zombies
@@ -375,7 +380,7 @@ object PazEntities {
             attackDamage = 2.0,
             movementSpeed = 0.225,
             maxHealth = 35.0,
-            followRange = 26.0,
+            followRange = 36.0,
         )
     )
     @JvmField val ENGINEER_ZOMBIE: EntityType<EngineerZombie> =  registerZombie(
@@ -409,7 +414,7 @@ object PazEntities {
     @JvmField val DISCO_ZOMBIE: EntityType<DiscoZombie> =  registerZombie(
         "disco_zombie",
         EntityType.Builder.of(::DiscoZombie, MobCategory.MONSTER)
-            .sized(0.64f, 2.2f)
+            .sized(0.64f, 1.96f)
             .eyeHeight(1.74f)
             .clientTrackingRange(8),
         attributes = PazZombie.Companion.PazZombieAttributes(
@@ -427,7 +432,7 @@ object PazEntities {
             .clientTrackingRange(8),
         attributes = PazZombie.Companion.PazZombieAttributes(
             attackDamage = 3.5,
-            maxHealth = 20.0,
+            maxHealth = 12.0,
             movementSpeed = 0.3,
             followRange = 24.0,
             spawnReinforcementsChance = 0.0,
@@ -441,7 +446,7 @@ object PazEntities {
             .clientTrackingRange(8),
         attributes = PazZombie.Companion.PazZombieAttributes(
             attackDamage = 7.0,
-            maxHealth = 75.0,
+            maxHealth = 65.0,
             stepHeight = 1.0,
             movementSpeed = 0.23,
             spawnReinforcementsChance = 1.5,
@@ -468,7 +473,7 @@ object PazEntities {
             .clientTrackingRange(8),
         attributes = PazZombie.Companion.PazZombieAttributes(
             attackDamage = 4.0,
-            maxHealth = 40.0,
+            maxHealth = 38.0,
             movementSpeed = 0.237,
             spawnReinforcementsChance = 2.0,
         )
@@ -482,7 +487,7 @@ object PazEntities {
         attributes = PazZombie.Companion.PazZombieAttributes(
             armor = 4.0,
             attackDamage = 6.0,
-            maxHealth = 120.0,
+            maxHealth = 90.0,
             movementSpeed = 0.21,
             spawnReinforcementsChance = 0.0,
         )
@@ -495,41 +500,43 @@ object PazEntities {
             .clientTrackingRange(8),
         attributes = PazZombie.Companion.PazZombieAttributes(
             attackDamage = 6.0,
-            maxHealth = 80.0,
+            maxHealth = 55.0,
             movementSpeed = 0.25,
-            followRange = 126.0,
+            followRange = 100.0,
             spawnReinforcementsChance = 0.0,
         )
     )
     @JvmField val ROBO_ZOMBIE: EntityType<RoboZombie> =  registerZombie(
         "robo_zombie",
         EntityType.Builder.of(::RoboZombie, MobCategory.MONSTER)
-            .sized(1.3f, 1.95f)
+            .sized(1.3964844f, 1.95f)
             .eyeHeight(1.74f)
             .clientTrackingRange(8),
         attributes = PazZombie.Companion.PazZombieAttributes(
-            armor = 16.0,
-            attackDamage = 12.0,
-            maxHealth = 100.0,
+            armor = 12.0,
+            armorToughness = 9.0,
+            attackDamage = 11.0,
+            maxHealth = 128.0,
             stepHeight = 1.0,
-            movementSpeed = 0.23,
-            knockbackResistance = 1.0,
+            movementSpeed = 0.215,
+            knockbackResistance = 0.85,
             spawnReinforcementsChance = 0.0,
         )
     )
     @JvmField val SUPER_BRAINZ: EntityType<SuperBrainz> =  registerZombie(
         "super_brainz",
         EntityType.Builder.of(::SuperBrainz, MobCategory.MONSTER)
-            .sized(1.25f, 2.4f)
+            .sized(1.3f, 2.4f)
             .clientTrackingRange(8),
         attributes = PazZombie.Companion.PazZombieAttributes(
-            armor = 8.0,
+            armor = 20.0,
+            armorToughness = 4.0,
             attackDamage = 10.0,
             maxHealth = 150.0,
             stepHeight = 1.0,
             movementSpeed = 0.25,
             flyingSpeed = 0.28,
-            knockbackResistance = 0.6,
+            knockbackResistance = 0.8,
             spawnReinforcementsChance = 0.0,
         )
     )
@@ -546,9 +553,8 @@ object PazEntities {
             movementSpeed = 0.32,
             spawnReinforcementsChance = 0.3,
         )
-
     )
-    @JvmField val GARGANTUAR: EntityType<Gargantuar> =  registerZombie(
+    @JvmField val GARGANTUAR: EntityType<Gargantuar> = registerZombie(
         "gargantuar",
         EntityType.Builder.of(::Gargantuar, MobCategory.MONSTER)
             .sized(1.7f, 3.2f)
@@ -557,11 +563,42 @@ object PazEntities {
         attributes = PazZombie.Companion.PazZombieAttributes(
             armor = 6.0,
             attackDamage = 7.0,
-            maxHealth = 550.0,
+            maxHealth = 600.0,
             movementSpeed = 0.21,
             knockbackResistance = 1.4,
             explosionKnockbackResistance = 0.7,
             scale = 1.33,
+            stepHeight = 1.0,
+            attackRange = 2.0,
+            spawnReinforcementsChance = 0.0,
+        )
+    )
+    @JvmField val ZOMBIE_BAT: EntityType<ZombieBat> =  registerZombie(
+        "zombie_bat",
+        EntityType.Builder.of(::ZombieBat, MobCategory.MONSTER)
+            .sized(0.5F, 0.9F)
+            .eyeHeight(0.45F)
+            .clientTrackingRange(8),
+        attributes = PazZombie.Companion.PazZombieAttributes(
+            attackDamage = 2.0,
+            maxHealth = 20.0,
+            movementSpeed = 0.32,
+            flyingSpeed = 0.28,
+            spawnReinforcementsChance = 0.3,
+        )
+    )
+    @JvmField val BARON_VON_BATS: EntityType<BaronVonBats> = registerZombie(
+        "baron_von_bats",
+        EntityType.Builder.of(::BaronVonBats, MobCategory.MONSTER)
+            .sized(0.6f, 1.95f)
+            .clientTrackingRange(8),
+        attributes = PazZombie.Companion.PazZombieAttributes(
+            armor = 6.0,
+            attackDamage = 7.0,
+            maxHealth = 500.0,
+            movementSpeed = 0.21,
+            knockbackResistance = 1.4,
+            explosionKnockbackResistance = 0.5,
             stepHeight = 1.0,
             attackRange = 2.0,
             spawnReinforcementsChance = 0.0,
@@ -576,7 +613,7 @@ object PazEntities {
             maxHealth = 8.0,
             armor = 7.0,
             followRange = 20.0,
-            attackDamage = 1.5,
+            attackDamage = 2.0,
             spawnReinforcementsChance = 0.0,
         )
     )
@@ -735,9 +772,11 @@ object PazEntities {
         return Registry.register(BuiltInRegistries.ENTITY_TYPE, id, builder.build(id.toString()))
     }
 
-    val MAGIC_NAMES = mapOf<EntityType<*>, String>(
-        CHOMPER      to "chester",
-        DISCO_ZOMBIE to "mj",
-        BROWN_COAT   to "tugboat"
+    val MAGIC_NAMES = mapOf<EntityType<*>, List<String>>(
+        SUNFLOWER           to listOf("vampire"),
+        CHOMPER             to listOf("chester"),
+        FIRE_PEA_SHOOTER    to listOf("blaze"),
+        DISCO_ZOMBIE        to listOf("mj"),
+        BROWN_COAT          to listOf("tugboat", "mustache")
     )
 }

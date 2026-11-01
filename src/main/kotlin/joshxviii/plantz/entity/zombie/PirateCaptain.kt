@@ -1,15 +1,20 @@
 package joshxviii.plantz.entity.zombie
 
+import net.minecraft.server.level.ServerLevel
 import it.unimi.dsi.fastutil.ints.IntList
 import joshxviii.plantz.PazEntities
+import joshxviii.plantz.PazSounds
 import joshxviii.plantz.ai.goal.NavigateToTargetGoal
 import joshxviii.plantz.ai.goal.ProjectileAttackGoal
+import joshxviii.plantz.entity.isActiveInRaid
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.EntityDataSerializers
 import net.minecraft.network.syncher.SynchedEntityData
+import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.DifficultyInstance
+import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.entity.*
 import net.minecraft.world.entity.projectile.FireworkRocketEntity
 import net.minecraft.world.entity.projectile.ProjectileUtil
@@ -62,6 +67,16 @@ class PirateCaptain(type: EntityType<out PirateCaptain>, level: Level) : PazZomb
         xpReward = 80
     }
 
+    override fun getAmbientSound(): SoundEvent {
+        return PazSounds.PIRATE_CAPTAIN_AMBIENT
+    }
+    override fun getHurtSound(source: DamageSource): SoundEvent {
+        return PazSounds.PIRATE_CAPTAIN_HURT
+    }
+    override fun getDeathSound(): SoundEvent {
+        return PazSounds.PIRATE_CAPTAIN_DEATH
+    }
+
     var shootTime: Int
         get() = this.entityData.get(SHOT_TIME_ID)
         set(value) = this.entityData.set(SHOT_TIME_ID, value)
@@ -75,6 +90,7 @@ class PirateCaptain(type: EntityType<out PirateCaptain>, level: Level) : PazZomb
         super.registerGoals()
         goalSelector.addGoal(2, ProjectileAttackGoal(
             usingEntity = this,
+            leadShots = false,
             projectileFactory =  {
                 FireworkRocketEntity(level(), getFirework(), this, x, y+eyeHeight, z, true)
             },
@@ -128,8 +144,9 @@ class PirateCaptain(type: EntityType<out PirateCaptain>, level: Level) : PazZomb
         if (reason == RemovalReason.KILLED) {
             convertToSingle(PazEntities.PIRATE_CAPTAIN_GHOST, keepEquipment = true, preserveCanPickUpLoot = true) {
                 it.playSound(SoundEvents.ZOMBIE_VILLAGER_CONVERTED)
-                it.setItemSlot(EquipmentSlot.MAINHAND, Items.IRON_SWORD.defaultInstance)
-                it.setDropChance(EquipmentSlot.MAINHAND, 0.0f)
+                (level() as? ServerLevel)?.let { level ->
+                    it.finalizeSpawn(level, level.getCurrentDifficultyAt(blockPosition()), MobSpawnType.CONVERSION, PazZombieGroupData(isRaider = this.isActiveInRaid()))
+                }
             }
         }
         super.remove(reason)

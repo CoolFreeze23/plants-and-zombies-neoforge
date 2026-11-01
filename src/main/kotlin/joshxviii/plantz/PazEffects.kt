@@ -33,6 +33,7 @@ object PazEffects {
     @JvmField val FROZEN: Holder<MobEffect> = register("frozen",
         FreezeMobEffect(MobEffectCategory.HARMFUL, 0x74F0FF, PazServerParticles.CHILLED)
             .addAttributeModifier(Attributes.MOVEMENT_SPEED, pazResource("effect.frozen"), -99.0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE)
+            .addAttributeModifier(Attributes.FLYING_SPEED, pazResource("effect.frozen"), -99.0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE)
             .addAttributeModifier(Attributes.JUMP_STRENGTH, pazResource("effect.frozen"), -99.0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE)
             .addAttributeModifier(Attributes.ATTACK_DAMAGE, pazResource("effect.frozen"), -99.0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE)
     )
@@ -58,6 +59,7 @@ object PazEffects {
     @JvmField val BUTTERED: Holder<MobEffect> = register("buttered",
         ButteredMobEffect(MobEffectCategory.HARMFUL, 13416767, PazServerParticles.BUTTER_DRIP)
             .addAttributeModifier(Attributes.MOVEMENT_SPEED, pazResource("effect.buttered"), -99.0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE)
+            .addAttributeModifier(Attributes.FLYING_SPEED, pazResource("effect.buttered"), -99.0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE)
             .addAttributeModifier(Attributes.WATER_MOVEMENT_EFFICIENCY, pazResource("effect.buttered"), -99.0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE)
             .addAttributeModifier(Attributes.JUMP_STRENGTH, pazResource("effect.buttered"), -99.0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE)
             .addAttributeModifier(Attributes.ATTACK_DAMAGE, pazResource("effect.buttered"), -99.0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE)
@@ -67,6 +69,7 @@ object PazEffects {
     @JvmField val TANGLED: Holder<MobEffect> = register("tangled",
         TangledMobEffect(MobEffectCategory.HARMFUL, 0x354023, BlockParticleOption(ParticleTypes.BLOCK, Blocks.SWEET_BERRY_BUSH.defaultBlockState()))
             .addAttributeModifier(Attributes.MOVEMENT_SPEED, pazResource("effect.tangled"), -99.0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE)
+            .addAttributeModifier(Attributes.FLYING_SPEED, pazResource("effect.tangled"), -99.0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE)
             .addAttributeModifier(Attributes.WATER_MOVEMENT_EFFICIENCY, pazResource("effect.tangled"), -99.0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE)
             .addAttributeModifier(Attributes.JUMP_STRENGTH, pazResource("effect.tangled"), -99.0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE)
             .addAttributeModifier(Attributes.ATTACK_DAMAGE, pazResource("effect.tangled"), -99.0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE)

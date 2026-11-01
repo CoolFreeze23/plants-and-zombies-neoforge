@@ -13,9 +13,9 @@ import net.neoforged.neoforge.event.AddPackFindersEvent
 
 /**
  * Optional Copper Age Backport support. It adds 1.21.9's copper tools, copper nuggets, copper chests and copper golem
- * under the `minecraft` namespace, so with it installed the 26.1 copper content comes back: gnomes carry copper tools,
- * gravestone treasure has copper nuggets and the relocation advancement shows a copper shovel; its copper chest and
- * statue sound events are preferred by [joshxviii.plantz.PazCompatSounds].
+ * under the `minecraft` namespace, so with it installed the 26.1 copper content comes back: gnomes carry copper tools
+ * and the relocation advancement shows a copper shovel; its copper chest, statue and step sound events are preferred by
+ * [joshxviii.plantz.PazCompatSounds].
  */
 object PazCopperAgeBackportCompat {
     const val MOD_ID = "copperagebackport"

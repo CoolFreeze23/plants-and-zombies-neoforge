@@ -63,7 +63,7 @@ class SuperBrainzRenderer(
         var capeLean2 = (deltaX * forwardZ - deltaZ * forwardX) * 200.0f
         capeLean2 = Mth.clamp(capeLean2, -20f, 20f)
 
-        val walkDistance = Mth.lerp(partialTicks, entity.walkDistO, entity.walkDist)
+        val walkDistance = Mth.lerp(partialTicks, entity.moveDirO.horizontalDistance().toFloat(), entity.moveDir.horizontalDistance().toFloat())
         capeFlap += Mth.sin(walkDistance * 2.0f) * 32f * 0.3f
 
         state.capeFlap = capeFlap

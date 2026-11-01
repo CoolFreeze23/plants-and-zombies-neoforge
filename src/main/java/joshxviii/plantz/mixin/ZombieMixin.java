@@ -3,6 +3,7 @@ package joshxviii.plantz.mixin;
 import joshxviii.plantz.*;
 import joshxviii.plantz.compat.ValueInput;
 import joshxviii.plantz.compat.ValueOutput;
+import joshxviii.plantz.entity.ZombieRaider;
 import joshxviii.plantz.entity.zombie.PazZombie;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -33,6 +34,12 @@ public class ZombieMixin implements ZombieRaider {
 
     @Unique
     static private final EntityDataAccessor<Boolean> IS_FROM_RAID  = SynchedEntityData.defineId(Zombie.class, EntityDataSerializers.BOOLEAN);
+    @Unique
+    static private final EntityDataAccessor<Boolean> ADDS_HEALTH_TO_RAID  = SynchedEntityData.defineId(Zombie.class, EntityDataSerializers.BOOLEAN);
+    @Unique
+    static private final EntityDataAccessor<Boolean> IS_LEADER  = SynchedEntityData.defineId(Zombie.class, EntityDataSerializers.BOOLEAN);
+    @Unique
+    static private final EntityDataAccessor<Boolean> IS_BOSS  = SynchedEntityData.defineId(Zombie.class, EntityDataSerializers.BOOLEAN);
 
     @Override
     public boolean plantz$getIsFromRaid() {
@@ -44,21 +51,60 @@ public class ZombieMixin implements ZombieRaider {
         ((Entity) (Object) this).getEntityData().set(IS_FROM_RAID, value);
     }
 
+    @Override
+    public boolean plantz$getAddsHealthToRaid() {
+        return ((Entity) (Object) this).getEntityData().get(ADDS_HEALTH_TO_RAID);
+    }
+
+    @Override
+    public void plantz$setAddsHealthToRaid(boolean value) {
+        ((Entity) (Object) this).getEntityData().set(ADDS_HEALTH_TO_RAID, value);
+    }
+
+    @Override
+    public void plantz$setIsLeader(boolean value) {
+        ((Entity) (Object) this).getEntityData().set(IS_LEADER, value);
+    }
+
+    @Override
+    public boolean plantz$getIsLeader() {
+        return ((Entity) (Object) this).getEntityData().get(IS_LEADER);
+    }
+
+    @Override
+    public boolean plantz$getIsBoss() {
+        return ((Entity) (Object) this).getEntityData().get(IS_BOSS);
+    }
+
+    @Override
+    public void plantz$setIsBoss(boolean value) {
+        ((Entity) (Object) this).getEntityData().set(IS_BOSS, value);
+    }
+
     @Inject(method = "defineSynchedData", at = @At("TAIL"))
     public void syncedData(SynchedEntityData.Builder entityData, CallbackInfo ci) {
         entityData.define(IS_FROM_RAID, false);
+        entityData.define(ADDS_HEALTH_TO_RAID, true);
+        entityData.define(IS_LEADER, false);
+        entityData.define(IS_BOSS, false);
     }
 
     @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
     private void saveCustomFlags(CompoundTag tag, CallbackInfo ci) {
         ValueOutput output = ValueOutput.of(tag, ((Entity) (Object) this).registryAccess());
         output.putBoolean("plantz:IsFromRaid", this.plantz$getIsFromRaid());
+        output.putBoolean("plantz:AddsHealthToRaid", this.plantz$getAddsHealthToRaid());
+        output.putBoolean("plantz:IsLeader", this.plantz$getIsLeader());
+        output.putBoolean("plantz:IsBoss", this.plantz$getIsBoss());
     }
 
     @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
     private void loadCustomFlags(CompoundTag tag, CallbackInfo ci) {
         ValueInput input = ValueInput.of(tag, ((Entity) (Object) this).registryAccess());
         this.plantz$setIsFromRaid(input.getBooleanOr("plantz:IsFromRaid", false));
+        this.plantz$setAddsHealthToRaid(input.getBooleanOr("plantz:AddsHealthToRaid", true));
+        this.plantz$setIsLeader(input.getBooleanOr("plantz:IsLeader", false));
+        this.plantz$setIsBoss(input.getBooleanOr("plantz:IsBoss", false));
     }
 
     // 26.1 hurtServer -> 1.21.1 hurt (Zombie.hurt calls super.hurt(source, amount) first)

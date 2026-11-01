@@ -10,6 +10,8 @@ import joshxviii.plantz.networking.ServerConfigResponsePayload
 import joshxviii.plantz.networking.UiSoundPayload
 import joshxviii.plantz.networking.UpdateCollectionBoxPayload
 import joshxviii.plantz.networking.UpdateCollectionBoxPayload.Companion.handleUpdateCollectionBoxPacket
+import joshxviii.plantz.networking.UpdateLetterPayload
+import joshxviii.plantz.networking.UpdateLetterPayload.Companion.handleUpdateLetterPacket
 import joshxviii.plantz.networking.ZombieRaidClientData
 import joshxviii.plantz.networking.ZombieRaidResponsePayload
 import net.neoforged.neoforge.network.PacketDistributor
@@ -41,6 +43,7 @@ object PazNetwork {
         // serverbound
         registrar.playToServer(SendMailRequestPayload.ID, SendMailRequestPayload.STREAM_CODEC, ::handleSendMailPacket)
         registrar.playToServer(UpdateCollectionBoxPayload.ID, UpdateCollectionBoxPayload.STREAM_CODEC, ::handleUpdateCollectionBoxPacket)
+        registrar.playToServer(UpdateLetterPayload.ID, UpdateLetterPayload.STREAM_CODEC, ::handleUpdateLetterPacket)
 
         // clientbound
         registrar.playToClient(SendMailResponsePayload.ID, SendMailResponsePayload.STREAM_CODEC) { payload, context -> PazClientNetwork.handleSendMailResponse(payload, context) }

@@ -1,5 +1,6 @@
 package joshxviii.plantz.entity.zombie
 
+import joshxviii.plantz.PazSounds
 import joshxviii.plantz.entity.plant.Plant
 import joshxviii.plantz.hasSameRootOwner
 import joshxviii.plantz.item.BlueprintItem
@@ -119,10 +120,12 @@ abstract class ZombieRobot(type: EntityType<out ZombieRobot>, level: Level) : Pa
         idleAnimation.startIfStopped(tickCount)
     }
 
-    override fun getAmbientSound(): SoundEvent = SoundEvents.EMPTY
-    override fun getHurtSound(source: DamageSource): SoundEvent = SoundEvents.EMPTY
-    override fun getDeathSound(): SoundEvent = SoundEvents.EMPTY
+    override fun getAmbientSound(): SoundEvent = PazSounds.ROBO_ZOMBIE_AMBIENT
+    override fun getHurtSound(source: DamageSource): SoundEvent = PazSounds.ROBO_ZOMBIE_HURT
+    override fun getDeathSound(): SoundEvent = PazSounds.ROBO_ZOMBIE_DEATH
     override fun getStepSound(): SoundEvent = SoundEvents.EMPTY
+    override fun getVoicePitch(): Float = 1.75f
+    override fun getSoundVolume(): Float = 0.7f
 
     override fun getPickResult(): ItemStack = BlueprintItem.stackFor(this.type)
 

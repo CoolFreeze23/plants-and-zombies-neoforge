@@ -17,7 +17,7 @@ import net.minecraft.world.level.block.Block
  * A block item with a 26.1 `EQUIPPABLE` component (cone on the head, flags in the off hand).
  * [swappable] mirrors 26.1 `Equippable.swappable`: when true, using the item in the air equips it.
  */
-class EquipableBlockItem(
+open class EquipableBlockItem(
     block: Block,
     properties: Properties,
     private val slot: EquipmentSlot,

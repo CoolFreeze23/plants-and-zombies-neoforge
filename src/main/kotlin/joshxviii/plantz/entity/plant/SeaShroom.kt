@@ -53,6 +53,6 @@ class SeaShroom(type: EntityType<out Plant>, level: Level) : Plant(type, level) 
     override fun plantCanBreatheUnderwater(): Boolean = true
 
     override fun canSurviveOn(block: BlockState): Boolean {
-        return block.`is`(PazTags.BlockTags.FARMABLE) || level().getBlockState(blockPosition()).fluidState.`is`(FluidTags.WATER)
+        return block.`is`(PazTags.BlockTags.FARMABLE) || safeGetBlockState(blockPosition()).fluidState.`is`(FluidTags.WATER)
     }
 }

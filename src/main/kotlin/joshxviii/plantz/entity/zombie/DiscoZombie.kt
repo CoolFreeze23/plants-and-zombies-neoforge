@@ -1,11 +1,14 @@
 package joshxviii.plantz.entity.zombie
 
+import net.minecraft.nbt.CompoundTag
 import joshxviii.plantz.compat.AnimationState
 import joshxviii.plantz.PazEffects
 import joshxviii.plantz.PazEntities
 import joshxviii.plantz.PazSounds
+import joshxviii.plantz.entity.isActiveInRaid
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.core.UUIDUtil
 import net.minecraft.core.Vec3i
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.EntityDataSerializers
@@ -25,7 +28,11 @@ import net.minecraft.world.level.ServerLevelAccessor
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.gameevent.GameEvent
 import net.minecraft.world.level.material.Fluids
+import joshxviii.plantz.compat.ValueInput
+import joshxviii.plantz.compat.ValueOutput
 import net.minecraft.world.phys.Vec3
+import java.util.UUID
+import kotlin.jvm.optionals.getOrDefault
 import kotlin.math.max
 import kotlin.math.min
 
@@ -43,14 +50,31 @@ class DiscoZombie(type: EntityType<out DiscoZombie>, level: Level) : PazZombie(t
     var summoningTime: Int
         get() = this.entityData.get(SUMMON_TIME_ID)
         set(value) = this.entityData.set(SUMMON_TIME_ID, value)
+    private val trackedBackupDancerIds = mutableSetOf<UUID>()
 
     override fun defineSynchedData(entityData: SynchedEntityData.Builder) {
         super.defineSynchedData(entityData)
         entityData.define(SUMMON_TIME_ID, 0)
     }
 
+    override fun addAdditionalSaveData(tag: CompoundTag) {
+        super.addAdditionalSaveData(tag)
+        val output = ValueOutput.of(tag, registryAccess())
+        output.store("tracked_backup", UUIDUtil.CODEC_SET, trackedBackupDancerIds)
+    }
+
+    override fun readAdditionalSaveData(tag: CompoundTag) {
+        super.readAdditionalSaveData(tag)
+        val input = ValueInput.of(tag, registryAccess())
+        trackedBackupDancerIds.clear()
+        trackedBackupDancerIds.addAll(input.read("tracked_backup", UUIDUtil.CODEC_SET).getOrDefault(emptySet()))
+    }
+
+    private fun updateTrackedBackupDancers(level: ServerLevel) {
+        trackedBackupDancerIds.removeIf { uuid -> level.getEntity(uuid)?.let { !it.isAlive } == true }
+    }
+
     override fun getMoveControl(): MoveControl = if (summoningTime>0) noMoveControl else super.getMoveControl()
-    override fun isWithinMeleeAttackRange(target: LivingEntity): Boolean = if (summoningTime>0) false else super.isWithinMeleeAttackRange(target)
 
     override fun tick() {
         super.tick()
@@ -107,16 +131,26 @@ class DiscoZombie(type: EntityType<out DiscoZombie>, level: Level) : PazZombie(t
     ) : Goal() {
         companion object {
             const val DEFAULT_AMOUNT = 3
+            const val MAX_TRACKED_BACKUP_DANCERS = 6
+            const val MAX_NEARBY_BACKUP_DANCERS = 3
             const val SUMMON_DISTANCE = 2
-            const val SUMMON_DELAY_TIME = 75
+            const val SUMMON_DELAY_TIME = 105
             val backupTargeting: TargetingConditions = TargetingConditions.forNonCombat().range(16.0).ignoreInvisibilityTesting()
         }
         var summonTime = summoner.random.nextInt(20,60)
 
         override fun canUse(): Boolean {
             if (summoner.summoningTime>0) return true
-            val nearbyBackupDancers: Int = (summoner.level() as ServerLevel).getNearbyEntities(BackupDancer::class.java, backupTargeting, summoner, summoner.boundingBox.inflate(16.0)).size
-            return summoner.isAggressive && !summoner.isDeadOrDying && (summoner.target?.isAlive == true) && nearbyBackupDancers < 3
+            val level = summoner.level() as ServerLevel
+            summoner.updateTrackedBackupDancers(level)
+            val nearbyBackupDancers = level.getNearbyEntities(
+                BackupDancer::class.java,
+                backupTargeting,
+                summoner,
+                summoner.boundingBox.inflate(16.0)
+            ).size
+            return summoner.isAggressive && !summoner.isDeadOrDying && (summoner.target?.isAlive == true) &&
+                summoner.trackedBackupDancerIds.size < MAX_TRACKED_BACKUP_DANCERS && nearbyBackupDancers < MAX_NEARBY_BACKUP_DANCERS
         }
 
         override fun tick() {
@@ -136,12 +170,24 @@ class DiscoZombie(type: EntityType<out DiscoZombie>, level: Level) : PazZombie(t
         }
 
         private fun trySummonBackup() {
-            summonTime = SUMMON_DELAY_TIME + summoner.random.nextInt(40)
+            summonTime = SUMMON_DELAY_TIME + summoner.random.nextInt(50)
             val target = summoner.target?: return
+            val level = summoner.level() as ServerLevel
+            summoner.updateTrackedBackupDancers(level)
+            val nearbyBackupDancers = level.getNearbyEntities(
+                BackupDancer::class.java,
+                backupTargeting,
+                summoner,
+                summoner.boundingBox.inflate(16.0)
+            ).size
+            if (nearbyBackupDancers >= MAX_NEARBY_BACKUP_DANCERS) return
+            val remainingCapacity = MAX_TRACKED_BACKUP_DANCERS - summoner.trackedBackupDancerIds.size
+            val remainingNearbyCapacity = MAX_NEARBY_BACKUP_DANCERS - nearbyBackupDancers
+            if (remainingCapacity <= 0) return
             val angleToTarget = (summoner.yRot * Math.PI.toFloat()) / 180.0f
-            val minY = min(target.y, summoner.y) - 2.0
-            val maxY = max(target.y, summoner.y) + 2.0
-            val amount = getSummonAmount()
+            val minY = (min(target.y, summoner.y) - 2.0).coerceIn(summoner.y-3.0, summoner.y+2.0)
+            val maxY = (max(target.y, summoner.y) + 2.0).coerceIn(summoner.y-3.0, summoner.y+2.0)
+            val amount = min(getSummonAmount(), min(remainingCapacity, remainingNearbyCapacity))
             val a = (2*Math.PI / amount)// spread angle evenly based on summons amount
             for(i in 1..amount) {
                 // get x/z coords based on angle
@@ -180,10 +226,12 @@ class DiscoZombie(type: EntityType<out DiscoZombie>, level: Level) : PazZombie(t
                 val backup = PazEntities.BACKUP_DANCER.create(level)?: return
                 // apply hypnotize-effect if present
                 backup.moveTo(BlockPos(Vec3i(x.toInt(),(pos.y+topOffset).toInt(),z.toInt())), angle * (180.0f / Math.PI.toFloat()), 0.0f)
-                backup.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.REINFORCEMENT, PazZombieGroupData(isRaider = summoner.isRaider()))
+                backup.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.REINFORCEMENT, PazZombieGroupData(isRaider = summoner.isActiveInRaid()))
+                backup.setPersistenceRequired()
                 val effect = summoner.activeEffects.find { it.effect.`is`(PazEffects.HYPNOTIZE.unwrapKey().get()) }
                 if (effect!=null) backup.addEffect(effect)
-                level.addFreshEntity(backup)
+                if (!level.addFreshEntity(backup)) return
+                summoner.trackedBackupDancerIds.add(backup.uuid)
                 level.gameEvent(GameEvent.ENTITY_PLACE, Vec3(x, pos.y+topOffset, z), GameEvent.Context.of(summoner))
             }
         }

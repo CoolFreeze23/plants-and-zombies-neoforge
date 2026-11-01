@@ -17,4 +17,7 @@ class DuckyTubeItem(properties: Properties) : Item(properties), Equipable {
         swapWithEquipmentSlot(level, player, hand, EquipmentSlot.LEGS)
 
     override fun isValidRepairItem(stack: ItemStack, repairCandidate: ItemStack): Boolean = repairCandidate.`is`(Items.PHANTOM_MEMBRANE)
+
+    // 26.1 enchantable(1)
+    override fun getEnchantmentValue(stack: ItemStack): Int = 1
 }

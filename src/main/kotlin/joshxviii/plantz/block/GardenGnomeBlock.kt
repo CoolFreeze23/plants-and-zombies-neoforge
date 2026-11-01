@@ -131,7 +131,8 @@ enum class GardenGnomeColor: StringRepresentable {
     RED,
     GREEN,
     BLUE,
-    YELLOW;
+    YELLOW,
+    GOLDEN;
     override fun getSerializedName(): String = this.name.lowercase()
 }
 

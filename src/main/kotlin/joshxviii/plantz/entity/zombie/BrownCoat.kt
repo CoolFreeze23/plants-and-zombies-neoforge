@@ -1,5 +1,6 @@
 package joshxviii.plantz.entity.zombie
 
+import net.minecraft.world.item.DyeColor
 import net.minecraft.nbt.CompoundTag
 import joshxviii.plantz.PazBlocks
 import joshxviii.plantz.PazDataSerializers.BROWN_COAT_VARIANT
@@ -60,6 +61,21 @@ class BrownCoat(type: EntityType<out BrownCoat>, level: Level) : PazZombie(type,
         else super.canFreeze()
     }
 
+    fun spawnWithBalloons() {
+        var balloonCount = random.nextIntBetweenInclusive(2,3)
+        if (variant == BrownCoatVariant.BROWN && random.nextFloat() < 0.33) {
+            variant = BrownCoatVariant.BALLOON
+            balloonCount+=2
+        }
+        val balloonColors = when (variant) {
+            BrownCoatVariant.DESERT -> listOf(DyeColor.ORANGE, DyeColor.BROWN)
+            BrownCoatVariant.SNOW -> listOf(DyeColor.LIGHT_BLUE, DyeColor.WHITE)
+            BrownCoatVariant.BUCCANEER -> listOf(DyeColor.BLACK, DyeColor.RED)
+            else -> listOf(DyeColor.RED, DyeColor.YELLOW, DyeColor.BLUE)
+        }
+        spawnBalloons(balloonCount, balloonColors)
+    }
+
     override fun finalizeSpawn(
         level: ServerLevelAccessor,
         difficulty: DifficultyInstance,
@@ -83,17 +99,15 @@ class BrownCoat(type: EntityType<out BrownCoat>, level: Level) : PazZombie(type,
         if (getItemBySlot(EquipmentSlot.HEAD).isEmpty){
             if (random.nextFloat() < 0.18) {
                 setItemSlot(EquipmentSlot.HEAD, PazBlocks.CONE.asItem().defaultInstance)
-                setDropChance(EquipmentSlot.HEAD, 0.07f)
+                setDropChance(EquipmentSlot.HEAD, 0.02f)
             }
             else if (random.nextFloat() < 0.07 && getItemBySlot(EquipmentSlot.HEAD).isEmpty) {
                 setItemSlot(EquipmentSlot.HEAD, Items.BUCKET.defaultInstance)
             }
         }
 
-        val spawnBalloons = (spawnReason != MobSpawnType.EVENT && spawnReason != MobSpawnType.REINFORCEMENT && random.nextFloat() < 0.02)
-        if (spawnBalloons) Balloon.browncoatBallons[variant]?.let{
-            spawnBalloons(random.nextIntBetweenInclusive(2,3), it)
-        }
+        val spawnBalloons = (spawnReason != MobSpawnType.EVENT && spawnReason != MobSpawnType.REINFORCEMENT && y > level.seaLevel && random.nextFloat() < 0.02)
+        if (spawnBalloons) spawnWithBalloons()
 
         return data
     }

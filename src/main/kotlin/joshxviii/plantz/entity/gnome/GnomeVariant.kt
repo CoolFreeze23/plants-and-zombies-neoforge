@@ -17,14 +17,15 @@ enum class GnomeVariant(val color: String, val id: Int) : StringRepresentable {
     BLUE("blue", 0),
     RED("red", 1),
     GREEN("green", 2),
-    YELLOW("yellow", 3);
+    YELLOW("yellow", 3),
+    GOLDEN("golden", 4);
 
     override fun getSerializedName(): String = color
     fun getTexture(): ResourceLocation = pazResource("textures/entity/gnome/${color}.png")
 
     companion object {
         fun getDefault(): GnomeVariant = BLUE
-        fun pickRandomVariant(): GnomeVariant = entries.random()
+        fun pickRandomVariant(): GnomeVariant = entries.filter { it != GOLDEN }.random()
 
         val CODEC: Codec<GnomeVariant> = StringRepresentable.fromEnum(GnomeVariant::values)
         private val BY_ID: IntFunction<GnomeVariant> = ByIdMap.continuous(GnomeVariant::id, entries.toTypedArray(), ByIdMap.OutOfBoundsStrategy.ZERO);

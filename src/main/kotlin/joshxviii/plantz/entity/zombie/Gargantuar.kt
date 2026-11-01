@@ -7,6 +7,7 @@ import joshxviii.plantz.PazDataSerializers.GARGANTUAR_VARIANT
 import joshxviii.plantz.ai.ZombieState
 import joshxviii.plantz.ai.goal.MeleeAttackActionGoal
 import joshxviii.plantz.ai.goal.NavigateToTargetGoal
+import joshxviii.plantz.entity.isActiveInRaid
 import net.minecraft.core.BlockPos
 import net.minecraft.core.particles.BlockParticleOption
 import net.minecraft.core.particles.ParticleTypes
@@ -186,9 +187,7 @@ class Gargantuar(type: EntityType<out Gargantuar>, level: Level) : PazZombie(typ
         this.goalSelector.setControlFlag(Goal.Flag.TARGET, noController)
     }
 
-    override fun getLookControl(): LookControl =  if (smashAttackTime>0) noLookControl else super.getLookControl()
     override fun getMoveControl(): MoveControl = if (smashAttackTime>0) noMoveControl else super.getMoveControl()
-    override fun isWithinMeleeAttackRange(target: LivingEntity): Boolean = if (smashAttackTime>0) false else super.isWithinMeleeAttackRange(target)
 
     override fun tick() {
         super.tick()
@@ -339,9 +338,10 @@ class Gargantuar(type: EntityType<out Gargantuar>, level: Level) : PazZombie(typ
                 spawnDirection.y + gargantuar.y+2.5f,
                 spawnDirection.z + gargantuar.z
             )
-           PazEntities.IMP.create(level)?.let { imp ->
+            PazEntities.IMP.create(level)?.let { imp ->
                 val lookDirection = gargantuar.calculateViewVector(0f, gargantuar.yRot)
                 imp.moveTo(spawnPos, gargantuar.yRot, 0.0f)
+                imp.finalizeSpawn(level, level.getCurrentDifficultyAt(BlockPos.containing(spawnPos)), MobSpawnType.REINFORCEMENT, PazZombieGroupData(isRaider = gargantuar.isActiveInRaid()))
                 imp.applyImpulse(lookDirection.x, lookDirection.y, lookDirection.z, 1.0f, 0f)
                 if (gargantuar.variant == GargantuarVariant.PIRATE) imp.variant = ImpVariant.PIRATE
                 gargantuar.target.let { if (it!=null) imp.setLastHurtMob(it) }

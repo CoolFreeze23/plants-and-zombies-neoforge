@@ -29,6 +29,7 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.ServerLevelAccessor
 import net.minecraft.world.level.gameevent.GameEvent
 import net.minecraft.world.level.material.Fluids
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import kotlin.math.max
 import kotlin.math.min
@@ -58,12 +59,10 @@ class EngineerZombie(type: EntityType<out EngineerZombie>, level: Level) : PazZo
     }
 
     override fun getMoveControl(): MoveControl = if (buildingTime>0) noMoveControl else super.getMoveControl()
-    override fun getLookControl(): LookControl = if (buildingTime>0) noLookControl else super.getLookControl()
-    override fun isWithinMeleeAttackRange(target: LivingEntity): Boolean = if (buildingTime>0) false else super.isWithinMeleeAttackRange(target)
 
     override fun registerGoals() {
         super.registerGoals()
-        goalSelector.addGoal(1, AvoidEntityGoal(this, LivingEntity::class.java, 20f, 0.8, 1.0) { target -> target is Player || target is Plant })
+        goalSelector.addGoal(1, AvoidEntityGoal(this, LivingEntity::class.java, 2f, 0.8, 1.0) { target -> target is Player || target is Plant })
         goalSelector.addGoal(2, BuildBotGoal(this))
     }
 
@@ -124,7 +123,6 @@ class EngineerZombie(type: EntityType<out EngineerZombie>, level: Level) : PazZo
         val engineerZombie: EngineerZombie,
     ) : Goal() {
         companion object {
-            const val DEFAULT_AMOUNT = 1
             const val BUILD_DISTANCE = 1
             const val BUILD_DELAY_TIME = 75
             val botTargeting: TargetingConditions = TargetingConditions.forNonCombat().range(16.0).ignoreLineOfSight().ignoreInvisibilityTesting()
@@ -140,59 +138,45 @@ class EngineerZombie(type: EntityType<out EngineerZombie>, level: Level) : PazZo
         override fun tick() {
             super.tick()
             if (--buildTime == 0) engineerZombie.buildingTime=1
-            if (buildTime<-28) tryBuildBot()
+            if (buildTime<-28) tryCreateBot()
         }
 
         override fun stop() {
             super.stop()
         }
 
-        private fun tryBuildBot() {
-            buildTime = BUILD_DELAY_TIME + engineerZombie.random.nextInt(40)
-            val target = engineerZombie.target?: return
+        fun buildPos(): BlockPos {
             val angleToTarget = (engineerZombie.yRot + 90) * Mth.DEG_TO_RAD
-            val minY = min(target.y, engineerZombie.y) - 2.0
-            val maxY = max(target.y, engineerZombie.y) + 2.0
-            val amount = DEFAULT_AMOUNT
-            val a = (2*Mth.PI / amount)
-            for(i in 1..amount) {
-                val b = a*i-a*(amount+1)*.5
-                val x = engineerZombie.x + Mth.cos((b+angleToTarget).toFloat())*BUILD_DISTANCE
-                val z = engineerZombie.z + Mth.sin((b+angleToTarget).toFloat())*BUILD_DISTANCE
-                tryCreateBot(x, z, minY, maxY, angleToTarget)
-            }
+            val y = engineerZombie.y
+            val x = engineerZombie.x + Mth.cos(angleToTarget)*BUILD_DISTANCE
+            val z = engineerZombie.z + Mth.sin(angleToTarget)*BUILD_DISTANCE
+            return BlockPos.containing(x, y, z)
         }
 
-        private fun tryCreateBot(x: Double, z: Double, minY: Double, maxY: Double, angle: Float) {
+        fun testBuildPos(pos: BlockPos): Boolean {
             val level = engineerZombie.level() as ServerLevel
-            var pos = BlockPos.containing(x, maxY, z)
-            var success = false
-            var topOffset = 0.0
-            do {// search for an empty space from minY to maxY
-                val belowState = level.getBlockState(pos.below())
-                val blockState = level.getBlockState(pos)
-                val fluidState = blockState.fluidState
-                if (belowState.isFaceSturdy(level, pos.below(), Direction.UP)) {
-                    if (!level.isEmptyBlock(pos)) {
-                        val shape = blockState.getCollisionShape(level, pos)
-                        if (!shape.isEmpty) topOffset = shape.max(Direction.Axis.Y)
-                    }
-                    success = true; break
-                }
-                if (fluidState.`is`(Fluids.WATER)) {
-                    topOffset = fluidState.getHeight(level, pos).toDouble()
-                    success = true; break
-                }
-                pos = pos.below()
-            } while (pos.y >= Mth.floor(minY) - 1)
 
-            if (success) {
+            val blockState = level.getBlockState(pos)
+            val fluidState = blockState.fluidState
+            return if (
+                blockState.getCollisionShape(level, pos).isEmpty
+                && !fluidState.`is`(Fluids.WATER)
+                && level.getEntitiesOfClass(ZombieRobot::class.java, AABB(pos)).isEmpty()
+            ) true
+            else false
+        }
+
+        private fun tryCreateBot() {
+            val level = engineerZombie.level() as ServerLevel
+            val buildPos = buildPos()
+            if (testBuildPos(buildPos)) {
+                buildTime = BUILD_DELAY_TIME + engineerZombie.random.nextInt(40)
                 val bot : ZombieRobot = ZOMBIE_BOTS.random().create(level)?: return
-                bot.moveTo(BlockPos(Vec3i(x.toInt(),(pos.y+topOffset).toInt(),z.toInt())), angle * Mth.RAD_TO_DEG, 0.0f)
-                bot.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.REINFORCEMENT, PazZombieGroupData(isRaider = false))
+                bot.moveTo(buildPos, engineerZombie.yRot, 0.0f)
+                bot.finalizeSpawn(level, level.getCurrentDifficultyAt(buildPos), MobSpawnType.REINFORCEMENT, PazZombieGroupData(isRaider = true, isCountedTowardRaidHealth = false))
                 bot.owner = engineerZombie
                 level.addFreshEntity(bot)
-                level.gameEvent(GameEvent.ENTITY_PLACE, Vec3(x, pos.y+topOffset, z), GameEvent.Context.of(engineerZombie))
+                level.gameEvent(GameEvent.ENTITY_PLACE, buildPos.center, GameEvent.Context.of(engineerZombie))
             }
         }
     }

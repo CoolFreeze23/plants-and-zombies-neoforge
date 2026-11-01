@@ -42,6 +42,7 @@ object PazServerParticles {
     @JvmField val NEEDS_TIME: SimpleParticleType = registerSimple("needs_time")
     @JvmField val ZOMBIE_OMEN: SimpleParticleType = registerSimple("zombie_omen")
     @JvmField val CONFETTI: SimpleParticleType = registerSimple("confetti")
+    @JvmField val PLASMA_BURST: ParticleType<PlasmaBurstOptions> = register("plasma_burst", { PlasmaBurstOptions.CODEC}, {PlasmaBurstOptions.STREAM_CODEC})
     @JvmField val NUKE_WAVE: ParticleType<NukeWaveParticleOptions> = register("nuke_wave", { NukeWaveParticleOptions.CODEC}, {NukeWaveParticleOptions.STREAM_CODEC})
     @JvmField val NUKE_BLAST: ParticleType<NukeBlastParticleOptions> = register("nuke_blast", {NukeBlastParticleOptions.CODEC}, {NukeBlastParticleOptions.STREAM_CODEC})
     @JvmField val NUKE_SMOKE: ParticleType<NukeSmokeParticleOptions> = register("nuke_smoke", {NukeSmokeParticleOptions.CODEC}, {NukeSmokeParticleOptions.STREAM_CODEC})
@@ -71,6 +72,26 @@ object PazServerParticles {
     }
 
     fun initialize() {}
+}
+
+class PlasmaBurstOptions(private val color: Int, scale: Float = 1f) : ScalableParticleOptionsBase(scale) {
+    override fun getType(): ParticleType<PlasmaBurstOptions> {
+        return PazServerParticles.PLASMA_BURST
+    }
+
+    fun getColor(): Vector3f = ARGB.vector3fFromRGB24(this.color)
+
+    companion object {
+        val CODEC: MapCodec<PlasmaBurstOptions> = RecordCodecBuilder.mapCodec { i ->
+            i.group(
+                Codec.INT.fieldOf("color").forGetter { it.color },
+                SCALE.fieldOf("scale").forGetter { it.scale }
+            ).apply(i, ::PlasmaBurstOptions) }
+        val STREAM_CODEC: StreamCodec<RegistryFriendlyByteBuf, PlasmaBurstOptions> = StreamCodec.composite(
+            ByteBufCodecs.INT, { it.color },
+            ByteBufCodecs.FLOAT, { it.scale },
+            ::PlasmaBurstOptions)
+    }
 }
 
 class PaintParticleOptions(private val color: Int, scale: Float = 1f) : ScalableParticleOptionsBase(scale) {

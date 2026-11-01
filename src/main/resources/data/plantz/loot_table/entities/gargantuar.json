@@ -6,17 +6,11 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "conditions": [
-            {
-              "condition": "minecraft:random_chance",
-              "chance": 0.7
-            }
-          ],
           "functions": [
             {
               "count": {
-                "min": 2,
-                "max": 3
+                "min": 18,
+                "max": 25
               },
               "function": "minecraft:set_count"
             }

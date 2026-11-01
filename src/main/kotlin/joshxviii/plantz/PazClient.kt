@@ -24,6 +24,7 @@ import net.minecraft.network.chat.Component
 import net.minecraft.util.Mth
 import net.neoforged.neoforge.client.IItemDecorator
 import net.neoforged.neoforge.client.event.RegisterItemDecorationsEvent
+import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent
 import net.neoforged.bus.api.IEventBus
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent
 import net.neoforged.neoforge.client.event.ClientTickEvent
@@ -36,6 +37,7 @@ import net.neoforged.neoforge.client.event.RegisterShadersEvent
 import net.neoforged.neoforge.common.NeoForge
 import net.neoforged.neoforge.event.AddPackFindersEvent
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent
+import net.neoforged.neoforge.event.AddReloadListenerEvent
 
 object PazClient {
 	fun init(modBus: IEventBus) {
@@ -49,11 +51,14 @@ object PazClient {
 		modBus.addListener { event: AddPackFindersEvent -> ModernAssets.addPackFinders(event) }
 		modBus.addListener { event: RegisterClientReloadListenersEvent ->
 			event.registerReloadListener(ResourceManagerReloadListener { EquipmentLayerRenderer.clearCaches() })
+			// Fabric ResourceLoader CLIENT_RESOURCES
+			event.registerReloadListener(ResourceManagerReloadListener { if (PazNetwork.ZombieRaidClientCache.isActive()) { RaidMusicManager.restart() } })
 		}
 		modBus.addListener { event: RegisterShadersEvent -> PazRenderPipelines.registerShaders(event) }
 		modBus.addListener { event: ModelEvent.RegisterAdditional -> PazModels.registerAdditionalModels(event) }
 		modBus.addListener { event: ModelEvent.ModifyBakingResult -> PazModels.modifyBakingResult(event) }
 		modBus.addListener { event: RegisterItemDecorationsEvent -> registerSeedPacketCooldownOverlay(event) }
+		modBus.addListener { event: RegisterColorHandlersEvent.Item -> joshxviii.plantz.data.PazItemModelProperties.registerItemColors(event) }
 		modBus.addListener { event: FMLClientSetupEvent -> event.enqueueWork { PazClientHooks.clientSetup() } }
 		PazClientHooks.registerModBus(modBus)
 
@@ -61,6 +66,11 @@ object PazClient {
 		bus.addListener { _: ClientTickEvent.Pre -> PazClientNetwork.onClientTick() }
 		bus.addListener { _: ClientTickEvent.Post -> GraveyardAmbience.tick() }
 		bus.addListener { event: ViewportEvent.RenderFog -> GraveyardAmbience.onRenderFog(event) }
+
+		// Fabric ResourceLoader SERVER_DATA
+		bus.addListener { event: AddReloadListenerEvent ->
+			event.addListener(ResourceManagerReloadListener { PazNetwork.ZombieRaidClientCache.clear() })
+		}
 
 		// custom tooltips
 		bus.addListener { event: ItemTooltipEvent ->

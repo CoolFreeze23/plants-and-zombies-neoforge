@@ -10,7 +10,10 @@ import net.minecraft.core.component.DataComponents
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.entity.LivingEntity
+import net.minecraft.util.FastColor
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.component.DyedItemColor
+import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent
 
 /**
  * Item model predicates used by the 1.21.1 item models in assets/plantz/models/item (the 26.1 item model
@@ -36,6 +39,8 @@ object PazItemModelProperties {
     private val NEWSPAPER_ZOMBIE = pazResource("newspaper_zombie")
     private val USING = pazResource("using")
     private val MOON_PHASE = pazResource("moon_phase")
+    private val DYED = pazResource("dyed")
+    private val OPENED = pazResource("opened")
 
     fun register() {
         val blueprint = item("blueprint")
@@ -61,6 +66,28 @@ object PazItemModelProperties {
             val l = level ?: Minecraft.getInstance().level
             if (l == null) 0f else l.moonPhase / 8f
         })
+        // 26.1: condition has_component minecraft:dyed_color / minecraft:writable_book_content (ignore_default)
+        ItemProperties.register(item("dye_blaster"), DYED, fn { stack, _, _ -> bool(isDyed(stack)) })
+        ItemProperties.register(item("letter"), OPENED, fn { stack, _, _ -> bool(isOpenedLetter(stack)) })
+    }
+
+    @JvmStatic
+    fun isDyed(stack: ItemStack): Boolean = hasNonDefault(stack, DataComponents.DYED_COLOR)
+
+    @JvmStatic
+    fun isOpenedLetter(stack: ItemStack): Boolean = hasNonDefault(stack, DataComponents.WRITABLE_BOOK_CONTENT)
+
+    /**
+     * 26.1 `"tints": [{"type": "minecraft:dye", "default": ...}]` on the dyed dye blaster and the closed letter models.
+     * 1.21.1 colors per item, so the other models of these items (empty blaster, opened letter) get no tint here.
+     */
+    fun registerItemColors(event: RegisterColorHandlersEvent.Item) {
+        event.register({ stack, tintIndex ->
+            if (tintIndex == 0 && isDyed(stack)) FastColor.ARGB32.opaque(DyedItemColor.getOrDefault(stack, 0xFFFFFF)) else -1
+        }, item("dye_blaster"))
+        event.register({ stack, tintIndex ->
+            if (tintIndex == 0 && !isOpenedLetter(stack)) FastColor.ARGB32.opaque(DyedItemColor.getOrDefault(stack, -3523278)) else -1
+        }, item("letter"))
     }
 
     private fun item(path: String) = BuiltInRegistries.ITEM.get(pazResource(path))

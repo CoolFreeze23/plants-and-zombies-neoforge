@@ -1,6 +1,5 @@
 package joshxviii.plantz
 
-import joshxviii.plantz.block.entity.*
 import joshxviii.plantz.compat.client.BucketHelmet
 import joshxviii.plantz.model.BalloonModel
 import joshxviii.plantz.model.FlagBlockModel
@@ -16,6 +15,7 @@ import joshxviii.plantz.model.zombies.*
 import joshxviii.plantz.renderer.*
 import joshxviii.plantz.renderer.entity.*
 import joshxviii.plantz.renderer.entity.plant.PlantRenderer
+import joshxviii.plantz.renderer.entity.plant.PumpkinRenderer
 import joshxviii.plantz.renderer.entity.plant.WallNutRenderer
 import joshxviii.plantz.renderer.entity.zombie.*
 import joshxviii.plantz.compat.client.RenderStateDataKey
@@ -71,13 +71,16 @@ object PazModels {
         feet  = ARMOR_LAYER_FEET
     )
 
-    // 26.1 registered the plant_icon item model type here (ItemModels.ID_MAPPER); see PlantIconItemModel
     fun registerAdditionalModels(event: ModelEvent.RegisterAdditional) {
         PlantIconItemModel.registerAdditionalModels(event)
         BucketHelmet.registerModel(event)
     }
 
-    fun modifyBakingResult(event: ModelEvent.ModifyBakingResult) = PlantIconItemModel.modifyBakingResult(event)
+    // 26.1 registered the plant_icon and door_shield_model item model types (ItemModels.ID_MAPPER)
+    fun modifyBakingResult(event: ModelEvent.ModifyBakingResult) {
+        PlantIconItemModel.modifyBakingResult(event)
+        DoorShieldItemModel.modifyBakingResult(event)
+    }
 
     fun registerLayers(event: EntityRenderersEvent.RegisterLayerDefinitions) {
         event.registerLayerDefinition(EMPTY_LAYER) { LayerDefinition.create(MeshDefinition(), 0, 0) }
@@ -114,6 +117,7 @@ object PazModels {
         event.registerLayerDefinition(SeaShroomModel.LAYER_LOCATION) { SeaShroomModel.createBodyLayer() }
         event.registerLayerDefinition(CoffeeBeanModel.LAYER_LOCATION) { CoffeeBeanModel.createBodyLayer() }
         event.registerLayerDefinition(GraveBusterModel.LAYER_LOCATION) { GraveBusterModel.createBodyLayer() }
+        event.registerLayerDefinition(PumpkinModel.LAYER_LOCATION) { PumpkinModel.createBodyLayer() }
 
         event.registerLayerDefinition(PeaModel.LAYER_LOCATION) { PeaModel.createBodyLayer() }
         event.registerLayerDefinition(NeedleModel.LAYER_LOCATION) { NeedleModel.createBodyLayer() }
@@ -138,6 +142,8 @@ object PazModels {
         event.registerLayerDefinition(RoboZombieModel.LAYER_LOCATION) { RoboZombieModel.createBodyLayer() }
         event.registerLayerDefinition(SuperBrainzModel.LAYER_LOCATION) { SuperBrainzModel.createBodyLayer() }
         event.registerLayerDefinition(ImpModel.LAYER_LOCATION) { ImpModel.createBodyLayer() }
+        event.registerLayerDefinition(ZombieBatModel.LAYER_LOCATION) { ZombieBatModel.createBodyLayer() }
+        event.registerLayerDefinition(BaronVonBatsModel.LAYER_LOCATION) { BaronVonBatsModel.createBodyLayer() }
         event.registerLayerDefinition(GargantuarModel.LAYER_LOCATION) { GargantuarModel.createBodyLayer() }
 
         event.registerLayerDefinition(ZombieTurretModel.LAYER_LOCATION) { ZombieTurretModel.createBodyLayer() }
@@ -186,6 +192,7 @@ object PazModels {
         event.registerEntityRenderer(PazEntities.SEA_SHROOM) { PlantRenderer(SeaShroomModel(it.bakeLayer(SeaShroomModel.LAYER_LOCATION)), it) }
         event.registerEntityRenderer(PazEntities.COFFEE_BEAN) { PlantRenderer(CoffeeBeanModel(it.bakeLayer(CoffeeBeanModel.LAYER_LOCATION)), it) }
         event.registerEntityRenderer(PazEntities.GRAVE_BUSTER) { PlantRenderer(GraveBusterModel(it.bakeLayer(GraveBusterModel.LAYER_LOCATION)), it) }
+        event.registerEntityRenderer(PazEntities.PUMPKIN) { PumpkinRenderer(it) }
 
         event.registerEntityRenderer(PazEntities.SUN_SHROOM) { PlantRenderer(SunShroomModel(it.bakeLayer(SunShroomModel.LAYER_LOCATION)), it, SunShroomBabyModel(it.bakeLayer(SunShroomBabyModel.LAYER_LOCATION))) }
 
@@ -208,9 +215,9 @@ object PazModels {
 
         event.registerEntityRenderer(PazEntities.BROWN_COAT) { PazZombieRenderer(it) }
         event.registerEntityRenderer(PazEntities.NEWSPAPER_ZOMBIE) { PazZombieRenderer(it) }
-        event.registerEntityRenderer(PazEntities.DIGGER_ZOMBIE) { PazZombieRenderer(it, DiggerZombieModel(it.bakeLayer(DiggerZombieModel.LAYER_LOCATION))) }
+        event.registerEntityRenderer(PazEntities.DIGGER_ZOMBIE) { DiggerZombieRenderer(it) }
         event.registerEntityRenderer(PazEntities.ENGINEER_ZOMBIE) { PazZombieRenderer(it, EngineerZombieModel(it.bakeLayer(EngineerZombieModel.LAYER_LOCATION))) }
-        event.registerEntityRenderer(PazEntities.ZOMBIE_YETI) { PazZombieRenderer(it, ZombieYetiModel(it.bakeLayer(ZombieYetiModel.LAYER_LOCATION))) }
+        event.registerEntityRenderer(PazEntities.ZOMBIE_YETI) { ZombieYetiRenderer(it) }
         event.registerEntityRenderer(PazEntities.BACKUP_DANCER) { PazZombieRenderer(it, DiscoZombieModel(it.bakeLayer(DiscoZombieModel.LAYER_LOCATION))) }
         event.registerEntityRenderer(PazEntities.DISCO_ZOMBIE) { PazZombieRenderer(it, DiscoZombieModel(it.bakeLayer(DiscoZombieModel.LAYER_LOCATION))) }
         event.registerEntityRenderer(PazEntities.ALL_STAR) { PazZombieRenderer(it, AllStarModel(it.bakeLayer(AllStarModel.LAYER_LOCATION)), AllStarModel(it.bakeLayer(AllStarModel.LAYER_LOCATION))) }
@@ -222,6 +229,8 @@ object PazModels {
         event.registerEntityRenderer(PazEntities.SUPER_BRAINZ) { SuperBrainzRenderer(it) }
         event.registerEntityRenderer(PazEntities.IMP) { PazZombieRenderer(it, ImpModel(it.bakeLayer(ImpModel.LAYER_LOCATION)), ImpModel(it.bakeLayer(ImpModel.LAYER_LOCATION))) }
         event.registerEntityRenderer(PazEntities.GARGANTUAR) { GargantuarRenderer(it) }
+        event.registerEntityRenderer(PazEntities.ZOMBIE_BAT) { ZombieBatRenderer(it) }
+        event.registerEntityRenderer(PazEntities.BARON_VON_BATS) { PazZombieRenderer(it, BaronVonBatsModel(it.bakeLayer(BaronVonBatsModel.LAYER_LOCATION))) }
 
         event.registerEntityRenderer(PazEntities.ZOMBIE_TURRET) { BlueprintMachineRenderer(it) }
         event.registerEntityRenderer(PazEntities.ELECTRO_TURRET) { BlueprintMachineRenderer(it, ElectroTurretModel(it.bakeLayer(ElectroTurretModel.LAYER_LOCATION))) }

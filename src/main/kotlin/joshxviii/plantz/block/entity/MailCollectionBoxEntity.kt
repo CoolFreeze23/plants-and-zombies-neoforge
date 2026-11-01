@@ -110,7 +110,7 @@ class MailCollectionBoxEntity(
                 setChanged()
                 targetBE?.setChanged()
                 targetBE?.updateMailboxState(MailboxState.HAS_MAIL)
-                playSound(SoundEvents.UI_LOOM_TAKE_RESULT, 0.3f, 1.2f)
+                playSound(SoundEvents.UI_LOOM_TAKE_RESULT, 0.2f, 1.2f)
             }
             MailboxSendResult.DISCARDED -> {
                 selectedMailbox = null

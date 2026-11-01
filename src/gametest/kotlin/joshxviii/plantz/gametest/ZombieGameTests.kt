@@ -1,12 +1,17 @@
 package joshxviii.plantz.gametest
 
+import joshxviii.plantz.raid.WaveType
+import joshxviii.plantz.raid.BossType
+import kotlin.math.sin
+import kotlin.math.cos
+import net.minecraft.world.level.ChunkPos
 import joshxviii.plantz.PazBlocks
 import joshxviii.plantz.PazDamageTypes
 import joshxviii.plantz.PazEffects
 import joshxviii.plantz.PazEntities
 import joshxviii.plantz.PazItems
 import joshxviii.plantz.GardenHeroRewards
-import joshxviii.plantz.ZombieRaider
+import joshxviii.plantz.entity.ZombieRaider
 import joshxviii.plantz.ai.ZombieState
 import joshxviii.plantz.entity.projectile.Missile
 import joshxviii.plantz.entity.projectile.PaintBall
@@ -229,6 +234,7 @@ object ZombieGameTests {
         val villager = helper.victim(7, 1, 13, unhurtable = true)
         val robo = helper.spawn(PazEntities.ROBO_ZOMBIE, 7, 1, 2).targeting(villager)
         robo.reassessNavigation()
+        robo.missileCooldown = 0 // spawns with a full cooldown
         var missileSeen = false
         helper.succeedWhenThenClean {
             missileSeen = missileSeen || helper.entitiesNearby(Missile::class.java).isNotEmpty()
@@ -302,13 +308,18 @@ object ZombieGameTests {
 
     /** The grave digger digs up gravestones near its target. */
     @JvmStatic
-    @GameTest(template = PLATFORM, timeoutTicks = 300)
+    @GameTest(template = PLATFORM, timeoutTicks = 400)
     fun graveDiggerDigsGraves(helper: GameTestHelper) {
         val villager = helper.victim(7, 1, 12, unhurtable = true)
         val digger = helper.spawn(PazEntities.GRAVE_DIGGER, 7, 1, 4).targeting(villager)
         digger.setItemSlot(EquipmentSlot.MAINHAND, Items.STONE_SHOVEL.defaultInstance)
         digger.maxGraves = 5
-        helper.succeedWhenThenClean { helper.assertTrue(digger.dugGraves > 0, "no grave dug") }
+        // digs only with a player within 14 blocks
+        val player = helper.makeModMockServerPlayer(Vec3(3.5, 1.0, 4.5))
+        helper.succeedWhenThenClean {
+            helper.assertTrue(digger.dugGraves > 0, "no grave dug")
+            helper.removeMockPlayer(player)
+        }
     }
 
     /** A killed pirate captain comes back as its ghost, keeping its name, effects and persistence (26.1 conversion). */
@@ -429,6 +440,7 @@ object ZombieGameTests {
     @GameTest(template = PLATFORM, timeoutTicks = 300)
     fun zombieDroneFliesAndAttacks(helper: GameTestHelper) {
         val drone = helper.spawn(PazEntities.ZOMBIE_DRONE, 7, 2, 3)
+        drone.finalizeSpawn(helper.level, helper.level.getCurrentDifficultyAt(drone.blockPosition()), MobSpawnType.MOB_SUMMONED, null) // starts flying
         val sunflower = helper.spawn(PazEntities.SUNFLOWER, 7, 1, 10)
         helper.succeedWhenThenClean {
             helper.assertTrue(drone.isFlying && drone.isNoGravity, "drone is not flying")
@@ -488,14 +500,16 @@ object ZombieGameTests {
 
     // ---- zombie raid
 
-    /** Credits add two waves; omen levels add two each. */
+    /** Two waves plus the difficulty; credits add two waves; each omen level adds two. */
     @JvmStatic
     @GameTest(template = PLATFORM)
     fun raidWaveCount(helper: GameTestHelper) {
-        helper.assertTrue(ZombieRaid.getWaveSpawnCount(Difficulty.NORMAL, 1, false) == 7, "normal raid should have 7 waves")
-        helper.assertTrue(ZombieRaid.getWaveSpawnCount(Difficulty.NORMAL, 1, true) == 9, "credits should add two waves")
-        helper.assertTrue(ZombieRaid.getWaveSpawnCount(Difficulty.HARD, 3, true) == 14, "omen 3 should add six waves")
-        helper.assertTrue(ZombieRaid.getWaveSpawnCount(Difficulty.HARD, 99, true) == ZombieRaid.MAXIMUM_WAVE_COUNT, "wave count is not capped")
+        fun raid(omen: Float, credits: Boolean) = ZombieRaid(BlockPos.ZERO, zombieRaidOmenLevel = omen, starterHasSeenCredits = credits)
+        helper.assertTrue(ZombieRaid.getWaveSpawnCount(Difficulty.NORMAL, raid(1f, false)) == 6, "normal raid should have 6 waves")
+        helper.assertTrue(ZombieRaid.getWaveSpawnCount(Difficulty.NORMAL, raid(1f, true)) == 8, "credits should add two waves")
+        helper.assertTrue(ZombieRaid.getWaveSpawnCount(Difficulty.HARD, raid(3f, true)) == 13, "omen 3 should add six waves")
+        helper.assertTrue(ZombieRaid.getWaveSpawnCount(Difficulty.NORMAL, raid(1.5f, false)) == 7, "half omen levels round up")
+        helper.assertTrue(ZombieRaid.getWaveSpawnCount(Difficulty.HARD, raid(99f, true)) == ZombieRaid.MAXIMUM_WAVE_COUNT, "wave count is not capped")
         helper.succeed()
     }
 
@@ -509,13 +523,19 @@ object ZombieGameTests {
         val level = helper.level
         val flagPos = helper.absolutePos(BlockPos(7, 1, 7))
         helper.setBlock(BlockPos(7, 1, 7), PazBlocks.PLANTZ_FLAG)
+        // waves spawn SPAWN_DISTANCE blocks out and only in entity-ticking chunks: keep that ring loaded during the raid
+        val spawnRing = (0 until 64).map { i ->
+            val angle = Math.PI * 2 * i / 64
+            ChunkPos(BlockPos(flagPos.x + (cos(angle) * ZombieRaid.SPAWN_DISTANCE).toInt(), 0, flagPos.z + (sin(angle) * ZombieRaid.SPAWN_DISTANCE).toInt()))
+        }.toSet()
+        spawnRing.forEach { level.setChunkForced(it.x, it.z, true) }
         val player = helper.makeModMockServerPlayer(Vec3(3.5, 1.0, 3.5))
         player.addEffect(MobEffectInstance(PazEffects.ZOMBIE_OMEN, 2000, 0))
 
         val raid = level.getZombieRaids().createOrExtendZombieRaid(player, flagPos)
         helper.assertTrue(raid != null, "raid did not start")
         raid!!
-        helper.assertTrue(raid.zombieRaidOmenLevel == 1, "omen not absorbed")
+        helper.assertTrue(raid.zombieRaidOmenLevel == 1f, "omen not absorbed")
         helper.assertTrue(raid.startedBy == player.uuid && !raid.starterHasSeenCredits, "wrong raid starter state")
         helper.assertTrue(raid.zombieRaidEvent.players.contains(player), "player not in the raid")
 
@@ -527,13 +547,13 @@ object ZombieGameTests {
         helper.succeedWhen {
             if (raid.status != ZombieRaid.ZombieRaidStatus.VICTORY && raid.status != ZombieRaid.ZombieRaidStatus.STOPPED) {
                 val raiders = raiders()
-                if (raiders.isNotEmpty() && raid.wavesSpawned > 0) wavesSeen += raid.wavesSpawned
+                if (raiders.isNotEmpty() && raid.currentWaveNumber() > 0) wavesSeen += raid.currentWaveNumber()
                 raiders.forEach { it.discard() }
             }
             if (raid.status == ZombieRaid.ZombieRaidStatus.VICTORY) {
                 fireworkSeen = fireworkSeen || level.getEntitiesOfClass(FireworkRocketEntity::class.java, AABB(flagPos).inflate(8.0)).isNotEmpty()
             }
-            helper.assertTrue(raid.isStopped(), "raid still running (status ${raid.status}, wave ${raid.wavesSpawned}/${raid.numWaves})")
+            helper.assertTrue(raid.isStopped(), "raid still running (status ${raid.status}, wave ${raid.currentWaveNumber()}/${raid.numWaves})")
 
             helper.assertTrue(wavesSeen == (1..raid.numWaves).toSet(), "waves seen $wavesSeen of ${raid.numWaves}")
             helper.assertTrue(raid.waveTypes.size == raid.numWaves, "wave types not recorded")
@@ -544,8 +564,47 @@ object ZombieGameTests {
             helper.assertTrue(level.getZombieRaids().getNearbyRaid(flagPos, 16) == null, "finished raid still registered")
             helper.assertBlockPresent(PazBlocks.PLANTZ_FLAG, BlockPos(7, 1, 7))
 
+            spawnRing.forEach { level.setChunkForced(it.x, it.z, false) }
             helper.removeMockPlayer(player)
             helper.discardEntities()
         }
+    }
+
+    // ---- bats and bosses
+
+    /** Zombie bats spawn flying and stay up without gravity; Baron von Bats spawns as a zombie. */
+    @JvmStatic
+    @GameTest(template = PLATFORM, timeoutTicks = 60)
+    fun zombieBatsFly(helper: GameTestHelper) {
+        val bat = PazEntities.ZOMBIE_BAT.spawn(helper.level, helper.absolutePos(BlockPos(7, 4, 7)), MobSpawnType.MOB_SUMMONED)
+        val baron = PazEntities.BARON_VON_BATS.spawn(helper.level, helper.absolutePos(BlockPos(3, 2, 3)), MobSpawnType.MOB_SUMMONED)
+        helper.assertTrue(bat != null && baron != null, "bats did not spawn")
+        val startY = bat!!.y
+        helper.runAfterDelay(20) {
+            helper.assertTrue(bat.isFlying && bat.isNoGravity, "zombie bat is not flying")
+            helper.assertTrue(bat.y > startY - 1.0, "zombie bat fell from $startY to ${bat.y}")
+            helper.assertTrue(baron!!.isAlive, "baron von bats died")
+            helper.discardEntities()
+            helper.succeed()
+        }
+    }
+
+    /** Bosses by wave: robo army waves can get the robo mech, other waves never; bossify scales the zombie up once. */
+    @JvmStatic
+    @GameTest(template = PLATFORM)
+    fun raidBossTypes(helper: GameTestHelper) {
+        val raid = ZombieRaid(BlockPos.ZERO)
+        val robo = (1..300).map { BossType.pickBossType(raid, WaveType.ROBO_ARMY) }.toSet()
+        val default = (1..300).map { BossType.pickBossType(raid, WaveType.DEFAULT) }.toSet()
+        helper.assertTrue(BossType.ROBO_MECH in robo && BossType.ZOMBOSS !in robo, "robo army bosses $robo")
+        helper.assertTrue(BossType.ROBO_MECH !in default && BossType.ZOMBOSS !in default && BossType.GARGANTUAR in default, "default wave bosses $default")
+
+        val zombie = helper.spawnWithNoFreeWill(PazEntities.ROBO_ZOMBIE, 7, 2, 7)
+        val health = zombie.maxHealth
+        BossType.bossify(zombie)
+        BossType.bossify(zombie)
+        helper.assertTrue(zombie.maxHealth == health * 4 && zombie.getAttributeValue(Attributes.SCALE) == 2.0, "bossified: ${zombie.maxHealth}, scale ${zombie.getAttributeValue(Attributes.SCALE)}")
+        helper.discardEntities()
+        helper.succeed()
     }
 }

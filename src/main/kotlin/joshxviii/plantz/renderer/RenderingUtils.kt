@@ -54,12 +54,13 @@ fun resolveTextureLocation(base: String, rm: ResourceManager, suffixes: List<Str
     return null
 }
 
-fun LivingEntityRenderState.isMagicName(name: String): String {
+fun LivingEntityRenderState.validMagicName(name: String): String? {
     val type = this.entityType
-    MAGIC_NAMES.forEach { (entityType, magicName) ->
-        if (entityType == type && magicName == name.lowercase()) return magicName
+    val str = name.lowercase()
+    MAGIC_NAMES.forEach { (entityType, names) ->
+        if (entityType == type) return if (names.contains(str)) str else null
     }
-    return ""
+    return null
 }
 
 fun BlockEntityRenderState.getTextureLocation(path: String): ResourceLocation {
