@@ -1,0 +1,24 @@
+{
+  "loader": "neoforge:separate_transforms",
+  "gui_light": "front",
+  "textures": {
+    "particle": "plantz:item/baron_staff"
+  },
+  "base": {
+    "parent": "plantz:item/baron_staff_in_hand_beam"
+  },
+  "perspectives": {
+    "gui": {
+      "parent": "plantz:item/baron_staff_flat"
+    },
+    "ground": {
+      "parent": "plantz:item/baron_staff_flat"
+    },
+    "fixed": {
+      "parent": "plantz:item/baron_staff_flat"
+    },
+    "plantz:on_shelf": {
+      "parent": "plantz:item/baron_staff_flat"
+    }
+  }
+}

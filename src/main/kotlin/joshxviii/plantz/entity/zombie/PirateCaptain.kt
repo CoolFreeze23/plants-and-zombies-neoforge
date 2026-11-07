@@ -6,13 +6,15 @@ import joshxviii.plantz.PazEntities
 import joshxviii.plantz.PazSounds
 import joshxviii.plantz.ai.goal.NavigateToTargetGoal
 import joshxviii.plantz.ai.goal.ProjectileAttackGoal
-import joshxviii.plantz.entity.isActiveInRaid
+import joshxviii.plantz.raid.PazZombieGroupData
+import joshxviii.plantz.raid.isActiveInRaid
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.EntityDataSerializers
 import net.minecraft.network.syncher.SynchedEntityData
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
+import net.minecraft.tags.DamageTypeTags
 import net.minecraft.world.DifficultyInstance
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.entity.*
@@ -64,7 +66,7 @@ class PirateCaptain(type: EntityType<out PirateCaptain>, level: Level) : PazZomb
     }
 
     init {
-        xpReward = 80
+        xpReward = 0
     }
 
     override fun getAmbientSound(): SoundEvent {
@@ -140,16 +142,20 @@ class PirateCaptain(type: EntityType<out PirateCaptain>, level: Level) : PazZomb
         }
     }
 
-    override fun remove(reason: RemovalReason) {
-        if (reason == RemovalReason.KILLED) {
-            convertToSingle(PazEntities.PIRATE_CAPTAIN_GHOST, keepEquipment = true, preserveCanPickUpLoot = true) {
-                it.playSound(SoundEvents.ZOMBIE_VILLAGER_CONVERTED)
-                (level() as? ServerLevel)?.let { level ->
-                    it.finalizeSpawn(level, level.getCurrentDifficultyAt(blockPosition()), MobSpawnType.CONVERSION, PazZombieGroupData(isRaider = this.isActiveInRaid()))
-                }
+    override fun die(source: DamageSource) {
+        super.die(source)
+        if (!source.`is`(DamageTypeTags.BYPASSES_INVULNERABILITY) && level() is ServerLevel) convertToGhost()
+    }
+
+    fun convertToGhost() {
+        convertToSingle(PazEntities.PIRATE_CAPTAIN_GHOST, keepEquipment = true, preserveCanPickUpLoot = true) {
+            it.playSound(SoundEvents.ZOMBIE_VILLAGER_CONVERTED)
+            (level() as? ServerLevel)?.let { level ->
+                it.finalizeSpawn(level, level.getCurrentDifficultyAt(blockPosition()), MobSpawnType.CONVERSION,
+                    PazZombieGroupData(isRaider = this.isActiveInRaid())
+                )
             }
         }
-        super.remove(reason)
     }
 
     override fun finalizeSpawn(

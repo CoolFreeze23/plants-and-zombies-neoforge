@@ -1,6 +1,7 @@
 package joshxviii.plantz.item.component
 
 import com.mojang.serialization.Codec
+import joshxviii.plantz.PazComponents
 import joshxviii.plantz.PazConfig
 import joshxviii.plantz.PazItems
 import joshxviii.plantz.name
@@ -24,7 +25,7 @@ data class SunCost(
         components: ItemStack
     ) {
         val type = components.entityDataType()
-        consumer.accept(Component.translatable("component.item_cost", PazItems.SUN.name(), getSunCost(type)).withStyle(ChatFormatting.GOLD))
+        consumer.accept(Component.translatable("component.plantz.item_cost", PazItems.SUN.name(), getSunCost(type)).withStyle(ChatFormatting.GOLD))
     }
 
     fun getSunCost(forType: EntityType<*>?): Int {
@@ -33,6 +34,9 @@ data class SunCost(
     }
 
     companion object {
+        fun getSunCost(item: ItemStack): Int {
+            return item.get(PazComponents.SUN_COST)?.getSunCost(item.entityDataType())?: 0
+        }
 
         val CODEC = Codec.INT.xmap(
             { SunCost(it) },

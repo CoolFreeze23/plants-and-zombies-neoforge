@@ -20,6 +20,13 @@ import joshxviii.plantz.compat.ValueOutput
 class SoldierZombie(type: EntityType<out SoldierZombie>, level: Level) : PazZombie(type, level) {
 
     companion object {
+        val potentialDyes = listOf(
+            DyeColor.GREEN,
+            DyeColor.PURPLE,
+            DyeColor.ORANGE,
+            DyeColor.BLUE,
+        )
+
         val DYE_COLOR: EntityDataAccessor<DyeColor> = SynchedEntityData.defineId<DyeColor>(SoldierZombie::class.java, DATA_DYE_COLOR)
     }
 
@@ -80,7 +87,7 @@ class SoldierZombie(type: EntityType<out SoldierZombie>, level: Level) : PazZomb
         val data = super.finalizeSpawn(level, difficulty, spawnReason, groupData)
 
         setItemSlot(EquipmentSlot.MAINHAND, PazItems.DYE_BLASTER.defaultInstance)
-        dyeColor = DyeColor.entries.filter { it != DyeColor.WHITE && it != DyeColor.BLACK }.random()
+        dyeColor = potentialDyes.random()
         setDropChance(EquipmentSlot.MAINHAND, 0.0f)
         if (spawnReason != MobSpawnType.CONVERSION) {
             setCanBreakDoors(true)

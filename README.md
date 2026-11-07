@@ -1,11 +1,11 @@
 # Plants & Zombies: NeoForge 1.21.1 port
 
 Unofficial backport of [joshxviii/plants-and-zombies](https://github.com/joshxviii/plants-and-zombies) (Fabric, MC 26.1.2,
-upstream commit `88ddc959`, mod version 1.5.2) to **NeoForge 21.1 / Minecraft 1.21.1**. Licensed MPL-2.0 like upstream.
+upstream commit `bbf9ae9a`, mod version 1.5.2) to **NeoForge 21.1 / Minecraft 1.21.1**. Licensed MPL-2.0 like upstream.
 `PORTING.md` explains how the port is structured.
 
 ## Install
-Put `build/libs/plants-and-zombies-neoforge-1.5.2-neoforge.1.jar` in `mods/` together with:
+Put `build/libs/plants-and-zombies-neoforge-1.5.2-neoforge.2.jar` in `mods/` together with:
 - Kotlin for Forge 5.11.0 or newer (NeoForge build)
 - TerraBlender for NeoForge 1.21.1 (4.1.0.x)
 
@@ -45,13 +45,16 @@ Optional, detected automatically:
 - Every upstream source and resource file was compared against the port; differences are restored or listed below.
 - Every Plants & Zombies tag expands to the same blocks, items and entities as upstream does against 26.1's vanilla tags
   (1.21.1's `#minecraft:dirt` and carver tags hold different blocks, so the port uses 26.1's contents).
-- **All 142 required GameTests pass** (repeated runs): every plant's behaviour, all special zombies and blueprint machines, ownership, a full zombie
+- **All 148 required GameTests pass** (repeated runs): every plant's behaviour, all special zombies and blueprint machines, ownership, a full zombie
   raid (waves, victory, rewards, boss types), mailboxes (delivery, queue, full/discard), collection box, sun battery, time machine,
   flags, gravestones, garden gnomes, pots, watering can, gardening glove (incl. Lobbing), seed packets and cooldowns, wearables
-  (incl. the bucket) and their head protection, the newspaper shield, letters, pumpkin armor and carving loot, the
-  brainz alloy door and trapdoor, zombie bats, dispensers, blueprints, every upstream recipe, loot tables,
-  advancements, tags, worldgen features, seed mutations and villager trades.
-- Dedicated server + client over the network: config sync, a zombie raid with its HUD, boss bar and head markers.
+  (incl. the bucket) and their head protection, the newspaper and door shields, the coffin, letters, pumpkin armor and
+  carving loot, the brainz alloy door and trapdoor, zombats, dispensers, blueprints, spawn egg variants and loadouts,
+  every upstream recipe, loot tables, advancements, tags, worldgen features, seed mutations and villager trades.
+- Raids saved by older versions (plain wave types, no boss health, no starter) load and save again in the new format.
+- Dedicated server + client over the network: config sync, a zombie raid started with `/pz raid` with its HUD, boss
+  bar, boss chance and wave timer, a saved raid surviving a restart, `/pz options`, the sun HUD, the door shield held and
+  raised, the coffin worn, Baron von Bats, Zombie Goat, Zombat, Marigold, a Lobbing glove throw, the creative tab eggs.
 - Dev client: every entity and block entity renderer, item icons, screens (mailbox, collection box, time machine),
   raid overlay, particles, graveyard ambience; with Iris + a shader pack; with Vanilla Backport.
 - GameTests also pass with Backported Spears, Backported Spears + Copper Age Backport, and all three backports
@@ -74,9 +77,9 @@ Optional, detected automatically:
   unchanged. 26.1's `on_shelf` display context is `plantz:on_shelf` (NeoForge requires a namespaced name), falling
   back to `fixed`; 1.21.1 only has shelves through Copper Age Backport.
 - The newspaper blocks like a 1.21.1 shield (raised after a quarter second, axes disable it) with 26.1's numbers: 90%
-  of a hit from within 80 degrees of where its holder looks. Head protection (bucket, cone, football helmet) applies
-  right after shield blocking, where 26.1 applies it.
-- The door shield item shows the door it was made from with that door's item model, like upstream.
+  of a hit from within 90 degrees of where its holder looks. The door shield and the worn coffin block through the same
+  path (`item/component/BlocksAttacks`, 26.1's `blocks_attacks` numbers). Head protection (bucket, cone, football
+  helmet) applies right after shield blocking, where 26.1 applies it, and now takes the whole hit from above.
 
 The worn bucket uses the mod's own `plantz:item/bucket_head` model in the head layers instead of overriding the
 vanilla bucket model like upstream, so resource packs that retexture the bucket (e.g. Alittle Axolotl) no longer hide it.
@@ -90,6 +93,9 @@ dropped the Brainz flag; the lime mailbox recipe made a red mailbox; picking a s
 with the placed block; balloons dropped a lead when their holder died; 66 missing English strings (subtitles, death
 messages, biome/entity/block names) and the three death sounds with a broken subtitle key. Sound events registered without a
 definition: the zombie yeti's snow chunk burst was silent (now vanilla's powder snow break, with a subtitle) and the
-per-variant gnome jump events logged "missing sound" warnings (now the shared gnome jump).
+per-variant gnome jump events logged "missing sound" warnings (now the shared gnome jump). Hypnotized zombies stopped
+fighting other zombies (a new `canAttack` check also applied to them); raids saved before wave details existed were
+dropped on load; a raid with no starter couldn't load at all; the Pirate Captain Ghost egg had no name; five spawn egg
+models pointed at textures that don't exist.
 
 Upstream gap kept: the newspaper zombie's `angry_ambient` sound files don't exist upstream.

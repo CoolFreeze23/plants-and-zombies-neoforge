@@ -3,12 +3,15 @@ package joshxviii.plantz.entity.zombie
 import joshxviii.plantz.PazCompatSounds
 import net.minecraft.nbt.CompoundTag
 import joshxviii.plantz.compat.AnimationState
+import joshxviii.plantz.raid.BossType
+import joshxviii.plantz.PazDataSerializers.ROBO_ZOMBIE_VARIANT
 import joshxviii.plantz.PazSounds
 import joshxviii.plantz.ai.goal.MeleeAttackActionGoal
 import joshxviii.plantz.ai.goal.NavigateToTargetGoal
 import joshxviii.plantz.ai.goal.ProjectileAttackGoal
 import joshxviii.plantz.entity.projectile.Missile
 import joshxviii.plantz.pazResource
+import net.minecraft.network.chat.Component
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.EntityDataSerializers
 import net.minecraft.network.syncher.SynchedEntityData
@@ -29,6 +32,7 @@ import net.minecraft.world.level.ServerLevelAccessor
 import joshxviii.plantz.compat.ValueInput
 import joshxviii.plantz.compat.ValueOutput
 import net.minecraft.world.phys.Vec3
+import kotlin.jvm.optionals.getOrDefault
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -42,6 +46,7 @@ class RoboZombie(type: EntityType<out RoboZombie>, level: Level) : PazZombie(typ
         val MISSILE_COOLDOWN_ID: EntityDataAccessor<Int> = SynchedEntityData.defineId<Int>(RoboZombie::class.java, EntityDataSerializers.INT)
         val BASH_TIME_ID: EntityDataAccessor<Int> = SynchedEntityData.defineId<Int>(RoboZombie::class.java, EntityDataSerializers.INT)
         val TRANSFORMED_ID: ResourceLocation = pazResource("transformed")
+        val DATA_VARIANT_ID: EntityDataAccessor<RoboZombieVariant> = SynchedEntityData.defineId(RoboZombie::class.java, ROBO_ZOMBIE_VARIANT)
 
         private val SPEED_MODIFIER = AttributeModifier(TRANSFORMED_ID, 0.15, AttributeModifier.Operation.ADD_VALUE)
         private val STEP_HEIGHT_MODIFIER = AttributeModifier(TRANSFORMED_ID, 0.0, AttributeModifier.Operation.ADD_VALUE)
@@ -77,6 +82,10 @@ class RoboZombie(type: EntityType<out RoboZombie>, level: Level) : PazZombie(typ
             reassessNavigation()
         }
 
+    var variant: RoboZombieVariant
+        get() = this.entityData.get(DATA_VARIANT_ID)
+        set(value) = this.entityData.set(DATA_VARIANT_ID, value)
+
     var missileTime: Int
         get() = this.entityData.get(MISSILE_TIME_ID)
         set(value) = this.entityData.set(MISSILE_TIME_ID, value)
@@ -110,6 +119,7 @@ class RoboZombie(type: EntityType<out RoboZombie>, level: Level) : PazZombie(typ
         entityData.define(MISSILE_COOLDOWN_ID, MISSILE_COOLDOWN_TIME)
         entityData.define(MISSILE_TIME_ID, 0)
         entityData.define(BASH_TIME_ID, 0)
+        entityData.define(DATA_VARIANT_ID, RoboZombieVariant.getDefault())
     }
 
     override fun addAdditionalSaveData(tag: CompoundTag) {
@@ -117,13 +127,14 @@ class RoboZombie(type: EntityType<out RoboZombie>, level: Level) : PazZombie(typ
         val output = ValueOutput.of(tag, registryAccess())
         output.putBoolean("is_transformed", isTransformed)
         output.putInt("missile_cooldown", missileCooldown)
-    }
+        output.store("variant", RoboZombieVariant.CODEC, variant)    }
 
     override fun readAdditionalSaveData(tag: CompoundTag) {
         super.readAdditionalSaveData(tag)
         val input = ValueInput.of(tag, registryAccess())
         isTransformed = input.getBooleanOr("is_transformed", false)
         missileCooldown = input.getIntOr("missile_cooldown", MISSILE_COOLDOWN_TIME)
+        variant = input.read("variant", RoboZombieVariant.CODEC).getOrDefault(RoboZombieVariant.getDefault())
         reassessNavigation()
     }
 
@@ -234,6 +245,15 @@ class RoboZombie(type: EntityType<out RoboZombie>, level: Level) : PazZombie(typ
     override fun doHurtTarget(target: Entity): Boolean {
         val result = super.doHurtTarget(target)
         return result
+    }
+
+    override fun getTypeName(): Component {
+        return if (variant != RoboZombieVariant.ROBO) Component.translatable("entity.plantz.robo_zombie.variant.${variant.name.lowercase()}")
+        else super.getTypeName()
+    }
+
+    override fun onSpawnedFromItem() {
+        if (variant == RoboZombieVariant.GENERAL) BossType.bossify(this)
     }
 
     override fun finalizeSpawn(

@@ -6,6 +6,7 @@ import joshxviii.plantz.networking.SeedPacketCooldownPayload
 import joshxviii.plantz.networking.SendMailRequestPayload
 import joshxviii.plantz.networking.SendMailRequestPayload.Companion.handleSendMailPacket
 import joshxviii.plantz.networking.SendMailResponsePayload
+import joshxviii.plantz.networking.OpenOptionsScreenPayload
 import joshxviii.plantz.networking.ServerConfigResponsePayload
 import joshxviii.plantz.networking.UiSoundPayload
 import joshxviii.plantz.networking.UpdateCollectionBoxPayload
@@ -52,5 +53,6 @@ object PazNetwork {
         registrar.playToClient(SeedPacketCooldownPayload.ID, SeedPacketCooldownPayload.STREAM_CODEC) { payload, context -> PazClientNetwork.handleSeedPacketCooldown(payload, context) }
         registrar.playToClient(ZombieRaidResponsePayload.ID, ZombieRaidResponsePayload.STREAM_CODEC) { payload, context -> PazClientNetwork.handleZombieRaid(payload, context) }
         registrar.playToClient(UiSoundPayload.ID, UiSoundPayload.STREAM_CODEC) { payload, context -> PazClientNetwork.handleUiSound(payload, context) }
+        registrar.playToClient(OpenOptionsScreenPayload.ID, OpenOptionsScreenPayload.STREAM_CODEC) { payload, context -> PazClientNetwork.handleOpenOptionsScreen(payload, context) }
     }
 }

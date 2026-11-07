@@ -88,7 +88,7 @@ object DataGameTests {
 
     // generated from upstream data/plantz/recipe/**.json; mailbox transmutes start from a differently dyed mailbox.
     private val RECIPES = listOf(
-        R("balloon/balloon", true, 3, 3, listOf("", "minecraft:phantom_membrane", "", "", "minecraft:wind_charge", "", "", "minecraft:string", ""), "plantz:white_balloon", 8),
+        R("balloon/balloon", true, 3, 3, listOf("", "minecraft:phantom_membrane", "", "", "minecraft:wind_charge", "", "", "minecraft:string", ""), "plantz:white_balloon", 16),
         R("balloon/black_balloon", false, 9, 1, listOf("#plantz:balloons", "#plantz:balloons", "#plantz:balloons", "#plantz:balloons", "minecraft:black_dye", "#plantz:balloons", "#plantz:balloons", "#plantz:balloons", "#plantz:balloons"), "plantz:black_balloon", 8),
         R("balloon/blue_balloon", false, 9, 1, listOf("#plantz:balloons", "#plantz:balloons", "#plantz:balloons", "#plantz:balloons", "minecraft:blue_dye", "#plantz:balloons", "#plantz:balloons", "#plantz:balloons", "#plantz:balloons"), "plantz:blue_balloon", 8),
         R("balloon/brown_balloon", false, 9, 1, listOf("#plantz:balloons", "#plantz:balloons", "#plantz:balloons", "#plantz:balloons", "minecraft:brown_dye", "#plantz:balloons", "#plantz:balloons", "#plantz:balloons", "#plantz:balloons"), "plantz:brown_balloon", 8),
@@ -113,6 +113,7 @@ object DataGameTests {
         R("brainz_alloy_slab", true, 3, 1, listOf("plantz:brainz_alloy_block", "plantz:brainz_alloy_block", "plantz:brainz_alloy_block"), "plantz:brainz_alloy_slab", 6),
         R("brainz_alloy_stairs", true, 3, 3, listOf("plantz:brainz_alloy_block", "", "", "plantz:brainz_alloy_block", "plantz:brainz_alloy_block", "", "plantz:brainz_alloy_block", "plantz:brainz_alloy_block", "plantz:brainz_alloy_block"), "plantz:brainz_alloy_stairs", 4),
         R("brainz_alloy_trapdoor", true, 2, 2, listOf("plantz:brainz_alloy", "plantz:brainz_alloy", "plantz:brainz_alloy", "plantz:brainz_alloy"), "plantz:brainz_alloy_trapdoor", 1),
+        R("coffin", true, 3, 2, listOf("#minecraft:wooden_trapdoors", "#minecraft:wooden_trapdoors", "#minecraft:wooden_trapdoors", "#minecraft:wooden_slabs", "#minecraft:wooden_slabs", "#minecraft:wooden_slabs"), "plantz:coffin", 1),
         R("mail_collection_box", true, 3, 3, listOf("plantz:brainz_alloy", "plantz:brainz_alloy", "plantz:brainz_alloy", "plantz:brainz_alloy", "plantz:newspaper", "plantz:brainz_alloy", "minecraft:redstone", "#plantz:mailboxes", "minecraft:redstone"), "plantz:mail_collection_box", 1),
         R("mailbox/black_mailbox", false, 2, 1, listOf("plantz:mailbox", "minecraft:black_dye"), "plantz:black_mailbox", 1),
         R("mailbox/blue_mailbox", false, 2, 1, listOf("plantz:black_mailbox", "minecraft:blue_dye"), "plantz:blue_mailbox", 1),
@@ -154,7 +155,7 @@ object DataGameTests {
         val level = helper.level
         val manager = level.recipeManager
         val problems = mutableListOf<String>()
-        val loaded = manager.recipes.filter { it.id().namespace == "plantz" }.map { it.id().path }.toSet()
+        val loaded = manager.recipes.filter { it.id().namespace == "plantz" }.map { it.id().path }.toSet() - "door_shield" // custom recipe
         val expected = RECIPES.map { it.id }.toSet()
         if (loaded != expected) problems += "recipe ids differ: missing=${expected - loaded} extra=${loaded - expected}"
         for (r in RECIPES) {
@@ -304,15 +305,17 @@ object DataGameTests {
 
     // generated from upstream data/plantz/advancement/**.json
     private val ADVANCEMENTS = listOf(
-        A("plantz:all_gnomes", "plantz:taco_time", listOf("has_time_machine"), 1, listOf(), listOf(), 0),
+        A("plantz:all_gnomes", "plantz:receive_hero_mail", listOf("blue_gnome", "golden_gnome", "green_gnome", "red_gnome", "yellow_gnome"), 5, listOf(), listOf(), 0),
         A("plantz:big_three", "plantz:cone_head", listOf("plantz:all_star", "plantz:disco_zombie", "plantz:zombie_yeti"), 3, listOf(), listOf(), 0),
         A("plantz:bigger_three", "plantz:big_three", listOf("plantz:all_star", "plantz:disco_zombie", "plantz:zombie_yeti"), 3, listOf(), listOf(), 0),
+        A("plantz:biggest_three", "plantz:bigger_three", listOf("plantz:all_star", "plantz:disco_zombie", "plantz:zombie_yeti"), 3, listOf(), listOf(), 0),
+        A("plantz:boss_slayer", "plantz:taco_time", listOf("boss_1", "boss_10", "boss_11", "boss_12", "boss_13", "boss_14", "boss_15", "boss_16", "boss_17", "boss_18", "boss_19", "boss_2", "boss_20", "boss_21", "boss_22", "boss_23", "boss_24", "boss_25", "boss_26", "boss_27", "boss_28", "boss_29", "boss_3", "boss_30", "boss_4", "boss_5", "boss_6", "boss_7", "boss_8", "boss_9"), 30, listOf(), listOf(), 0),
         A("plantz:cone_head", "plantz:root", listOf("wearing_cone"), 1, listOf(), listOf(), 0),
         A("plantz:craft_plant_flag", "plantz:root", listOf("craft_flag"), 1, listOf(), listOf(), 0),
         A("plantz:disco_hypno", "plantz:big_three", listOf("disco_hypno"), 1, listOf(), listOf(), 0),
         A("plantz:grave_buster_bust", "plantz:grow_plant_seeds", listOf("grave_buster_bust"), 1, listOf(), listOf(), 0),
         A("plantz:grow_plant_seeds", "plantz:relocation", listOf("grow_seeds"), 1, listOf(), listOf(), 0),
-        A("plantz:plant_all_plants", "plantz:grave_buster_bust", listOf("plantz:bonkchoy", "plantz:cabbagepult", "plantz:cactus", "plantz:cherrybomb", "plantz:chomper", "plantz:coffeebean", "plantz:doomshroom", "plantz:electric_peashooter", "plantz:explode_o_nut", "plantz:fire_peashooter", "plantz:fumeshroom", "plantz:grave_buster", "plantz:hypnoshroom", "plantz:ice_peashooter", "plantz:iceshroom", "plantz:kernelpult", "plantz:lightning_reed", "plantz:melonpult", "plantz:peashooter", "plantz:potatomine", "plantz:puffshroom", "plantz:pumpkin", "plantz:repeater", "plantz:scaredyshroom", "plantz:seashroom", "plantz:sunflower", "plantz:sunshroom", "plantz:tanglekelp", "plantz:wallnut", "plantz:winter_melon"), 30, listOf(), listOf(), 0),
+        A("plantz:plant_all_plants", "plantz:grave_buster_bust", listOf("plantz:bonkchoy", "plantz:cabbagepult", "plantz:cactus", "plantz:cherrybomb", "plantz:chomper", "plantz:coffeebean", "plantz:doomshroom", "plantz:electric_peashooter", "plantz:explode_o_nut", "plantz:fire_peashooter", "plantz:fumeshroom", "plantz:grave_buster", "plantz:hypnoshroom", "plantz:ice_peashooter", "plantz:iceshroom", "plantz:kernelpult", "plantz:lightning_reed", "plantz:marigold", "plantz:melonpult", "plantz:peashooter", "plantz:potatomine", "plantz:puffshroom", "plantz:pumpkin", "plantz:repeater", "plantz:scaredyshroom", "plantz:seashroom", "plantz:sunflower", "plantz:sunshroom", "plantz:tanglekelp", "plantz:wallnut", "plantz:winter_melon"), 31, listOf(), listOf(), 0),
         A("plantz:plant_pot_minecart", "plantz:grow_plant_seeds", listOf("plant_pot_minecart"), 1, listOf(), listOf(), 0),
         A("plantz:read_newspaper", "plantz:root", listOf("read_newspaper"), 1, listOf(), listOf(), 0),
         A("plantz:receive_hero_mail", "plantz:send_mail", listOf("receive_hero_mail"), 1, listOf(), listOf(), 0),
@@ -321,6 +324,8 @@ object DataGameTests {
         A("plantz:recipes/brainz_alloy", "minecraft:recipes/root", listOf("has_brainz_alloy_block", "has_the_recipe"), 1, listOf("plantz:brainz_alloy_by_block"), listOf(), 0),
         A("plantz:recipes/brainz_alloy_blocks", "minecraft:recipes/root", listOf("has_brainz_alloy", "has_the_recipe"), 1, listOf("plantz:brainz_alloy_block", "plantz:brainz_alloy_by_block", "plantz:brainz_alloy_door", "plantz:brainz_alloy_fence", "plantz:brainz_alloy_slab", "plantz:brainz_alloy_stairs", "plantz:brainz_alloy_trapdoor", "plantz:reinforced_brainz_alloy_block", "plantz:sun_battery", "plantz:treaded_brainz_alloy_block"), listOf(), 0),
         A("plantz:recipes/brainzium_crafting", "minecraft:recipes/root", listOf("has_brainzium", "has_the_recipe"), 1, listOf("plantz:brainz_alloy", "plantz:time_machine"), listOf(), 0),
+        A("plantz:recipes/coffin", "minecraft:recipes/root", listOf("has_the_recipe", "has_wooden_trapdoor"), 1, listOf("plantz:coffin"), listOf(), 0),
+        A("plantz:recipes/door_shield", "minecraft:recipes/root", listOf("has_ingredients", "has_the_recipe"), 1, listOf("plantz:door_shield"), listOf(), 0),
         A("plantz:recipes/mail_collection_box", "minecraft:recipes/root", listOf("has_brainz_alloy", "has_mailbox", "has_the_recipe"), 1, listOf("plantz:mail_collection_box"), listOf(), 0),
         A("plantz:recipes/mailbox", "minecraft:recipes/root", listOf("has_newspaper", "has_the_recipe"), 1, listOf("plantz:mailbox/mailbox"), listOf(), 0),
         A("plantz:recipes/mailbox_dyes", "plantz:recipes/mailbox", listOf("has_mailbox", "has_the_recipe"), 1, listOf("plantz:mailbox/black_mailbox", "plantz:mailbox/blue_mailbox", "plantz:mailbox/brown_mailbox", "plantz:mailbox/cyan_mailbox", "plantz:mailbox/gray_mailbox", "plantz:mailbox/green_mailbox", "plantz:mailbox/light_blue_mailbox", "plantz:mailbox/light_gray_mailbox", "plantz:mailbox/lime_mailbox", "plantz:mailbox/magenta_mailbox", "plantz:mailbox/orange_mailbox", "plantz:mailbox/pink_mailbox", "plantz:mailbox/purple_mailbox", "plantz:mailbox/red_mailbox", "plantz:mailbox/white_mailbox", "plantz:mailbox/yellow_mailbox"), listOf(), 0),
@@ -335,7 +340,7 @@ object DataGameTests {
         A("plantz:root", "", listOf("has_sun"), 1, listOf(), listOf(), 0),
         A("plantz:send_mail", "plantz:read_newspaper", listOf("send_mail"), 1, listOf(), listOf(), 0),
         A("plantz:solar_power", "plantz:plant_pot_minecart", listOf("has_sun_battery"), 1, listOf(), listOf(), 0),
-        A("plantz:taco_time", "plantz:craft_plant_flag", listOf("wave_1", "wave_10", "wave_2", "wave_3", "wave_4", "wave_5", "wave_6", "wave_7", "wave_8", "wave_9"), 10, listOf(), listOf(), 0),
+        A("plantz:taco_time", "plantz:craft_plant_flag", listOf("boss_1", "boss_2"), 2, listOf(), listOf(), 0),
         A("plantz:time_machine", "plantz:solar_power", listOf("has_time_machine"), 1, listOf(), listOf(), 0),
         A("plantz:wallnut_bowling", "plantz:plant_pot_minecart", listOf("bowl"), 1, listOf(), listOf(), 0),
         A("plantz:win_hardest_raid", "plantz:win_zombie_raid", listOf("win_hardest_raid"), 1, listOf(), listOf(), 0),
@@ -515,6 +520,7 @@ object DataGameTests {
             "electric_peashooter" to listOf("plantz:electric_peashooter", "plantz:peashooter"),
             "explode_o_nut" to listOf("plantz:wallnut"),
             "fire_peashooter" to listOf("plantz:fire_peashooter", "plantz:peashooter"),
+            "marigold" to listOf("plantz:seed_mutations/marigold"),
             "melonpult" to listOf("plantz:winter_melon"),
             "peashooter" to listOf("plantz:electric_peashooter", "plantz:fire_peashooter", "plantz:repeater"),
             "wallnut" to listOf("plantz:explode_o_nut"),
@@ -527,6 +533,7 @@ object DataGameTests {
                 when (val result = it.result) {
                     is SeedMutationResult.EntityTypeResult -> result.entityType.unwrapKey().get().location().toString()
                     is SeedMutationResult.ItemStackResult -> result.item.unwrapKey().get().location().toString()
+                    is SeedMutationResult.LootTableResult -> result.lootTable.toString()
                 }
             }
             helper.assertTrue(ids == results, "$name mutation results: $ids")
@@ -534,7 +541,7 @@ object DataGameTests {
         val pea = mutations.get(pazResource("peashooter"))!!.mutations
         helper.assertTrue(pea[0].weather.isPresent && pea[1].biomes.isPresent && pea[1].biomes.get().size() > 0 && pea[2].chance == 0.1f, "peashooter mutation rules")
 
-        val damageNames = listOf("electric_zap", "energy", "paint", "plant", "plant_chomp", "plant_electric", "plant_explode", "plant_fire",
+        val damageNames = listOf("electric_zap", "energy", "paint", "piercing_projectile", "plant", "plant_chomp", "plant_electric", "plant_explode", "plant_fire",
             "plant_freeze", "plant_fume", "toxic", "zombie_eat", "zombie_electric", "zombie_energy", "zombie_explode", "zombie_smash", "zombie_trample")
         val loadedDamage = access.registryOrThrow(Registries.DAMAGE_TYPE).keySet().filter { it.namespace == "plantz" }.map { it.path }.sorted()
         helper.assertTrue(loadedDamage == damageNames, "damage types: $loadedDamage")

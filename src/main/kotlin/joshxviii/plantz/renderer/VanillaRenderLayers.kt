@@ -97,6 +97,21 @@ class VanillaDuckyTubeRenderLayer<T : LivingEntity, M : EntityModel<T>>(parent: 
 class VanillaDyeVatRenderLayer<T : LivingEntity, M : EntityModel<T>>(parent: RenderLayerParent<T, M>) :
     VanillaBodyItemAttachmentRenderLayer<T, M>(parent, PazItems.DYE_BLASTER, { it.mainHandItem })
 
+/** [BodyBlockerRenderLayer] for vanilla renderers. */
+class VanillaBodyBlockerRenderLayer<T : LivingEntity, M : EntityModel<T>>(parent: RenderLayerParent<T, M>) :
+    VanillaBodyItemAttachmentRenderLayer<T, M>(parent, PazItems.COFFIN, { it.getItemBySlot(EquipmentSlot.CHEST) }) {
+
+    override fun render(
+        poseStack: PoseStack, buffer: MultiBufferSource, packedLight: Int, entity: T,
+        limbSwing: Float, limbSwingAmount: Float, partialTick: Float, ageInTicks: Float, netHeadYaw: Float, headPitch: Float
+    ) {
+        super.render(poseStack, buffer, packedLight, entity, limbSwing, limbSwingAmount, partialTick, ageInTicks, netHeadYaw, headPitch)
+        // the head itself is drawn by now; the layers after this one (helmets, hats) follow it, and setupAnim resets it next frame
+        val humanoid = parentModel as? HumanoidModel<*> ?: return
+        if (entity.getItemBySlot(EquipmentSlot.CHEST).`is`(PazItems.COFFIN)) humanoid.head.y = humanoid.body.y - 4f
+    }
+}
+
 /** [BodyItemAttachmentRenderLayer] for vanilla renderers: the item model drawn on a humanoid body. */
 abstract class VanillaBodyItemAttachmentRenderLayer<T : LivingEntity, M : EntityModel<T>>(
     parent: RenderLayerParent<T, M>,

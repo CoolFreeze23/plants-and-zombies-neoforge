@@ -57,9 +57,9 @@
   "effect.plantz.buttered": "Buttered",
 
   "component.stored_sun.desc": "Pinaglaman ang araw",
-  "component.stored_sun": "%s / %s",
+  "component.plantz.stored_sun": "%s / %s",
   "component.stored_water.desc": "Pandilig ng halaman",
-  "component.stored_water": "Tubig: %s / %s",
+  "component.plantz.stored_water": "Tubig: %s / %s",
   "component.sun_cost": "Gastos na araw: %s",
   "component.blocks_damage.desc": "Hinaharangan ang Binabato:",
   "component.blocks_damage": "Pagkakataong Masisira: %s%%",

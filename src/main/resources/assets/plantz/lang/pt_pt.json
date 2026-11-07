@@ -57,9 +57,9 @@
   "effect.plantz.buttered": "Amanteigado",
 
   "component.stored_sun.desc": "Armazena e usa Sol recolhido",
-  "component.stored_sun": "%s / %s",
+  "component.plantz.stored_sun": "%s / %s",
   "component.stored_water.desc": "Pode ser usado para regar plantas",
-  "component.stored_water": "Água: %s / %s",
+  "component.plantz.stored_water": "Água: %s / %s",
   "component.sun_cost": "Custo de Sol: %s",
   "component.blocks_damage.desc": "Bloqueia Projéteis:",
   "component.blocks_damage": "Probabilidade de Quebra: %s%%",

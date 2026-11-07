@@ -1,6 +1,17 @@
 {
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "plantz:item/gargantuar_spawn_egg"
-  }
+  "parent": "plantz:item/spawn_egg/gargantuar/gargantuar",
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 1
+      },
+      "model": "plantz:item/spawn_egg/gargantuar/pirate"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 2
+      },
+      "model": "plantz:item/spawn_egg/gargantuar/giga"
+    }
+  ]
 }

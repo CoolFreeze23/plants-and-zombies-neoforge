@@ -1,11 +1,16 @@
 package joshxviii.plantz
 
+import joshxviii.plantz.gui.PazOptionsScreen
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory
+import net.neoforged.fml.ModLoadingContext
+import joshxviii.plantz.PazItems.DUCKY_TUBE
 import joshxviii.plantz.PazItems.DYE_BLASTER
 import joshxviii.plantz.PazItems.FOOTBALL_HELMET
 import joshxviii.plantz.PazItems.GARDENING_GLOVE
 import joshxviii.plantz.PazItems.PLANT_POT_HELMET
 import joshxviii.plantz.client.ModernAssets
 import joshxviii.plantz.compat.client.renderer.layers.EquipmentLayerRenderer
+import joshxviii.plantz.item.DuckTubeItem
 import joshxviii.plantz.item.DyeBlasterItem
 import joshxviii.plantz.item.FootballHelmetItem
 import joshxviii.plantz.item.GardeningGloveItem
@@ -61,6 +66,8 @@ object PazClient {
 		modBus.addListener { event: RegisterColorHandlersEvent.Item -> joshxviii.plantz.data.PazItemModelProperties.registerItemColors(event) }
 		modBus.addListener { event: FMLClientSetupEvent -> event.enqueueWork { PazClientHooks.clientSetup() } }
 		PazClientHooks.registerModBus(modBus)
+		// Fabric ModMenu's config screen
+		ModLoadingContext.get().activeContainer.registerExtensionPoint(IConfigScreenFactory::class.java, IConfigScreenFactory { _, parent -> PazOptionsScreen(parent) })
 
 		val bus = NeoForge.EVENT_BUS
 		bus.addListener { _: ClientTickEvent.Pre -> PazClientNetwork.onClientTick() }
@@ -82,10 +89,10 @@ object PazClient {
 			val sneakKey = keybindFormat(minecraft.options.keyShift)
 			val sprintKey = keybindFormat(minecraft.options.keySprint)
 
-			if (stack.`is`(GARDENING_GLOVE)) GardeningGloveItem.addToTooltip(lines, stack, sneakKey)
-			if (stack.`is`(PLANT_POT_HELMET)) PlantPotHelmetItem.addToTooltip(lines, sneakKey)
+			if (stack.`is`(GARDENING_GLOVE)) GardeningGloveItem.addToTooltip(lines, stack)
+			if (stack.`is`(PLANT_POT_HELMET)) PlantPotHelmetItem.addToTooltip(lines)
 			if (stack.`is`(DYE_BLASTER)) DyeBlasterItem.addToTooltip(lines)
-			if (stack.`is`(FOOTBALL_HELMET)) FootballHelmetItem.addToTooltip(lines, sprintKey)
+			if (stack.`is`(DUCKY_TUBE)) DuckTubeItem.addToTooltip(lines)
 		}
 		PazClientHooks.registerGameBus(bus)
 	}

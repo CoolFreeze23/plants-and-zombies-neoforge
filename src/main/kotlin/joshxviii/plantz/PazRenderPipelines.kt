@@ -152,22 +152,6 @@ object PazRenderPipelines {
         )
     }
 
-    /** Sun entity quad: 26.1 `RenderPipelines.ENERGY_SWIRL` render setup with lightmap and overlay, item-entity target. */
-    @JvmStatic
-    fun emissiveSun(texture: ResourceLocation): RenderType = CompatRenderType.create(
-        "plantz_sun", DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 1536, true, true,
-        RenderType.CompositeState.builder()
-            .setShaderState(RenderStateShard.RENDERTYPE_ENERGY_SWIRL_SHADER)
-            .setTextureState(RenderStateShard.TextureStateShard(texture, false, false))
-            .setTexturingState(RenderStateShard.OffsetTexturingStateShard(0f, 0f))
-            .setTransparencyState(RenderStateShard.ADDITIVE_TRANSPARENCY)
-            .setCullState(RenderStateShard.NO_CULL)
-            .setLightmapState(RenderStateShard.LIGHTMAP)
-            .setOverlayState(RenderStateShard.OVERLAY)
-            .setOutputState(RenderStateShard.ITEM_ENTITY_TARGET)
-            .createCompositeState(true)
-    )
-
     /**
      * Sun glow of sun batteries and time machines: 26.1 `RenderPipelines.BEACON_BEAM_TRANSLUCENT` (translucent, no depth
      * write, item-entity target), with the beacon shader's BLOCK vertex format.

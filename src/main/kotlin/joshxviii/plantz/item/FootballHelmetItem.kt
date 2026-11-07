@@ -43,8 +43,8 @@ class FootballHelmetItem(properties: Properties) : Item(properties), Equipable {
         /** ArmorType.HELMET durability (11) x chainmail multiplier (15) */
         const val DURABILITY = 11 * 15
 
-        fun addToTooltip(consumer: MutableList<Component>, sprintKey: Component) {
-            consumer.add(1, Component.translatable("item.plantz.football_helmet.description", sprintKey)
+        fun addToTooltip(consumer: MutableList<Component>) {
+            consumer.add(1, Component.translatable("item.plantz.football_helmet.description")
                 .withStyle(ChatFormatting.DARK_GRAY).withStyle(ChatFormatting.ITALIC))
         }
 

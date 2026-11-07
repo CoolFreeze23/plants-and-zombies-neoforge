@@ -1,9 +1,12 @@
 package joshxviii.plantz
 
+import net.neoforged.neoforge.event.RegisterCommandsEvent
+import joshxviii.plantz.command.PazCommands
 import joshxviii.plantz.block.entity.MailboxBlockEntity
 import joshxviii.plantz.block.entity.MailboxManager
 import joshxviii.plantz.block.entity.getMailboxMailQueue
 import joshxviii.plantz.networking.ServerConfigResponsePayload
+import joshxviii.plantz.recipe.DoorShieldRecipe
 import joshxviii.plantz.raid.ZombieRaids
 import joshxviii.plantz.raid.getZombieRaids
 import net.minecraft.core.registries.Registries
@@ -73,6 +76,7 @@ object PazMain {
 			if (!event.level.isClientSide) PazEntities.onEntityLoad(event.entity, event.level)
 		}
 		bus.addListener { event: LootTableLoadEvent -> PazLootTables.onLootTableLoad(event) }
+		bus.addListener { event: RegisterCommandsEvent -> PazCommands.register(event.dispatcher) }
 		PazHooks.registerGameBus(bus)
 
 		if (FMLEnvironment.dist.isClient) PazClient.init(MOD_BUS)
@@ -102,7 +106,7 @@ object PazMain {
 		PazItems.initialize()
 		PazLootTables.initialize()
 		PazEffects.initialize()
-		PazCreativeTab.initialize()
+		PazCreativeTabs.initialize()
 		PazEntities.initialize()
 		PazDamageTypes.initialize()
 		PazCriteria.initialize()

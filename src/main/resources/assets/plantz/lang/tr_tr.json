@@ -57,9 +57,9 @@
   "effect.plantz.buttered": "Tereyağlı",
 
   "component.stored_sun.desc": "Stores and uses collected Sun",
-  "component.stored_sun": "%s / %s",
+  "component.plantz.stored_sun": "%s / %s",
   "component.stored_water.desc": "Bitkileri sulandırmak için kullanılabilir",
-  "component.stored_water": "Su: %s / %s",
+  "component.plantz.stored_water": "Su: %s / %s",
   "component.sun_cost": "Güneş fiyatı: %s",
   "component.blocks_damage.desc": "Mermileri engeller:",
   "component.blocks_damage": "Kırılma Şansı: %s%%",

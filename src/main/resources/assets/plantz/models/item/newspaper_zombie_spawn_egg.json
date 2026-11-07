@@ -1,6 +1,3 @@
 {
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "plantz:item/newspaper_zombie_spawn_egg"
-  }
+  "parent": "plantz:item/spawn_egg/newspaper_zombie"
 }

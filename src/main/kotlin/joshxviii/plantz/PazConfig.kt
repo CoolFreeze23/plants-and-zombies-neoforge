@@ -45,6 +45,7 @@ data class ServerConfig(
     ),
     var sunCosts: MutableMap<String, Int> = mutableMapOf(
         "plantz:sunflower"              to 5,
+        "plantz:marigold"               to 5,
         "plantz:peashooter"             to 5,
         "plantz:wallnut"                to 5,
         "plantz:explode_o_nut"          to 5,
@@ -79,9 +80,9 @@ data class ServerConfig(
 )
 data class ClientConfig(
     var showDebugInfo: Boolean = false,
-    var alwaysShowHeadMarkers: Boolean = false,
-    var showHiddenItemsInCreativeTab: Boolean = false,
-    var hideRaidUi: Boolean = false,
+    var splitItemTabs: Boolean = false,
+    var showRaidUi: Boolean = true,
+    var showSunInfo: Boolean = false,
     /** Port: volume of 26.1's UI sound category (raid announcements), which 1.21.1 doesn't have; set in Music & Sounds. */
     var uiVolume: Double = 1.0,
 )
@@ -112,6 +113,9 @@ object PazConfig {
         server = loadConfig(serverConfigPath, ServerConfig())
     }
 
+    fun saveClient() = saveConfig(clientConfigPath, client)
+    fun saveServer() = saveConfig(serverConfigPath, server)
+
     private inline fun <reified T> loadConfig(path: Path, default: T): T {
         return if (path.exists()) {
             try {
@@ -122,8 +126,6 @@ object PazConfig {
             }
         } else default.also { saveConfig(path, it) }
     }
-
-    fun saveClient() = saveConfig(clientConfigPath, client)
 
     private inline fun <reified T> saveConfig(path: Path, config: T) {
         try {
@@ -137,15 +139,14 @@ object PazConfig {
     val SHOW_DEBUG_INFO: Boolean
         get() = client.showDebugInfo
 
-    val ALWAYS_SHOW_HEAD_MARKERS: Boolean
-        get() = client.alwaysShowHeadMarkers
+    val SPLIT_ITEM_TABS: Boolean
+        get() = client.splitItemTabs
 
-    val SHOW_HIDDEN_ITEMS: Boolean
-        get() = client.showHiddenItemsInCreativeTab
+    val SHOW_RAID_UI: Boolean
+        get() = client.showRaidUi
 
-    val HIDE_RAID_UI: Boolean
-        get() = client.hideRaidUi
-
+    val SHOW_SUN_INFO: Boolean
+        get() = client.showSunInfo
     val UI_VOLUME: Float
         get() = client.uiVolume.coerceIn(0.0, 1.0).toFloat()
     val COFFEE_BUFF_DURATION: Int
@@ -232,11 +233,11 @@ object PazConfig {
 
     fun putDefaultSunCost(entityId: ResourceLocation, sunCost: Int) {
         server.sunCosts.putIfAbsent(entityId.toString(), sunCost.coerceAtLeast(0))
-        saveConfig(serverConfigPath, server)
+        saveServer()
     }
 
     fun putDefaultAlloyCost(entityId: ResourceLocation, alloyCost: Int) {
         server.alloyCosts.putIfAbsent(entityId.toString(), alloyCost.coerceAtLeast(0))
-        saveConfig(serverConfigPath, server)
+        saveServer()
     }
 }

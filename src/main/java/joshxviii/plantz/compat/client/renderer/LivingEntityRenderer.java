@@ -227,6 +227,10 @@ public abstract class LivingEntityRenderer<T extends LivingEntity, S extends Liv
         state.bodyRot = solveBodyRot(entity, headRot, partialTicks);
         state.yRot = Mth.wrapDegrees(headRot - state.bodyRot);
         state.xRot = Mth.lerp(partialTicks, entity.xRotO, entity.getXRot());
+        if (entity.getItemBySlot(EquipmentSlot.CHEST).has(joshxviii.plantz.PazComponents.WORN_BODY_BLOCKER)) {
+            state.yRot = 0.0F;
+            state.xRot = entity.isCrouching() ? 25.0F : 0.0F;
+        }
         state.isUpsideDown = this.isEntityUpsideDown(entity);
         if (state.isUpsideDown) {
             state.xRot *= -1.0F;

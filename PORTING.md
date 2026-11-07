@@ -1,6 +1,6 @@
 # How the port is structured
 
-Upstream: [joshxviii/plants-and-zombies](https://github.com/joshxviii/plants-and-zombies) @ `88ddc959` (1.5.2; Fabric, MC 26.1.2, Kotlin + Java).
+Upstream: [joshxviii/plants-and-zombies](https://github.com/joshxviii/plants-and-zombies) @ `bbf9ae9a` (1.5.2; Fabric, MC 26.1.2, Kotlin + Java).
 This port: NeoForge 21.1 / MC 1.21.1, Java 21, Kotlin 2.3 via Kotlin for Forge 5.11, TerraBlender 4.1.
 
 The goal is to keep upstream's code recognisable so upstream changes can be carried over. Most files are upstream's with
@@ -15,7 +15,7 @@ the minimum changes 1.21.1 forces; the newer vanilla APIs upstream relies on are
 | `src/main/kotlin/joshxviii/plantz/integration/**` | Optional Iris, Vanilla Backport, Copper Age Backport and Backported Spears support (registry lookups with 1.21.1 fallbacks, so nothing links against the backports) |
 | `src/main/kotlin/joshxviii/plantz/client/GraveyardAmbience.kt` | The graveyard's 26.1 environment attributes (fog, clouds, sunrise, light) |
 | `src/main/resources/resourcepacks/{vanillabackport,copperagebackport}_compat` | Built-in data packs, each enabled only when its backport is installed (they override different files) |
-| `src/gametest/**` | Dev-only GameTests (not packaged), 142 tests covering plants, zombies, raids, blocks/items, protection and data |
+| `src/gametest/**` | Dev-only GameTests (not packaged), 148 tests covering plants, zombies, raids, blocks/items, protection and data |
 
 ## Entry points
 - `PazMain` (`@Mod`): wires NeoForge events. All `Paz*.initialize()` objects still register eagerly with
@@ -46,14 +46,19 @@ Mirrors 26.1 names and semantics, so upstream code ports with import changes:
   The baby armor uses `CompatModelLayers.ZOMBIE_BABY_ARMOR_26_1` (26.1 UVs) when its texture is there.
 - `client.OnShelfDisplay` + `META-INF/enumextensions.json` + `CopperShelfRendererMixin` (optional, `require = 0`): 26.1's
   `on_shelf` display context, used by Copper Age Backport's shelves.
-- Item blocking: 26.1's `BLOCKS_ATTACKS` (newspaper) is a 1.21.1 shield (`ItemAbilities.SHIELD_BLOCK`) whose 26.1 arc,
-  reduction, block sound and break chance come from `NewspaperItem.onShieldBlock` (NeoForge `LivingShieldBlockEvent`);
-  26.1's `applyItemBlocking` head protection (`plantz:protects_head`) is `LivingEntityProtectsHeadMixin`, on the damage
-  left after shield blocking in `LivingEntity.hurt`.
+- Item blocking: 26.1's `minecraft:blocks_attacks` is `item/component/BlocksAttacks` (`plantz:blocks_attacks`, set on the
+  newspaper, door shield and coffin). Held blockers are 1.21.1 shields (`ItemAbilities.SHIELD_BLOCK`) and the worn coffin
+  blocks through the same `BlocksAttacks.onShieldBlock` (NeoForge `LivingShieldBlockEvent`), which applies the arc,
+  reduction, block sound and break chance. 26.1's `applyItemBlocking` head protection (`plantz:protects_head`) is
+  `LivingEntityProtectsHeadMixin`, on the damage left after shield blocking in `LivingEntity.hurt`.
+- Raid saves: `CompletedWave.SAVE_CODEC` also reads the plain wave types older versions stored, so old worlds keep their raids.
+- Spawn eggs: 26.1's `TypedEntityData` is `CustomData` with an `id` (`item/EntityDataUtil.kt`); `ZombieSpawnEggs` writes
+  1.21.1's `ArmorItems`/`HandItems` and the variant ordinal as `custom_model_data` for the egg models' overrides.
 - Item models: 26.1 item definitions became 1.21.1 models with `overrides` on the predicates in
   `data/PazItemModelProperties` (26.1 `has_component` / `select` / `range_dispatch`); 26.1 `tints` are per-item color
   handlers there (dyed dye blaster, closed letter). `PlantIconItemModel` and `DoorShieldItemModel` are baked-model
-  wrappers for upstream's custom item model types (`plantz:plant_icon`, `plantz:door_shield_model`).
+  wrappers for upstream's custom item model types (`plantz:plant_icon`, `plantz:door_shield_model`). A `BakedModelWrapper`
+  passes `applyTransform` and `getRenderPasses` to the wrapped model, so a wrapper with its own quads overrides both.
 - `gui.LetterEditBox` + `MultiLineEditBoxMixin`: 26.1's `MultiLineEditBox.builder()` options (no frame, black text, line limit).
 - 26.1 per-item enchantability (`enchantable(n)`) is a `getEnchantmentValue` override; 26.1's carve loot table is rolled by
   `PumpkinBlockCarveMixin` (`plantz:injection/carve/pumpkin`, a `block_use` table).

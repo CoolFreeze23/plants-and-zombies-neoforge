@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceLocation
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.tags.TagKey
+import net.minecraft.world.InteractionHand
 import net.minecraft.world.DifficultyInstance
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.entity.*
@@ -24,39 +25,18 @@ class NewspaperZombie(type: EntityType<out NewspaperZombie>, level: Level) : Paz
         val ANGRY_BONUS_ID: ResourceLocation = pazResource("angry_zombie_bonus")
     }
 
-//    override fun getAmbientSound(): SoundEvent {// TODO: custom sounds
-//        return if (isAngry()) PazSounds.NEWSPAPER_ZOMBIE_AMBIENT else PazSounds.NEWSPAPER_ZOMBIE_AMBIENT
-//    }
-//    override fun getHurtSound(source: DamageSource): SoundEvent {
-//        return if (isAngry()) PazSounds.NEWSPAPER_ZOMBIE_HURT else PazSounds.NEWSPAPER_ZOMBIE_HURT
-//    }
-//    override fun getDeathSound(): SoundEvent {
-//        return if (isAngry()) PazSounds.NEWSPAPER_ZOMBIE_DEATH else PazSounds.NEWSPAPER_ZOMBIE_DEATH
-//    }
     override fun getStepSound(): SoundEvent {
         return SoundEvents.ZOMBIE_STEP
     }
 
     fun isAngry() : Boolean {
-        return !mainHandItem.`is`(PazItems.NEWSPAPER)
+        return !offhandItem.`is`(PazItems.NEWSPAPER)
     }
 
-    override fun equipmentHasChanged(previous: ItemStack, current: ItemStack): Boolean {
-        val hasChanged = super.equipmentHasChanged(previous, current)
-        updateNewspaper()
-        return hasChanged
-    }
-
-    fun updateNewspaper() {
-        if(mainHandItem.`is`(PazItems.NEWSPAPER)) {
-            this.startUsingItem(usedItemHand)
-            this.setLivingEntityFlag(LIVING_ENTITY_FLAG_IS_USING, true)
-            removeAngerBoost()
-        }
-        else {
-            this.setLivingEntityFlag(LIVING_ENTITY_FLAG_IS_USING, false)
-            applyAngerBoost()
-        }
+    override fun onEquipItem(slot: EquipmentSlot, oldStack: ItemStack, stack: ItemStack) {
+        super.onEquipItem(slot, oldStack, stack)
+        if(offhandItem.`is`(PazItems.NEWSPAPER)) removeAngerBoost()
+        else applyAngerBoost()
     }
 
     fun removeAngerBoost() {
@@ -80,7 +60,6 @@ class NewspaperZombie(type: EntityType<out NewspaperZombie>, level: Level) : Paz
     }
 
     override fun getPreferredWeaponType(): TagKey<Item> = PazTags.ItemTags.NEWSPAPER_ZOMBIE_PREFERRED_WEAPONS
-    override fun canPickUpLoot(): Boolean = true
 
     override fun finalizeSpawn(
         level: ServerLevelAccessor,
@@ -90,8 +69,10 @@ class NewspaperZombie(type: EntityType<out NewspaperZombie>, level: Level) : Paz
     ): SpawnGroupData? {
         val data = super.finalizeSpawn(level, difficulty, spawnReason, groupData)
 
-        setItemSlot(EquipmentSlot.MAINHAND, PazItems.NEWSPAPER.defaultInstance)
-        setDropChance(EquipmentSlot.MAINHAND, 0.0f)
+        if (getItemBySlot(EquipmentSlot.OFFHAND).isEmpty) {
+            setItemSlot(EquipmentSlot.OFFHAND, PazItems.NEWSPAPER.defaultInstance)
+            setDropChance(EquipmentSlot.OFFHAND, 0.0f)
+        }
         return data
     }
 }

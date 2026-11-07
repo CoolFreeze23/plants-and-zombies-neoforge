@@ -2,6 +2,7 @@ package joshxviii.plantz.mixin.client;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.mojang.blaze3d.vertex.PoseStack;
+import joshxviii.plantz.renderer.BodyBlockerRenderLayer;
 import joshxviii.plantz.renderer.DuckyTubeRenderLayer;
 import joshxviii.plantz.renderer.DyeVatRenderLayer;
 import joshxviii.plantz.renderer.SpecialEffectsLayer;
@@ -33,15 +34,18 @@ import static joshxviii.plantz.PazModels.*;
  * (players, vanilla mobs) gets the same from LivingEntityRendererVanillaMixin.
  */
 @Mixin(LivingEntityRenderer.class)
-public abstract class LivingEntityRendererMixin<T extends LivingEntity, S extends LivingEntityRenderState, M extends EntityModel<? super S>> implements RenderLayerParent<S, M> {
+abstract public class LivingEntityRendererMixin<T extends LivingEntity, S extends LivingEntityRenderState, M extends EntityModel<? super S>> implements RenderLayerParent<S, M> {
 
     @Shadow
     protected abstract boolean addLayer(RenderLayer<S, M> layer);
 
     @Inject(method = "<init>(Lnet/minecraft/client/renderer/entity/EntityRendererProvider$Context;Ljoshxviii/plantz/compat/client/model/EntityModel;F)V", at = @At("TAIL"))
     private void plantz$addDuckyTubeLayer(EntityRendererProvider.Context context, M model, float shadow, CallbackInfo ci) {
+        //TODO try to consolidate these into one render layer
         this.addLayer(new DuckyTubeRenderLayer<>(this));
         this.addLayer(new DyeVatRenderLayer<>(this));
+        this.addLayer(new BodyBlockerRenderLayer<>(this));
+
         this.addLayer(new SpecialEffectsLayer<>(this));
     }
 

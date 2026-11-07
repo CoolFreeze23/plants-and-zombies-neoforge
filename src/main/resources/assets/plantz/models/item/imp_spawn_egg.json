@@ -1,6 +1,17 @@
 {
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "plantz:item/imp_spawn_egg"
-  }
+  "parent": "plantz:item/spawn_egg/imp/imp",
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 1
+      },
+      "model": "plantz:item/spawn_egg/imp/yeti"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 2
+      },
+      "model": "plantz:item/spawn_egg/imp/pirate"
+    }
+  ]
 }

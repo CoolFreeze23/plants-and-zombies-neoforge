@@ -6,6 +6,8 @@ import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
 import joshxviii.plantz.compat.ARGB;
 import joshxviii.plantz.mixin.LivingEntityAccessor;
+import joshxviii.plantz.PazComponents;
+import joshxviii.plantz.renderer.VanillaBodyBlockerRenderLayer;
 import joshxviii.plantz.renderer.VanillaDuckyTubeRenderLayer;
 import joshxviii.plantz.renderer.VanillaDyeVatRenderLayer;
 import joshxviii.plantz.renderer.VanillaSpecialEffectsLayer;
@@ -16,6 +18,7 @@ import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -43,6 +46,7 @@ public abstract class LivingEntityRendererVanillaMixin<T extends LivingEntity, M
     private void plantz$addDuckyTubeLayer(EntityRendererProvider.Context context, M model, float shadowRadius, CallbackInfo ci) {
         this.addLayer(new VanillaDuckyTubeRenderLayer<>(this));
         this.addLayer(new VanillaDyeVatRenderLayer<>(this));
+        this.addLayer(new VanillaBodyBlockerRenderLayer<>(this));
         this.addLayer(new VanillaSpecialEffectsLayer<>(this));
     }
 
@@ -99,6 +103,11 @@ public abstract class LivingEntityRendererVanillaMixin<T extends LivingEntity, M
             plantz$yRot = yRot;
             plantz$xRot = xRot;
             plantz$hasPreviousState = true;
+        }
+        // a worn coffin holds the head straight
+        if (entity instanceof LivingEntity living && living.getItemBySlot(EquipmentSlot.CHEST).has(PazComponents.WORN_BODY_BLOCKER)) {
+            yRot = 0.0F;
+            xRot = living.isCrouching() ? 25.0F : 0.0F;
         }
         original.call(model, entity, walkPos, walkSpeed, ageInTicks, yRot, xRot);
     }

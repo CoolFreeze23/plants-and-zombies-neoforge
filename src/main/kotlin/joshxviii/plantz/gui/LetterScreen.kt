@@ -25,8 +25,8 @@ class LetterScreen(
     title: Component = Component.translatable("gui.plantz.letter")
 ) : AbstractContainerScreen<LetterMenu>(menu, inventory, title) { // 26.1 passed MENU_WIDTH, MENU_HEIGHT here
     companion object {
-        private const val TEXT_WIDTH = 176
-        private const val TEXT_HEIGHT = 133
+        private const val TEXT_WIDTH = 148
+        private const val TEXT_HEIGHT = 102
         private const val LETTER_WIDTH = 185
         private const val LETTER_HEIGHT = 133
         private const val BACKGROUND_TEXTURE_SIZE = 256
@@ -71,7 +71,7 @@ class LetterScreen(
         if (editable) {
             if (pages.isEmpty()) pages.add("")
             // 26.1 MultiLineEditBox.builder(): no decorations or background, black text and cursor without shadow, setLineLimit
-            pageEditor = LetterEditBox(font, backgroundLeft() + 4, topPos + 4, TEXT_WIDTH, TEXT_HEIGHT - 32, TEXT_COLOR, 126 / 9)
+            pageEditor = LetterEditBox(font, textLeft(), textTop(), TEXT_WIDTH, TEXT_HEIGHT, TEXT_COLOR, TEXT_HEIGHT / 10)
             pageEditor.setCharacterLimit(1024)
             pageEditor.setValueListener { value -> pages[0] = value }
             addRenderableWidget(pageEditor)
@@ -151,15 +151,13 @@ class LetterScreen(
 
     override fun render(graphics: GuiGraphics, mouseX: Int, mouseY: Int, a: Float) {
         super.render(graphics, mouseX, mouseY, a)
-        // 26.1 textRenderer().accept(TextAlignment.RIGHT, ...)
-        graphics.drawString(font, pageNumber, leftPos + LETTER_WIDTH - 5 - font.width(pageNumber), topPos, -1)
 
         if (!editable) {
             val page = (pageComponents.firstOrNull() ?: CommonComponents.EMPTY).copy()
             page.withStyle(Style.EMPTY.withFont(originalData.font.getFont()))
-            val lines = font.split(page, TEXT_WIDTH)
-            for (index in 0 until minOf(126 / 9, lines.size)) {
-                graphics.drawString(font, lines[index], backgroundLeft() + 8, topPos + 8 + index * 9, TEXT_COLOR, false)
+            val lines = font.split(page, TEXT_WIDTH - 2)
+            for (index in 0 until minOf(TEXT_HEIGHT / 10, lines.size)) {
+                graphics.drawString(font, lines[index], textLeft() + 4, textTop() + 4 + index * 9, TEXT_COLOR, false)
             }
         }
         renderTooltip(graphics, mouseX, mouseY)
@@ -228,6 +226,9 @@ class LetterScreen(
         "gui.plantz.letter.background", Component.translatable(selectedBackground.translationKey)
     )
 
-    fun backgroundLeft() = if (editable) leftPos else (width - 187) / 2
+    fun backgroundLeft() = if (editable) leftPos else (width - LETTER_WIDTH) / 2
     fun backgroundTop() = topPos
+
+    fun textLeft() = backgroundLeft() - (TEXT_WIDTH - LETTER_WIDTH) / 2
+    fun textTop() = topPos + 10
 }

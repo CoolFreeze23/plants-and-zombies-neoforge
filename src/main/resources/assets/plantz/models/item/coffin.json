@@ -1,0 +1,15 @@
+{
+  "loader": "neoforge:separate_transforms",
+  "gui_light": "front",
+  "textures": {
+    "particle": "plantz:item/coffin"
+  },
+  "base": {
+    "parent": "plantz:item/coffin_flat"
+  },
+  "perspectives": {
+    "head": {
+      "parent": "plantz:block/coffin"
+    }
+  }
+}

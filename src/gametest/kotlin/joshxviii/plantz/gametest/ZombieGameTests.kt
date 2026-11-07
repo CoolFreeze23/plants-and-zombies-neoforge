@@ -1,5 +1,14 @@
 package joshxviii.plantz.gametest
 
+import net.minecraft.world.item.SpawnEggItem
+import net.minecraft.world.entity.Mob
+import net.minecraft.core.component.DataComponents
+import joshxviii.plantz.item.ZombieSpawnEggs
+import net.minecraft.nbt.StringTag
+import net.minecraft.nbt.NbtOps
+import net.minecraft.nbt.ListTag
+import joshxviii.plantz.entity.zombie.RoboZombieVariant
+import joshxviii.plantz.raid.CompletedWave
 import joshxviii.plantz.raid.WaveType
 import joshxviii.plantz.raid.BossType
 import kotlin.math.sin
@@ -10,8 +19,8 @@ import joshxviii.plantz.PazDamageTypes
 import joshxviii.plantz.PazEffects
 import joshxviii.plantz.PazEntities
 import joshxviii.plantz.PazItems
-import joshxviii.plantz.GardenHeroRewards
-import joshxviii.plantz.entity.ZombieRaider
+import joshxviii.plantz.raid.GardenHeroRewards
+import joshxviii.plantz.raid.ZombieRaider
 import joshxviii.plantz.ai.ZombieState
 import joshxviii.plantz.entity.projectile.Missile
 import joshxviii.plantz.entity.projectile.PaintBall
@@ -89,13 +98,13 @@ object ZombieGameTests {
     @GameTest(template = PLATFORM, timeoutTicks = 100)
     fun newspaperZombieRagesWithoutPaper(helper: GameTestHelper) {
         val zombie = helper.spawnWithNoFreeWill(PazEntities.NEWSPAPER_ZOMBIE, 7, 1, 7)
-        zombie.setItemSlot(EquipmentSlot.MAINHAND, PazItems.NEWSPAPER.defaultInstance)
+        zombie.setItemSlot(EquipmentSlot.OFFHAND, PazItems.NEWSPAPER.defaultInstance)
         val speed = zombie.getAttribute(Attributes.MOVEMENT_SPEED)!!
         helper.startSequence()
             .thenExecuteAfter(5) {
                 helper.assertFalse(zombie.isAngry(), "calm zombie reads as angry")
                 helper.assertFalse(speed.hasModifier(NewspaperZombie.ANGRY_BONUS_ID), "calm zombie has the anger bonus")
-                zombie.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY)
+                zombie.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY)
             }
             .thenWaitUntil {
                 helper.assertTrue(zombie.isAngry(), "zombie is not angry")
@@ -149,7 +158,7 @@ object ZombieGameTests {
         val disco = helper.spawn(PazEntities.DISCO_ZOMBIE, 5, 1, 7).targeting(villager)
         disco.isNoAi = true
         disco.isAggressive = true
-        val summon = disco.goal("SummonBackupGoal")
+        val summon = disco.goal("SummonMinionsGoal")
         helper.assertTrue(summon.canUse(), "summon goal not usable while fighting")
         for (i in 0..<200) {
             summon.tick()
@@ -333,7 +342,7 @@ object ZombieGameTests {
         captain.addEffect(MobEffectInstance(MobEffects.GLOWING, MobEffectInstance.INFINITE_DURATION))
         captain.addTag("plantz_test")
         val position = captain.position()
-        captain.kill()
+        captain.hurt(captain.damageSources().generic(), Float.MAX_VALUE)
         helper.succeedWhenThenClean {
             helper.assertTrue(captain.isRemoved, "captain was not removed")
             val ghosts = helper.entitiesNearby(PirateCaptainGhost::class.java, 32.0)
@@ -367,7 +376,7 @@ object ZombieGameTests {
     fun zombieLeaderSpawnsAtFullHealth(helper: GameTestHelper) {
         val zombie = helper.spawnWithNoFreeWill(PazEntities.BROWN_COAT, 7, 1, 7)
         zombie.getAttribute(Attributes.MAX_HEALTH)!!.addPermanentModifier(
-            AttributeModifier(ResourceLocation.withDefaultNamespace(PazZombie.LEADER_MODIFIER_ID), 1.0, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL)
+            AttributeModifier(PazZombie.LEADER_MODIFIER_ID, 1.0, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL)
         )
         helper.assertTrue(zombie.health < zombie.maxHealth, "leader already at full health")
         zombie.finalizeSpawn(helper.level, helper.level.getCurrentDifficultyAt(zombie.blockPosition()), MobSpawnType.EVENT, null)
@@ -532,12 +541,7 @@ object ZombieGameTests {
         val player = helper.makeModMockServerPlayer(Vec3(3.5, 1.0, 3.5))
         player.addEffect(MobEffectInstance(PazEffects.ZOMBIE_OMEN, 2000, 0))
 
-        val raid = level.getZombieRaids().createOrExtendZombieRaid(player, flagPos)
-        helper.assertTrue(raid != null, "raid did not start")
-        raid!!
-        helper.assertTrue(raid.zombieRaidOmenLevel == 1f, "omen not absorbed")
-        helper.assertTrue(raid.startedBy == player.uuid && !raid.starterHasSeenCredits, "wrong raid starter state")
-        helper.assertTrue(raid.zombieRaidEvent.players.contains(player), "player not in the raid")
+        var startedRaid: ZombieRaid? = null
 
         val wavesSeen = mutableSetOf<Int>()
         var fireworkSeen = false
@@ -545,6 +549,16 @@ object ZombieGameTests {
         fun raiders() = level.getEntitiesOfClass(Zombie::class.java, AABB(flagPos).inflate(ZombieRaid.SPAWN_DISTANCE * 2.0)) { (it as ZombieRaider).`plantz$getIsFromRaid`() }
 
         helper.succeedWhen {
+            // the flag's POI registers on the next tick
+            val raid = startedRaid ?: run {
+                val started = level.getZombieRaids().createOrExtendZombieRaid(player)
+                helper.assertTrue(started != null, "raid did not start")
+                helper.assertTrue(started!!.zombieRaidOmenLevel == 1f, "omen not absorbed")
+                helper.assertTrue(started.startedBy == player.uuid && !started.starterHasSeenCredits, "wrong raid starter state")
+                helper.assertTrue(started.zombieRaidEvent.players.contains(player), "player not in the raid")
+                startedRaid = started
+                started
+            }
             if (raid.status != ZombieRaid.ZombieRaidStatus.VICTORY && raid.status != ZombieRaid.ZombieRaidStatus.STOPPED) {
                 val raiders = raiders()
                 if (raiders.isNotEmpty() && raid.currentWaveNumber() > 0) wavesSeen += raid.currentWaveNumber()
@@ -556,11 +570,11 @@ object ZombieGameTests {
             helper.assertTrue(raid.isStopped(), "raid still running (status ${raid.status}, wave ${raid.currentWaveNumber()}/${raid.numWaves})")
 
             helper.assertTrue(wavesSeen == (1..raid.numWaves).toSet(), "waves seen $wavesSeen of ${raid.numWaves}")
-            helper.assertTrue(raid.waveTypes.size == raid.numWaves, "wave types not recorded")
+            helper.assertTrue(raid.waves.size == raid.numWaves, "wave types not recorded")
             helper.assertTrue(fireworkSeen, "no victory fireworks")
             val hero = player.getEffect(PazEffects.GARDEN_HERO)
             helper.assertTrue(hero != null && hero.amplifier == raid.numWaves - 1, "no hero of the garden reward")
-            helper.assertTrue((player as GardenHeroRewards).`plantz$getWaveList`() == raid.waveTypes, "reward wave list not stored")
+            helper.assertTrue((player as GardenHeroRewards).`plantz$getWaveList`().map { it.type to it.boss } == raid.waves.map { it.type to it.boss }, "reward wave list not stored")
             helper.assertTrue(level.getZombieRaids().getNearbyRaid(flagPos, 16) == null, "finished raid still registered")
             helper.assertBlockPresent(PazBlocks.PLANTZ_FLAG, BlockPos(7, 1, 7))
 
@@ -572,39 +586,87 @@ object ZombieGameTests {
 
     // ---- bats and bosses
 
-    /** Zombie bats spawn flying and stay up without gravity; Baron von Bats spawns as a zombie. */
+    /** Zombats spawn flying and stay up without gravity; Baron von Bats spawns as a zombie. */
     @JvmStatic
     @GameTest(template = PLATFORM, timeoutTicks = 60)
-    fun zombieBatsFly(helper: GameTestHelper) {
-        val bat = PazEntities.ZOMBIE_BAT.spawn(helper.level, helper.absolutePos(BlockPos(7, 4, 7)), MobSpawnType.MOB_SUMMONED)
+    fun zombatsFly(helper: GameTestHelper) {
+        val bat = PazEntities.ZOMBAT.spawn(helper.level, helper.absolutePos(BlockPos(7, 4, 7)), MobSpawnType.MOB_SUMMONED)
         val baron = PazEntities.BARON_VON_BATS.spawn(helper.level, helper.absolutePos(BlockPos(3, 2, 3)), MobSpawnType.MOB_SUMMONED)
         helper.assertTrue(bat != null && baron != null, "bats did not spawn")
         val startY = bat!!.y
         helper.runAfterDelay(20) {
-            helper.assertTrue(bat.isFlying && bat.isNoGravity, "zombie bat is not flying")
-            helper.assertTrue(bat.y > startY - 1.0, "zombie bat fell from $startY to ${bat.y}")
+            helper.assertTrue(bat.isFlying && bat.isNoGravity, "zombat is not flying")
+            // it hovers down to its flying height, above the ground
+            helper.assertTrue(!bat.onGround(), "zombat fell from $startY to ${bat.y}")
             helper.assertTrue(baron!!.isAlive, "baron von bats died")
             helper.discardEntities()
             helper.succeed()
         }
     }
 
-    /** Bosses by wave: robo army waves can get the robo mech, other waves never; bossify scales the zombie up once. */
+    /** Bosses by wave: the Robo-General needs wave 10 and a default or robo army wave; bossify scales a zombie up once and makes its giant variant. */
     @JvmStatic
     @GameTest(template = PLATFORM)
     fun raidBossTypes(helper: GameTestHelper) {
-        val raid = ZombieRaid(BlockPos.ZERO)
-        val robo = (1..300).map { BossType.pickBossType(raid, WaveType.ROBO_ARMY) }.toSet()
-        val default = (1..300).map { BossType.pickBossType(raid, WaveType.DEFAULT) }.toSet()
-        helper.assertTrue(BossType.ROBO_MECH in robo && BossType.ZOMBOSS !in robo, "robo army bosses $robo")
-        helper.assertTrue(BossType.ROBO_MECH !in default && BossType.ZOMBOSS !in default && BossType.GARGANTUAR in default, "default wave bosses $default")
+        fun raidAtWave(wave: Int) = ZombieRaid(BlockPos.ZERO, waves = MutableList(wave) { CompletedWave(WaveType.DEFAULT) })
+        fun picks(wave: Int, type: WaveType) = (1..300).map { BossType.pickBossType(raidAtWave(wave), type) }.toSet()
+        helper.assertTrue(BossType.ROBO_GENERAL in picks(15, WaveType.ROBO_ARMY), "robo army bosses at wave 15")
+        helper.assertTrue(BossType.ROBO_GENERAL !in picks(5, WaveType.ROBO_ARMY), "robo general before wave 10")
+        helper.assertTrue(BossType.ZOMBOSS !in picks(15, WaveType.DEFAULT), "zomboss on a default wave")
 
         val zombie = helper.spawnWithNoFreeWill(PazEntities.ROBO_ZOMBIE, 7, 2, 7)
         val health = zombie.maxHealth
         BossType.bossify(zombie)
         BossType.bossify(zombie)
-        helper.assertTrue(zombie.maxHealth == health * 4 && zombie.getAttributeValue(Attributes.SCALE) == 2.0, "bossified: ${zombie.maxHealth}, scale ${zombie.getAttributeValue(Attributes.SCALE)}")
+        helper.assertTrue(zombie.maxHealth == health * 3.25f && zombie.health == zombie.maxHealth, "bossified health: ${zombie.maxHealth}")
+        helper.assertTrue(zombie.variant == RoboZombieVariant.GENERAL && zombie.isTransformed, "not a robo general")
         helper.discardEntities()
+        helper.succeed()
+    }
+
+    /** Raids saved before waves had details (plain wave type names, no boss health) still load, so old worlds keep their raids. */
+    @JvmStatic
+    @GameTest(template = PLATFORM)
+    fun oldRaidSavesLoad(helper: GameTestHelper) {
+        val tag = CompoundTag().apply {
+            putIntArray("center", intArrayOf(1, 2, 3))
+            putLong("ticks_active", 500L)
+            putInt("raid_omen_level", 2)
+            put("wave_types", ListTag().apply { add(StringTag.valueOf(WaveType.DEFAULT.serializedName)); add(StringTag.valueOf(WaveType.ROBO_ARMY.serializedName)) })
+            putInt("cooldown_ticks", 100)
+            putInt("post_raid_ticks", 0)
+            putFloat("total_health", 40f)
+            putInt("wave_count", 6)
+            putInt("wave_timer", 300)
+            putString("status", ZombieRaid.ZombieRaidStatus.ONGOING.serializedName)
+        }
+        val raid = ZombieRaid.MAP_CODEC.codec().parse(NbtOps.INSTANCE, tag).getOrThrow()
+        helper.assertTrue(raid.waves.map { it.type } == listOf(WaveType.DEFAULT, WaveType.ROBO_ARMY), "old waves ${raid.waves}")
+        helper.assertTrue(raid.totalBossHealth == 0f && raid.zombieRaidOmenLevel == 2f && raid.numWaves == 6, "old raid fields")
+        // and what loads saves again in the new format
+        val saved = ZombieRaid.MAP_CODEC.codec().encodeStart(NbtOps.INSTANCE, raid).getOrThrow()
+        helper.assertTrue(ZombieRaid.MAP_CODEC.codec().parse(NbtOps.INSTANCE, saved).getOrThrow().waves == raid.waves, "new format round trip")
+        helper.succeed()
+    }
+
+    /** Every variant and loadout egg in the creative tab spawns what it says. */
+    @JvmStatic
+    @GameTest(template = PLATFORM)
+    fun spawnEggVariantsAndLoadouts(helper: GameTestHelper) {
+        fun spawnFrom(egg: ItemStack) = (egg.item as SpawnEggItem).getType(egg)
+            .spawn(helper.level, egg, null, helper.absolutePos(BlockPos(7, 2, 7)), MobSpawnType.SPAWN_EGG, true, false) as Mob
+        val variantEggs = ZombieSpawnEggs.brownCoat() + ZombieSpawnEggs.imp() + ZombieSpawnEggs.gargantuar() +
+            ZombieSpawnEggs.superBrainz() + ZombieSpawnEggs.allStar() + ZombieSpawnEggs.roboZombie()
+        for (egg in variantEggs) {
+            val data = egg.get(DataComponents.ENTITY_DATA)!!.copyTag()
+            val mob = spawnFrom(egg)
+            if (data.contains("variant")) helper.assertTrue(mob.saveWithoutId(CompoundTag()).getString("variant") == data.getString("variant"), "${egg.hoverName.string} spawned ${mob.saveWithoutId(CompoundTag()).getString("variant")}")
+            mob.discard()
+        }
+        val full = spawnFrom(ZombieSpawnEggs.loadoutEggs(PazEntities.BROWN_COAT, PazItems.BROWN_COAT_SPAWN_EGG, ZombieSpawnEggs.BROWN_COAT_LOADOUTS.filter { it.id == "full" }).single())
+        helper.assertTrue(full.getItemBySlot(EquipmentSlot.HEAD).`is`(PazBlocks.CONE.asItem()) && full.getItemBySlot(EquipmentSlot.CHEST).`is`(PazItems.COFFIN) &&
+            full.getItemBySlot(EquipmentSlot.OFFHAND).`is`(PazItems.DOOR_SHIELD), "full loadout: ${full.getItemBySlot(EquipmentSlot.HEAD)} ${full.getItemBySlot(EquipmentSlot.CHEST)} ${full.getItemBySlot(EquipmentSlot.OFFHAND)}")
+        full.discard()
         helper.succeed()
     }
 }

@@ -1,6 +1,7 @@
 package joshxviii.plantz
 
 import joshxviii.plantz.compat.client.BucketHelmet
+import joshxviii.plantz.item.model.PlantIconItemModel
 import joshxviii.plantz.model.BalloonModel
 import joshxviii.plantz.model.FlagBlockModel
 import joshxviii.plantz.model.GnomeArmorModel
@@ -74,6 +75,7 @@ object PazModels {
     fun registerAdditionalModels(event: ModelEvent.RegisterAdditional) {
         PlantIconItemModel.registerAdditionalModels(event)
         BucketHelmet.registerModel(event)
+        DoorShieldItemModel.registerAdditionalModels(event)
     }
 
     // 26.1 registered the plant_icon and door_shield_model item model types (ItemModels.ID_MAPPER)
@@ -90,6 +92,7 @@ object PazModels {
         // REGISTER MODELS
         event.registerLayerDefinition(PeaShooterModel.LAYER_LOCATION) { PeaShooterModel.createBodyLayer() }
         event.registerLayerDefinition(SunflowerModel.LAYER_LOCATION) { SunflowerModel.createBodyLayer() }
+        event.registerLayerDefinition(MarigoldModel.LAYER_LOCATION) { MarigoldModel.createBodyLayer() }
         event.registerLayerDefinition(WallNutModel.LAYER_LOCATION) { WallNutModel.createBodyLayer() }
         event.registerLayerDefinition(ChomperModel.LAYER_LOCATION) { ChomperModel.createBodyLayer() }
         event.registerLayerDefinition(CherryBombModel.LAYER_LOCATION) { CherryBombModel.createBodyLayer() }
@@ -142,9 +145,10 @@ object PazModels {
         event.registerLayerDefinition(RoboZombieModel.LAYER_LOCATION) { RoboZombieModel.createBodyLayer() }
         event.registerLayerDefinition(SuperBrainzModel.LAYER_LOCATION) { SuperBrainzModel.createBodyLayer() }
         event.registerLayerDefinition(ImpModel.LAYER_LOCATION) { ImpModel.createBodyLayer() }
-        event.registerLayerDefinition(ZombieBatModel.LAYER_LOCATION) { ZombieBatModel.createBodyLayer() }
-        event.registerLayerDefinition(BaronVonBatsModel.LAYER_LOCATION) { BaronVonBatsModel.createBodyLayer() }
         event.registerLayerDefinition(GargantuarModel.LAYER_LOCATION) { GargantuarModel.createBodyLayer() }
+        event.registerLayerDefinition(BaronVonBatsModel.LAYER_LOCATION) { BaronVonBatsModel.createBodyLayer() }
+        event.registerLayerDefinition(ZombatModel.LAYER_LOCATION) { ZombatModel.createBodyLayer() }
+        event.registerLayerDefinition(ZombieGoatModel.LAYER_LOCATION) { ZombieGoatModel.createBodyLayer() }
 
         event.registerLayerDefinition(ZombieTurretModel.LAYER_LOCATION) { ZombieTurretModel.createBodyLayer() }
         event.registerLayerDefinition(ElectroTurretModel.LAYER_LOCATION) { ElectroTurretModel.createBodyLayer() }
@@ -166,6 +170,7 @@ object PazModels {
         // REGISTER ENTITY RENDERERS
         event.registerEntityRenderer(PazEntities.PEA_SHOOTER) { PlantRenderer(PeaShooterModel(it.bakeLayer(PeaShooterModel.LAYER_LOCATION)), it) }
         event.registerEntityRenderer(PazEntities.SUNFLOWER) { PlantRenderer(SunflowerModel(it.bakeLayer(SunflowerModel.LAYER_LOCATION)), it) }
+        event.registerEntityRenderer(PazEntities.MARIGOLD) { PlantRenderer(MarigoldModel(it.bakeLayer(MarigoldModel.LAYER_LOCATION)), it) }
         event.registerEntityRenderer(PazEntities.WALL_NUT) { WallNutRenderer(it) }
         event.registerEntityRenderer(PazEntities.EXPLODE_O_NUT) { WallNutRenderer(it) }
         event.registerEntityRenderer(PazEntities.CHOMPER) { PlantRenderer(ChomperModel(it.bakeLayer(ChomperModel.LAYER_LOCATION)), it) }
@@ -217,7 +222,7 @@ object PazModels {
         event.registerEntityRenderer(PazEntities.NEWSPAPER_ZOMBIE) { PazZombieRenderer(it) }
         event.registerEntityRenderer(PazEntities.DIGGER_ZOMBIE) { DiggerZombieRenderer(it) }
         event.registerEntityRenderer(PazEntities.ENGINEER_ZOMBIE) { PazZombieRenderer(it, EngineerZombieModel(it.bakeLayer(EngineerZombieModel.LAYER_LOCATION))) }
-        event.registerEntityRenderer(PazEntities.ZOMBIE_YETI) { ZombieYetiRenderer(it) }
+        event.registerEntityRenderer(PazEntities.ZOMBIE_YETI) { PazZombieRenderer(it, ZombieYetiModel(it.bakeLayer(ZombieYetiModel.LAYER_LOCATION))) }
         event.registerEntityRenderer(PazEntities.BACKUP_DANCER) { PazZombieRenderer(it, DiscoZombieModel(it.bakeLayer(DiscoZombieModel.LAYER_LOCATION))) }
         event.registerEntityRenderer(PazEntities.DISCO_ZOMBIE) { PazZombieRenderer(it, DiscoZombieModel(it.bakeLayer(DiscoZombieModel.LAYER_LOCATION))) }
         event.registerEntityRenderer(PazEntities.ALL_STAR) { PazZombieRenderer(it, AllStarModel(it.bakeLayer(AllStarModel.LAYER_LOCATION)), AllStarModel(it.bakeLayer(AllStarModel.LAYER_LOCATION))) }
@@ -229,8 +234,9 @@ object PazModels {
         event.registerEntityRenderer(PazEntities.SUPER_BRAINZ) { SuperBrainzRenderer(it) }
         event.registerEntityRenderer(PazEntities.IMP) { PazZombieRenderer(it, ImpModel(it.bakeLayer(ImpModel.LAYER_LOCATION)), ImpModel(it.bakeLayer(ImpModel.LAYER_LOCATION))) }
         event.registerEntityRenderer(PazEntities.GARGANTUAR) { GargantuarRenderer(it) }
-        event.registerEntityRenderer(PazEntities.ZOMBIE_BAT) { ZombieBatRenderer(it) }
-        event.registerEntityRenderer(PazEntities.BARON_VON_BATS) { PazZombieRenderer(it, BaronVonBatsModel(it.bakeLayer(BaronVonBatsModel.LAYER_LOCATION))) }
+        event.registerEntityRenderer(PazEntities.BARON_VON_BATS) { BaronVonBatsRenderer(it) }
+        event.registerEntityRenderer(PazEntities.ZOMBAT) { ZombatRenderer(it) }
+        event.registerEntityRenderer(PazEntities.ZOMBIE_GOAT) { ZombieGoatRenderer(it) }
 
         event.registerEntityRenderer(PazEntities.ZOMBIE_TURRET) { BlueprintMachineRenderer(it) }
         event.registerEntityRenderer(PazEntities.ELECTRO_TURRET) { BlueprintMachineRenderer(it, ElectroTurretModel(it.bakeLayer(ElectroTurretModel.LAYER_LOCATION))) }

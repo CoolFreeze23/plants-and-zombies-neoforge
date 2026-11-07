@@ -1,21 +1,18 @@
 package joshxviii.plantz.item
 
+import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionResultHolder
 import joshxviii.plantz.PlantHeadAttachment
 import joshxviii.plantz.PazEnchantments
-import joshxviii.plantz.PazItems
 import joshxviii.plantz.applyImpulse
-import joshxviii.plantz.entity.plant.Plant
 import joshxviii.plantz.entity.plant.WallNut
+import joshxviii.plantz.pazResource
 import joshxviii.plantz.removeItemFromInventory
 import net.minecraft.ChatFormatting
-import net.minecraft.core.BlockPos
-import net.minecraft.core.Direction
 import net.minecraft.core.component.DataComponents
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.sounds.SoundEvents
-import net.minecraft.sounds.SoundSource
 import net.minecraft.tags.BlockTags
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
@@ -34,7 +31,6 @@ import net.minecraft.world.item.enchantment.ItemEnchantments
 import net.minecraft.world.level.block.CropBlock
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.BlockHitResult
-import net.minecraft.world.level.block.entity.BeaconBlockEntity.playSound
 
 class GardeningGloveItem(properties: Properties) : Item(properties) {
 
@@ -46,11 +42,11 @@ class GardeningGloveItem(properties: Properties) : Item(properties) {
             )
         }
 
-        fun addToTooltip(consumer: MutableList<Component>, components: ItemStack, shiftKey: Component) {
+        fun addToTooltip(consumer: MutableList<Component>, components: ItemStack) {
             val data = components.entityDataType()
 
             if (data == null) {
-                consumer.add(1, Component.translatable("item.plantz.gardening_glove.description", shiftKey)
+                consumer.add(1, Component.translatable("item.plantz.gardening_glove.description")
                     .withStyle(ChatFormatting.DARK_GRAY).withStyle(ChatFormatting.ITALIC))
                 return
             }
@@ -95,7 +91,6 @@ class GardeningGloveItem(properties: Properties) : Item(properties) {
 
     // 26.1 Tool(canDestroyBlocksInCreative = false)
     override fun canAttackBlock(state: BlockState, level: Level, pos: BlockPos, player: Player): Boolean = !player.abilities.instabuild
-
     override fun useOn(context: UseOnContext): InteractionResult {
         val stack = context.itemInHand
         val level = context.level
@@ -149,22 +144,23 @@ class GardeningGloveItem(properties: Properties) : Item(properties) {
     }
 
     override fun use(level: Level, player: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        if (player.getItemInHand(hand).has(DataComponents.ENTITY_DATA)) player.startUsingItem(hand)
+        val item = player.getItemInHand(hand)
+        val hasLobbing = item.enchantments.keySet().any { it.`is`(pazResource("lobbing")) }
+        if (item.has(DataComponents.ENTITY_DATA) && hasLobbing) player.startUsingItem(hand)
         return super.use(level, player, hand)
     }
 
-    // 26.1 ticks onUseTick even for a 0 tick use (until released); 1.21.1 only while ticks remain
-    override fun getUseDuration(itemStack: ItemStack, user: LivingEntity): Int = 72000
-
+    // 26.1 ticks onUseTick even for a 0 tick use; 1.21.1 only while ticks remain, so this use lasts its one tick
+    override fun getUseDuration(itemStack: ItemStack, user: LivingEntity): Int = 1
     override fun onUseTick(level: Level, livingEntity: LivingEntity, itemStack: ItemStack, ticksRemaining: Int) {
-        super.onUseTick(level, livingEntity, itemStack, ticksRemaining)
+        if (ticksRemaining>1) return
         if (level.isClientSide || livingEntity !is Player) return
 
         val stack = livingEntity.getItemInHand(livingEntity.usedItemHand)
         val plantData = stack.get(DataComponents.ENTITY_DATA) ?: return
-        val lobbingLevel = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY)
+        val lobbingLevel = stack.enchantments
             .entrySet()
-            .firstOrNull { it.key.value().effects().has(PazEnchantments.LOB_PLANT) }
+            .firstOrNull { it.key.value().effects().has(PazEnchantments.LOBBING) }
             ?.intValue ?: 0
         if (lobbingLevel == 0) return
 

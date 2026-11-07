@@ -3,9 +3,9 @@ package joshxviii.plantz.mixin;
 import joshxviii.plantz.*;
 import joshxviii.plantz.compat.ValueInput;
 import joshxviii.plantz.compat.ValueOutput;
-import joshxviii.plantz.entity.ZombieRaider;
 import joshxviii.plantz.entity.zombie.PazZombie;
 import net.minecraft.nbt.CompoundTag;
+import joshxviii.plantz.raid.ZombieRaider;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -40,6 +40,8 @@ public class ZombieMixin implements ZombieRaider {
     static private final EntityDataAccessor<Boolean> IS_LEADER  = SynchedEntityData.defineId(Zombie.class, EntityDataSerializers.BOOLEAN);
     @Unique
     static private final EntityDataAccessor<Boolean> IS_BOSS  = SynchedEntityData.defineId(Zombie.class, EntityDataSerializers.BOOLEAN);
+    @Unique
+    static private final EntityDataAccessor<Boolean> IGNORE_FLAG  = SynchedEntityData.defineId(Zombie.class, EntityDataSerializers.BOOLEAN);
 
     @Override
     public boolean plantz$getIsFromRaid() {
@@ -81,12 +83,23 @@ public class ZombieMixin implements ZombieRaider {
         ((Entity) (Object) this).getEntityData().set(IS_BOSS, value);
     }
 
+    @Override
+    public boolean plantz$getIgnoreFlag() {
+        return ((Entity) (Object) this).getEntityData().get(IGNORE_FLAG);
+    }
+
+    @Override
+    public void plantz$setIgnoreFlag(boolean value) {
+        ((Entity) (Object) this).getEntityData().set(IGNORE_FLAG, value);
+    }
+
     @Inject(method = "defineSynchedData", at = @At("TAIL"))
     public void syncedData(SynchedEntityData.Builder entityData, CallbackInfo ci) {
         entityData.define(IS_FROM_RAID, false);
         entityData.define(ADDS_HEALTH_TO_RAID, true);
         entityData.define(IS_LEADER, false);
         entityData.define(IS_BOSS, false);
+        entityData.define(IGNORE_FLAG, false);
     }
 
     @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
@@ -96,6 +109,7 @@ public class ZombieMixin implements ZombieRaider {
         output.putBoolean("plantz:AddsHealthToRaid", this.plantz$getAddsHealthToRaid());
         output.putBoolean("plantz:IsLeader", this.plantz$getIsLeader());
         output.putBoolean("plantz:IsBoss", this.plantz$getIsBoss());
+        output.putBoolean("plantz:IgnoreFlag", this.plantz$getIgnoreFlag());
     }
 
     @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
@@ -105,6 +119,7 @@ public class ZombieMixin implements ZombieRaider {
         this.plantz$setAddsHealthToRaid(input.getBooleanOr("plantz:AddsHealthToRaid", true));
         this.plantz$setIsLeader(input.getBooleanOr("plantz:IsLeader", false));
         this.plantz$setIsBoss(input.getBooleanOr("plantz:IsBoss", false));
+        this.plantz$setIgnoreFlag(input.getBooleanOr("plantz:IgnoreFlag", false));
     }
 
     // 26.1 hurtServer -> 1.21.1 hurt (Zombie.hurt calls super.hurt(source, amount) first)
@@ -135,7 +150,10 @@ public class ZombieMixin implements ZombieRaider {
         if (spawnReason == MobSpawnType.REINFORCEMENT || spawnReason == MobSpawnType.EVENT) return;
 
         Zombie entity = (Zombie) (Object) this;
-        if (!entity.getType().is(PazTags.EntityTypes.CAN_BE_LEADER)) return;
+        if (!entity.getType().is(PazTags.EntityTypes.CAN_BE_LEADER)) {
+            PazZombie.Companion.removeLeaderModifiers(entity);
+            return;
+        }
 
         boolean isBornLeader = PazZombie.Companion.isBornLeader(entity);
         boolean bonusPromotionChance = level.getRandom().nextFloat() < BONUS_LEADER_CHANCE;

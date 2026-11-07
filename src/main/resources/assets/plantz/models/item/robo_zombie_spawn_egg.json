@@ -1,6 +1,11 @@
 {
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "plantz:item/robo_zombie_spawn_egg"
-  }
+  "parent": "plantz:item/spawn_egg/robo_zombie/robo_zombie",
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 1
+      },
+      "model": "plantz:item/spawn_egg/robo_zombie/general"
+    }
+  ]
 }

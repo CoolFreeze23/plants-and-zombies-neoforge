@@ -4,7 +4,6 @@ import joshxviii.plantz.renderer.ModelCompatUtils;
 import joshxviii.plantz.animation.zombies.ZombieYetiAnimation;
 import joshxviii.plantz.renderer.entity.zombie.PazZombieRenderState;
 import joshxviii.plantz.compat.client.animation.KeyframeAnimation;
-import joshxviii.plantz.renderer.entity.zombie.ZombieYetiRenderState;
 import net.minecraft.client.model.AnimationUtils;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
@@ -58,12 +57,11 @@ public class ZombieYetiModel<S extends PazZombieRenderState> extends PazZombieMo
 
 	@Override
 	public void setupAnim(@NotNull S state) {
-		if (!(state instanceof ZombieYetiRenderState yetiState)) return;
 		super.setupAnim(state);
 		resetPose();
 		ModelCompatUtils.animateZombieArms(this.leftArm, this.rightArm, false, state);
 
 		walkAnimation.applyWalk(state.walkAnimationPos, state.walkAnimationSpeed, 1.5f, 2f);
-		actionAnimation.apply(yetiState.getBashAnimationState(), state.ageInTicks);
+		actionAnimation.apply(state.getActionAnimationState(), state.ageInTicks);
 	}
 }

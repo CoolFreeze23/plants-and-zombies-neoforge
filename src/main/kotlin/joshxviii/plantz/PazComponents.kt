@@ -1,14 +1,17 @@
 package joshxviii.plantz
 
-import com.mojang.serialization.Codec
+import net.minecraft.network.codec.StreamCodec
+import joshxviii.plantz.item.component.BlocksAttacks
 import joshxviii.plantz.item.component.BrainzAlloyCost
-import joshxviii.plantz.item.component.DoorShield
+import joshxviii.plantz.item.component.BlockBreakChanceComponent
+import joshxviii.plantz.item.component.DoorShieldComponent
 import joshxviii.plantz.item.component.LetterDataComponent
 import joshxviii.plantz.item.component.ProtectsHeadDataComponent
 import joshxviii.plantz.item.component.StoredSun
 import joshxviii.plantz.item.component.StoredWater
 import joshxviii.plantz.item.component.SunCost
 import joshxviii.plantz.item.component.UseCooldown
+import joshxviii.plantz.item.component.WornBodyBlockerComponent
 import net.minecraft.core.Registry
 import net.minecraft.core.component.DataComponentType
 import net.minecraft.core.registries.BuiltInRegistries
@@ -65,11 +68,17 @@ object PazComponents {
     }
 
     @JvmField
-    val BLOCKING_ITEM_BREAK_CHANCE: DataComponentType<Float> = register(
-        "blocking_item_break_chance"
-    ) { it.persistent(Codec.floatRange(0.0f, 1.0f))
-        .networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.FLOAT)
+    val BLOCK_BREAK_CHANCE: DataComponentType<BlockBreakChanceComponent> = register(
+        "block_break_chance"
+    ) { it.persistent(BlockBreakChanceComponent.CODEC)
+        .networkSynchronized(BlockBreakChanceComponent.STREAM_CODEC)
         .cacheEncoding()
+    }
+
+    /** 26.1 `minecraft:blocks_attacks`, not saved or synced: only item prototypes have it. */
+    @JvmField
+    val BLOCKS_ATTACKS: DataComponentType<BlocksAttacks> = register("blocks_attacks") { builder ->
+        builder.networkSynchronized(StreamCodec.of({ _, _ -> error("plantz:blocks_attacks is not synced") }, { error("plantz:blocks_attacks is not synced") }))
     }
 
     @JvmField
@@ -81,10 +90,18 @@ object PazComponents {
     }
 
     @JvmField
-    val DOOR_SHIELD: DataComponentType<DoorShield> = register(
+    val WORN_BODY_BLOCKER: DataComponentType<WornBodyBlockerComponent> = register(
+        "worn_body_blocker"
+    ) { it.persistent(WornBodyBlockerComponent.CODEC)
+        .networkSynchronized(WornBodyBlockerComponent.STREAM_CODEC)
+        .cacheEncoding()
+    }
+
+    @JvmField
+    val DOOR_SHIELD: DataComponentType<DoorShieldComponent> = register(
         "door_shield"
-    ) { it.persistent(DoorShield.CODEC)
-        .networkSynchronized(DoorShield.STREAM_CODEC)
+    ) { it.persistent(DoorShieldComponent.CODEC)
+        .networkSynchronized(DoorShieldComponent.STREAM_CODEC)
         .cacheEncoding()
     }
 
@@ -120,6 +137,8 @@ object PazComponents {
         stack.get(SUN_COST)?.addToTooltip(context, consumer, flag, stack)
         stack.get(BRAINZ_ALLOY_COST)?.addToTooltip(context, consumer, flag, stack)
         stack.get(PROTECTS_HEAD)?.addToTooltip(context, consumer, flag, stack)
+        stack.get(WORN_BODY_BLOCKER)?.addToTooltip(context, consumer, flag, stack)
+        stack.get(BLOCK_BREAK_CHANCE)?.addToTooltip(context, consumer, flag, stack)
         stack.get(LETTER_DATA)?.addToTooltip(context, consumer, flag, stack)
         stack.get(DOOR_SHIELD)?.addToTooltip(context, consumer, flag, stack)
         if (added.isNotEmpty()) lines.addAll(tooltipInsertIndex(stack, lines), added)

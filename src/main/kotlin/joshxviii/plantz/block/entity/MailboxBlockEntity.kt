@@ -7,8 +7,9 @@ import joshxviii.plantz.block.MailboxBlock.Companion.FACING
 import joshxviii.plantz.block.MailboxBlock.Companion.STATE
 import joshxviii.plantz.block.MailboxState
 import joshxviii.plantz.inventory.MailboxMenu
-import joshxviii.plantz.raid.ZombieRaid.Companion.BONUS_REWARD_INTERVAL
 import joshxviii.plantz.compat.menu.ExtendedMenuProvider
+import joshxviii.plantz.raid.CompletedWave
+import joshxviii.plantz.raid.GardenHeroRewards
 import net.minecraft.core.BlockPos
 import net.minecraft.core.HolderLookup
 import net.minecraft.core.NonNullList
@@ -55,7 +56,7 @@ class MailboxBlockEntity(
     private var name: Component? = null
     private var ejectTimer: Int = 0
     private var tickCount : Int = 0
-    private var heroMailBuffer: MutableList<ResourceKey<LootTable>> = mutableListOf()
+    private var heroMailBuffer: MutableList<CompletedWave> = mutableListOf()
     private var heroMailIndex: Int = 0
 
     companion object {
@@ -76,10 +77,10 @@ class MailboxBlockEntity(
             if (blockEntity.ejectTimer > 0) {
                 val buffer = blockEntity.heroMailBuffer
                 if (buffer.isNotEmpty()) {// Hero Mail Rewards
-                    if (blockEntity.ejectTimer % Mth.floor((HERO_MAIL_EJECT_DELAY+buffer.size)/buffer.size.toFloat()) == 0) buffer.getOrNull(blockEntity.heroMailIndex)?.let {
-                        blockEntity.getHeroMail(it).forEach { item -> blockEntity.ejectItem(item) }
+                    if (blockEntity.ejectTimer % Mth.floor((HERO_MAIL_EJECT_DELAY+buffer.size)/buffer.size.toFloat()) == 0) buffer.getOrNull(blockEntity.heroMailIndex)?.let { reward ->
+                        blockEntity.getHeroMail(reward.type.lootTableFn(blockEntity.heroMailIndex)).forEach { item -> blockEntity.ejectItem(item) }
 
-                        if ((blockEntity.heroMailIndex+1) % BONUS_REWARD_INTERVAL==0) {// Add bonus reward every 5 waves
+                        if (reward.boss!=null) {
                             blockEntity.getHeroMail(PazLootTables.MAIL_REWARDS_BONUS).forEach { item -> blockEntity.ejectItem(item) }
                             blockEntity.confetti()
                         }

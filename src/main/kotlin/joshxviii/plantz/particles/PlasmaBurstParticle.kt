@@ -7,6 +7,7 @@ import net.minecraft.client.particle.ParticleProvider
 import net.minecraft.client.particle.ParticleRenderType
 import net.minecraft.client.particle.TextureSheetParticle
 import net.minecraft.client.particle.SpriteSet
+import joshxviii.plantz.compat.LightCoordsUtil
 import net.minecraft.util.Mth
 import kotlin.math.floor
 
@@ -31,6 +32,8 @@ class PlasmaBurstParticle(
     }
 
     override fun getRenderType(): ParticleRenderType = ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT
+
+    override fun getLightColor(a: Float): Int = LightCoordsUtil.addSmoothBlockEmission(super.getLightColor(a), 1.0f)
 
     class Provider(private val sprite: SpriteSet) : ParticleProvider<PlasmaBurstOptions> {
         override fun createParticle(

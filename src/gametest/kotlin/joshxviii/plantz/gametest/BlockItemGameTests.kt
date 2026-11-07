@@ -19,7 +19,7 @@ import joshxviii.plantz.item.component.LetterDataComponent
 import joshxviii.plantz.inventory.LetterMenu
 import joshxviii.plantz.PazBlocks
 import joshxviii.plantz.PazComponents
-import joshxviii.plantz.PazCreativeTab
+import joshxviii.plantz.PazCreativeTabs
 import joshxviii.plantz.PazEffects
 import joshxviii.plantz.PazEntities
 import joshxviii.plantz.PazItems
@@ -632,12 +632,12 @@ object BlockItemGameTests {
         helper.check(PoiTypes.forState(PazBlocks.PLANTZ_FLAG.defaultBlockState()).map { it.value() == PazBlocks.PLANTZ_FLAG_POI }.orElse(false)) { "plantz flag POI" }
         helper.check(PoiTypes.forState(PazBlocks.SUN_BATTERY_BLOCK.defaultBlockState()).map { it.value() == PazBlocks.SUN_BATTERY_POI }.orElse(false)) { "sun battery POI" }
 
-        val tab = PazCreativeTab.PAZ_TAB
+        val tab = PazCreativeTabs.PAZ_TAB
         tab.buildContents(CreativeModeTab.ItemDisplayParameters(helper.level.enabledFeatures(), false, helper.level.registryAccess()))
         val items = tab.displayItems.toList()
         helper.check(items.firstOrNull()?.let { SeedPacketItem.typeFromStack(it) } == PazEntities.SUNFLOWER) { "tab starts with ${items.firstOrNull()}" }
         helper.check(items.any { it.`is`(PazItems.WATERING_CAN) } && items.any { it.`is`(PazBlocks.MAIL_COLLECTION_BOX.asItem()) }) { "tab misses items" }
-        helper.check(items.count { it.`is`(PazItems.SEED_PACKET) } == 30) { "tab has ${items.count { it.`is`(PazItems.SEED_PACKET) }} seed packets" }
+        helper.check(items.count { it.`is`(PazItems.SEED_PACKET) } == 31) { "tab has ${items.count { it.`is`(PazItems.SEED_PACKET) }} seed packets" }
         helper.succeed()
     }
 

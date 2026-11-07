@@ -1,14 +1,12 @@
 package joshxviii.plantz.entity
 
+import joshxviii.plantz.entity.LeashableEntity
 import joshxviii.plantz.PazDataSerializers.DATA_DYE_COLOR
 import joshxviii.plantz.PazServerParticles
 import joshxviii.plantz.PazSounds
 import joshxviii.plantz.compat.ValueInput
 import joshxviii.plantz.compat.ValueOutput
 import joshxviii.plantz.entity.plant.InterpolationHandler
-import joshxviii.plantz.entity.zombie.BrownCoatVariant
-import joshxviii.plantz.entity.zombie.ImpVariant
-import joshxviii.plantz.entity.zombie.PazZombie
 import joshxviii.plantz.item.BalloonItem
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.syncher.EntityDataAccessor

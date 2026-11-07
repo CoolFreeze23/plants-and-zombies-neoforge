@@ -1,6 +1,11 @@
 {
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "plantz:item/all_star_spawn_egg"
-  }
+  "parent": "plantz:item/spawn_egg/all_star/all_star",
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 1
+      },
+      "model": "plantz:item/spawn_egg/all_star/giga"
+    }
+  ]
 }

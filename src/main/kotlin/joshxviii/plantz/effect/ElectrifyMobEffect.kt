@@ -27,7 +27,7 @@ class ElectrifyMobEffect(
     companion object {
         const val ZAP_INTERVAL: Int = 12
         const val ZAP_RANGE: Double = 3.0
-        const val ZAP_DAMAGE: Float = 2.5f
+        const val MIN_CHAIN_DAMAGE: Float = 0.25f
     }
 
     // chain lightening effect to nearby mobs
@@ -35,13 +35,15 @@ class ElectrifyMobEffect(
         super.onMobHurt(mob, amplifier, source, damage)
         val level = mob.level() as? ServerLevel ?: return
         if (!source.`is`(PazTags.DamageTypes.IS_ELECTRIC)) return
+        if (damage < MIN_CHAIN_DAMAGE) return
         // targeting conditions for nearby candidates to zap
         val rootCauseEntity = source.entity
         val targetConditions = TargetingConditions.forNonCombat().ignoreLineOfSight().ignoreInvisibilityTesting().selector { entity ->
+            if (!entity.isPickable || entity.`is`(mob)) return@selector false
             val isRootSource = rootCauseEntity?.let { entity.hasSameRootOwner(it) || it == entity } ?: false
             val onSameTeam = (entity is Enemy && mob is Enemy) || (entity !is Enemy && mob !is Enemy)
             val canHurt = (rootCauseEntity as? LivingEntity)?.canAttack(entity) ?: true
-            entity != mob && !entity.hurtMarked && !isRootSource && canHurt && onSameTeam
+            !entity.hurtMarked && !isRootSource && canHurt && onSameTeam
         }
         val nearbyTargets = level.getNearbyEntities(LivingEntity::class.java, targetConditions, mob, mob.boundingBox.inflate(ZAP_RANGE))
         nearbyTargets.randomOrNull()?.let {
@@ -51,7 +53,7 @@ class ElectrifyMobEffect(
                     it.addEffect(MobEffectInstance(PazEffects.ELECTRIFIED, duration.coerceAtMost(300), effect.amplifier-1))
                 }
             }
-            zap(level, it, causeEntity = rootCauseEntity)
+            zap(level, it, damage = damage * 0.5f, causeEntity = rootCauseEntity)
             rootCauseEntity?.playSound(PazSounds.ELECTRIC_ZAP)
             level.sendParticles(
                 ElectricArcParticleOptions(// electric arc particle
@@ -71,7 +73,7 @@ class ElectrifyMobEffect(
         return true
     }
 
-    private fun zap(level: ServerLevel, target: LivingEntity, damage: Float = ZAP_DAMAGE, causeEntity: Entity? = null) {
+    private fun zap(level: ServerLevel, target: LivingEntity, damage: Float, causeEntity: Entity? = null) {
         val source = target.damageSources().source(PazDamageTypes.ZAP,causeEntity,null)
         target.hurt(source, damage)
         level.sendParticles(

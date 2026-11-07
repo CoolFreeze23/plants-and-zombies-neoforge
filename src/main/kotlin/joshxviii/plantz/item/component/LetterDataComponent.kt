@@ -33,10 +33,10 @@ data class LetterDataComponent(
         components: ItemStack
     ) {
         if (signed) consumer.accept(
-            Component.translatable("component.letter.signed", Component.translatable(author)).withStyle(ChatFormatting.GRAY)
+            Component.translatable("component.plantz.letter.signed", Component.translatable(author)).withStyle(ChatFormatting.GRAY)
         )
         if (!item.isEmpty) consumer.accept(
-            Component.translatable("component.letter.item", item.hoverName, item.count).withStyle(ChatFormatting.GRAY)
+            Component.translatable("component.plantz.letter.item", item.hoverName, item.count).withStyle(ChatFormatting.GRAY)
         )
     }
 

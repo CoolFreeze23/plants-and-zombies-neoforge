@@ -1,5 +1,13 @@
 package joshxviii.plantz.gametest
 
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.item.crafting.CraftingRecipe
+import net.minecraft.world.item.crafting.CraftingInput
+import net.minecraft.world.item.TooltipFlag
+import net.minecraft.world.item.Item
+import net.minecraft.network.chat.contents.TranslatableContents
+import net.minecraft.network.chat.Component
+import joshxviii.plantz.pazResource
 import joshxviii.plantz.gametest.zombies.discardEntities
 import joshxviii.plantz.gametest.blocks.check
 import joshxviii.plantz.PazComponents
@@ -61,7 +69,7 @@ object ProtectionGameTests {
         top.hurt(arrowFrom(helper, Vec3(top.x, top.eyeY + 1.0, top.z)), 6f)
         low.hurt(arrowFrom(helper, Vec3(low.x, low.y + 0.3, low.z)), 6f)
         helper.check(bare.taken() > 5f) { "bare zombie took ${bare.taken()}" }
-        helper.check(top.taken() > 0f && top.taken() < bare.taken() * 0.15f) { "bucket from above: ${top.taken()} of ${bare.taken()}" }
+        helper.check(top.taken() == 0f) { "bucket from above: ${top.taken()} of ${bare.taken()}" }
         helper.check(low.taken() > bare.taken() * 0.5f) { "bucket from below: ${low.taken()} of ${bare.taken()}" }
         helper.discardEntities()
         helper.succeed()
@@ -81,8 +89,8 @@ object ProtectionGameTests {
     }
 
     /**
-     * A raised newspaper is a shield: from within 80 degrees of where its holder looks it takes 90% of the hit
-     * (1.21.1 shields take all of it), from the side or behind nothing.
+     * A raised newspaper is a shield: from within 90 degrees of where its holder looks it takes 90% of the hit
+     * (1.21.1 shields take all of it), from the side behind or behind nothing.
      */
     @JvmStatic
     @GameTest(template = PLATFORM, batch = BATCH, timeoutTicks = 60)
@@ -105,7 +113,7 @@ object ProtectionGameTests {
             helper.check(zombies.all { it.isBlocking }) { "newspaper not raised" }
             // yaw 0 looks south (+z)
             front.hurt(arrowFrom(helper, front.position().add(0.5, 1.0, 4.0)), 10f)
-            side.hurt(arrowFrom(helper, side.position().add(4.0, 1.0, 0.5)), 10f)
+            side.hurt(arrowFrom(helper, side.position().add(4.0, 1.0, -0.5)), 10f)
             back.hurt(arrowFrom(helper, back.position().add(0.0, 1.0, -4.0)), 10f)
             helper.check(back.taken() > 7f) { "hit from behind: ${back.taken()}" }
             helper.check(side.taken() > 7f) { "hit from the side: ${side.taken()}" }
@@ -113,5 +121,59 @@ object ProtectionGameTests {
             helper.discardEntities()
             helper.succeed()
         }
+    }
+
+    /** A raised door shield takes all of a hit from the front, a worn coffin from any side; both take durability instead of breaking at random. */
+    @JvmStatic
+    @GameTest(template = PLATFORM, batch = BATCH, timeoutTicks = 60)
+    fun doorShieldAndCoffinBlock(helper: GameTestHelper) {
+        val shielded = standingZombie(helper, 3, 7)
+        val door = ItemStack(PazItems.DOOR_SHIELD)
+        shielded.setItemSlot(EquipmentSlot.MAINHAND, door)
+        shielded.startUsingItem(InteractionHand.MAIN_HAND)
+        val coffined = standingZombie(helper, 11, 7)
+        val coffin = ItemStack(PazItems.COFFIN)
+        coffined.setItemSlot(EquipmentSlot.CHEST, coffin)
+        helper.runAfterDelay(8) {
+            shielded.yRot = 0f
+            shielded.yBodyRot = 0f
+            shielded.yHeadRot = 0f
+            helper.check(shielded.isBlocking) { "door shield not raised" }
+            shielded.hurt(arrowFrom(helper, shielded.position().add(0.5, 1.0, 4.0)), 6f)
+            coffined.hurt(arrowFrom(helper, coffined.position().add(0.0, 1.0, -4.0)), 6f)
+            helper.check(shielded.taken() == 0f) { "door shield let through ${shielded.taken()}" }
+            helper.check(coffined.taken() == 0f) { "coffin let through ${coffined.taken()}" }
+            helper.check(door.damageValue > 0 && coffin.damageValue > 0) { "no durability used: door ${door.damageValue}, coffin ${coffin.damageValue}" }
+            helper.discardEntities()
+            helper.succeed()
+        }
+    }
+
+    /** A shield and any door craft a door shield of that door; nothing else does. */
+    @JvmStatic
+    @GameTest(template = PLATFORM, batch = BATCH)
+    fun doorShieldRecipe(helper: GameTestHelper) {
+        val level = helper.level
+        val recipe = level.recipeManager.byKey(pazResource("door_shield")).orElseThrow().value() as CraftingRecipe
+        fun input(a: Item, b: Item) = CraftingInput.of(2, 1, listOf(ItemStack(a), ItemStack(b)))
+        val door = input(Items.SHIELD, Items.SPRUCE_DOOR)
+        helper.check(recipe.matches(door, level)) { "shield and door do not match" }
+        val result = recipe.assemble(door, level.registryAccess())
+        helper.check(result.`is`(PazItems.DOOR_SHIELD) && result.get(PazComponents.DOOR_SHIELD)?.doorType == Blocks.SPRUCE_DOOR) { "crafted $result" }
+        helper.check(!recipe.matches(input(Items.SPRUCE_DOOR, Items.OAK_DOOR), level)) { "two doors match" }
+        helper.check(!recipe.matches(input(Items.SHIELD, Items.STICK), level)) { "shield and stick match" }
+        helper.succeed()
+    }
+
+    /** The new blocking components say what they do in their tooltips. */
+    @JvmStatic
+    @GameTest(template = PLATFORM, batch = BATCH)
+    fun blockingTooltips(helper: GameTestHelper) {
+        fun keys(stack: ItemStack) = mutableListOf<Component>().also {
+            PazComponents.addComponentTooltips(stack, Item.TooltipContext.EMPTY, it, TooltipFlag.NORMAL)
+        }.mapNotNull { (it.contents as? TranslatableContents)?.key }
+        helper.check("component.plantz.worn_body_blocker" in keys(ItemStack(PazItems.COFFIN))) { "coffin tooltip ${keys(ItemStack(PazItems.COFFIN))}" }
+        helper.check("component.plantz.block_break_chance" in keys(ItemStack(PazItems.NEWSPAPER))) { "newspaper tooltip ${keys(ItemStack(PazItems.NEWSPAPER))}" }
+        helper.succeed()
     }
 }

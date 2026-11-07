@@ -1,5 +1,6 @@
 package joshxviii.plantz.entity.zombie
 
+import joshxviii.plantz.entity.zombie.PazOwnableZombie
 import joshxviii.plantz.PazSounds
 import joshxviii.plantz.entity.plant.Plant
 import joshxviii.plantz.hasSameRootOwner

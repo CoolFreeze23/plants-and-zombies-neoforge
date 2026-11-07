@@ -1,6 +1,35 @@
 {
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "plantz:item/browncoat_spawn_egg"
-  }
+  "parent": "plantz:item/spawn_egg/browncoat/browncoat",
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 1
+      },
+      "model": "plantz:item/spawn_egg/browncoat/balloon"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 2
+      },
+      "model": "plantz:item/spawn_egg/browncoat/snowcoat"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 3
+      },
+      "model": "plantz:item/spawn_egg/browncoat/desert"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 4
+      },
+      "model": "plantz:item/spawn_egg/browncoat/buccaneer"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 5
+      },
+      "model": "plantz:item/spawn_egg/browncoat/vampire"
+    }
+  ]
 }

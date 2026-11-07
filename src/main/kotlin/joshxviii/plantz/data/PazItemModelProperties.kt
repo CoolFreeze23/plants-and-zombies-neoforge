@@ -1,5 +1,6 @@
 package joshxviii.plantz.data
 
+import joshxviii.plantz.PazComponents
 import joshxviii.plantz.pazResource
 import net.minecraft.client.Minecraft
 import net.minecraft.client.multiplayer.ClientLevel
@@ -53,7 +54,8 @@ object PazItemModelProperties {
         // 26.1: select component minecraft:entity_data -> id
         ItemProperties.register(blueprint, BLUEPRINT_TYPE, fn { stack, _, _ -> indexValue(entityId(stack), BLUEPRINT_TYPES, 8f) })
         // 26.1: condition has_component plantz:stored_sun / plantz:stored_water (ignore_default)
-        if (storedSun != null) ItemProperties.register(sunBattery, HAS_STORED_SUN, fn { stack, _, _ -> bool(hasNonDefault(stack, storedSun)) })
+        // 26.1 range_dispatch battery_fullness (1 - stored / max) with the empty model at 1
+        ItemProperties.register(sunBattery, HAS_STORED_SUN, fn { stack, _, _ -> bool((stack.get(PazComponents.STORED_SUN)?.storedSun ?: 0) > 0) })
         if (storedWater != null) ItemProperties.register(wateringCan, HAS_STORED_WATER, fn { stack, _, _ -> bool(hasNonDefault(stack, storedWater)) })
         // 26.1 newspaper: select context_entity_type == plantz:newspaper_zombie / condition using_item / range_dispatch time(moon_phase)
         ItemProperties.register(newspaper, NEWSPAPER_ZOMBIE, fn { _, _, entity ->
@@ -69,6 +71,10 @@ object PazItemModelProperties {
         // 26.1: condition has_component minecraft:dyed_color / minecraft:writable_book_content (ignore_default)
         ItemProperties.register(item("dye_blaster"), DYED, fn { stack, _, _ -> bool(isDyed(stack)) })
         ItemProperties.register(item("letter"), OPENED, fn { stack, _, _ -> bool(isOpenedLetter(stack)) })
+        // 26.1 baron_staff: condition using_item
+        ItemProperties.register(item("baron_staff"), USING, fn { stack, _, entity ->
+            bool(entity != null && entity.isUsingItem && entity.useItem == stack)
+        })
     }
 
     @JvmStatic

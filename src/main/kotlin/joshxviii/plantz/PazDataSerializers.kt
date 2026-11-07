@@ -5,9 +5,11 @@ import joshxviii.plantz.ai.PlantState
 import joshxviii.plantz.ai.ZombieState
 import joshxviii.plantz.entity.gnome.GnomeSoundVariant
 import joshxviii.plantz.entity.gnome.GnomeVariant
+import joshxviii.plantz.entity.zombie.AllStarVariant
 import joshxviii.plantz.entity.zombie.BrownCoatVariant
 import joshxviii.plantz.entity.zombie.GargantuarVariant
 import joshxviii.plantz.entity.zombie.ImpVariant
+import joshxviii.plantz.entity.zombie.RoboZombieVariant
 import joshxviii.plantz.entity.zombie.SuperBrainzVariant
 import net.minecraft.core.Registry
 import net.neoforged.neoforge.registries.NeoForgeRegistries
@@ -23,6 +25,8 @@ object PazDataSerializers {
     @JvmField val DATA_ZOMBIE_STATE = EntityDataSerializer.forValueType<ZombieState>(ZombieState.STREAM_CODEC)
     @JvmField val BROWN_COAT_VARIANT = EntityDataSerializer.forValueType<BrownCoatVariant>(BrownCoatVariant.STREAM_CODEC)
     @JvmField val IMP_VARIANT = EntityDataSerializer.forValueType<ImpVariant>(ImpVariant.STREAM_CODEC)
+    @JvmField val ALL_STAR_VARIANT = EntityDataSerializer.forValueType<AllStarVariant>(AllStarVariant.STREAM_CODEC)
+    @JvmField val ROBO_ZOMBIE_VARIANT = EntityDataSerializer.forValueType<RoboZombieVariant>(RoboZombieVariant.STREAM_CODEC)
     @JvmField val SUPER_BRAINZ_VARIANT = EntityDataSerializer.forValueType<SuperBrainzVariant>(SuperBrainzVariant.STREAM_CODEC)
     @JvmField val GARGANTUAR_VARIANT = EntityDataSerializer.forValueType<GargantuarVariant>(GargantuarVariant.STREAM_CODEC)
     @JvmField val GNOME_VARIANT = EntityDataSerializer.forValueType<GnomeVariant>(GnomeVariant.STREAM_CODEC)
@@ -35,6 +39,8 @@ object PazDataSerializers {
         Registry.register(NeoForgeRegistries.ENTITY_DATA_SERIALIZERS, pazResource("zombie_state"), DATA_ZOMBIE_STATE)
         Registry.register(NeoForgeRegistries.ENTITY_DATA_SERIALIZERS, pazResource("brown_coat_variant"), BROWN_COAT_VARIANT)
         Registry.register(NeoForgeRegistries.ENTITY_DATA_SERIALIZERS, pazResource("imp_variant"), IMP_VARIANT)
+        Registry.register(NeoForgeRegistries.ENTITY_DATA_SERIALIZERS, pazResource("all_star_variant"), ALL_STAR_VARIANT)
+        Registry.register(NeoForgeRegistries.ENTITY_DATA_SERIALIZERS, pazResource("robo_zombie_variant"), ROBO_ZOMBIE_VARIANT)
         Registry.register(NeoForgeRegistries.ENTITY_DATA_SERIALIZERS, pazResource("super_brainz_variant"), SUPER_BRAINZ_VARIANT)
         Registry.register(NeoForgeRegistries.ENTITY_DATA_SERIALIZERS, pazResource("gargantuar_variant"), GARGANTUAR_VARIANT)
         Registry.register(NeoForgeRegistries.ENTITY_DATA_SERIALIZERS, pazResource("gnome_variant"), GNOME_VARIANT)

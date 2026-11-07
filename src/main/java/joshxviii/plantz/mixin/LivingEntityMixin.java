@@ -1,5 +1,8 @@
 package joshxviii.plantz.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.serialization.Codec;
 import joshxviii.plantz.*;
 import joshxviii.plantz.compat.ValueInput;
@@ -7,9 +10,11 @@ import joshxviii.plantz.compat.ValueOutput;
 import joshxviii.plantz.effect.PaintedMobEffect;
 import joshxviii.plantz.effect.PazMobEffectHooks;
 import joshxviii.plantz.entity.plant.Plant;
-import joshxviii.plantz.raid.WaveType;
+import joshxviii.plantz.raid.CompletedWave;
+import joshxviii.plantz.raid.GardenHeroRewards;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -36,6 +41,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -74,8 +80,7 @@ abstract public class LivingEntityMixin implements PlantHeadAttachment, GardenHe
     private CompoundTag plantData = new CompoundTag();
 
     @Unique
-    private List<WaveType> completedRaidWaveList = List.of();
-
+    private List<CompletedWave> completedRaidWaveList = List.of();
     @Unique
     private @Nullable Plant plantEntity = null;
 
@@ -105,12 +110,12 @@ abstract public class LivingEntityMixin implements PlantHeadAttachment, GardenHe
     }
 
     @Override
-    public @NotNull List<WaveType> plantz$getWaveList() {
+    public @NotNull List<CompletedWave> plantz$getWaveList() {
         return completedRaidWaveList;
     }
 
     @Override
-    public void plantz$setWaveList(@NotNull List<WaveType> value) {
+    public void plantz$setWaveList(@NotNull List<CompletedWave> value) {
         completedRaidWaveList = value;
     }
 
@@ -203,8 +208,7 @@ abstract public class LivingEntityMixin implements PlantHeadAttachment, GardenHe
         if (!this.plantz$getPlantData().isEmpty()) {
             output.store("plantz:AttachedPlant", CompoundTag.CODEC, this.plantz$getPlantData());
         }
-        if (self instanceof ServerPlayer) output.store("plantz:CompletedWaveList", Codec.list(WaveType.Companion.getCODEC()), this.plantz$getWaveList());
-
+        if (self instanceof ServerPlayer) output.store("plantz:CompletedWaveList", Codec.list(CompletedWave.Companion.getCODEC()), this.plantz$getWaveList());
     }
     @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
     private void loadCustomFlags(CompoundTag tag, CallbackInfo ci) {
@@ -216,7 +220,9 @@ abstract public class LivingEntityMixin implements PlantHeadAttachment, GardenHe
         self.getEntityData().set(DATA_BUTTER_ID, input.getBooleanOr("plantz:IsButtered", false));
         self.getEntityData().set(DATA_PAINTED_COLORS, input.read("plantz:PaintedColor", PAINTED_COLORS_CODEC).orElseGet(HashMap::new));
         plantz$setPlantData(input.read("plantz:AttachedPlant", CompoundTag.CODEC).orElseGet(CompoundTag::new));
-        if (self instanceof ServerPlayer) plantz$setWaveList(input.read("plantz:CompletedWaveList", Codec.list(WaveType.Companion.getCODEC())).orElseGet(List::of));
+        if (self instanceof ServerPlayer) {
+            plantz$setWaveList(input.read("plantz:CompletedWaveList", Codec.list(CompletedWave.Companion.getSAVE_CODEC())).orElseGet(List::of));
+        }
         // Fix (upstream too): the flags above mirror active effects, which LivingEntity has just loaded, so derive them
         // from the effects. The old int-keyed map codec could never be written to NBT, so paint was lost on reload.
         if (!self.level().isClientSide()) updateEffects();
@@ -330,5 +336,10 @@ abstract public class LivingEntityMixin implements PlantHeadAttachment, GardenHe
         }
     }
 
+    // 26.1 blockedByItem: blocked attackers aren't knocked back
+    @Inject(method = "blockedByShield", at = @At("HEAD"), cancellable = true)
+    private void plantz$preventKnockbackWhileBlocking(LivingEntity defender, CallbackInfo ci) {
+        ci.cancel();
+    }
 
 }

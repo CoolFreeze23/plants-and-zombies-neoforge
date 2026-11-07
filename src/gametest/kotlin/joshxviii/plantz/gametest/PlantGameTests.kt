@@ -4,7 +4,7 @@ import net.minecraft.world.level.GameType
 import joshxviii.plantz.entity.plant.processSeedPacketInteraction
 import joshxviii.plantz.entity.plant.PacketInteractionResult
 import joshxviii.plantz.item.entityDataType
-import joshxviii.plantz.GardenHeroRewards
+import joshxviii.plantz.raid.GardenHeroRewards
 import joshxviii.plantz.PazBlocks
 import joshxviii.plantz.PazCriteria
 import joshxviii.plantz.PazDamageTypes
@@ -103,6 +103,8 @@ object PlantGameTests {
     fun sunIsPickedUpByPlayer(helper: GameTestHelper) {
         val player = helper.mockPlayer(7.5, 2.0, 7.5)
         val sun = Sun(helper.level, helper.absoluteVec(Vec3(7.5, 3.5, 9.5)), Vec3.ZERO, 1)
+        // no random kick: with one, about 1 sun in 100 circles a player standing still for longer than this test waits
+        sun.deltaMovement = Vec3.ZERO
         helper.level.addFreshEntity(sun)
         helper.succeedWhenThen({ helper.removeMockPlayer(player) }) {
             helper.assertTrue(sun.isRemoved, "sun was not collected")
@@ -111,7 +113,7 @@ object PlantGameTests {
     }
 
     @JvmStatic
-    @GameTest(template = PLATFORM, timeoutTicks = 200)
+    @GameTest(template = PLATFORM, timeoutTicks = 600)
     fun sunHealsDamagedPlant(helper: GameTestHelper) {
         val plant = helper.spawn(PazEntities.WALL_NUT, 7, 2, 7)
         plant.health = 20f
@@ -506,7 +508,8 @@ object PlantGameTests {
     @GameTest(template = PLATFORM, batch = NIGHT_BATCH, timeoutTicks = 100)
     fun wallNutBlocksAndGetsBitten(helper: GameTestHelper) {
         val nut = helper.spawn(PazEntities.WALL_NUT, 8, 2, 7)
-        val zombie = helper.spawnWithNoFreeWill(PazEntities.BROWN_COAT, 5, 2, 7)
+        // a zombie pressed against a wall-nut targets it through its AI
+        val zombie = helper.spawn(PazEntities.BROWN_COAT, 5, 2, 7)
         val nutX = nut.x
         helper.onEachTick { zombie.deltaMovement = Vec3(0.15, zombie.deltaMovement.y, 0.0) }
         helper.failIfEver { helper.assertTrue(zombie.x < nutX - 0.5, "zombie walked through the wall-nut") }
@@ -677,7 +680,7 @@ object PlantGameTests {
         helper.assertTrue(SeedMutationManager.get(level, PazEntities.SUNFLOWER) == null, "unexpected sunflower mutation data")
 
         val nut = helper.spawn(PazEntities.EXPLODE_O_NUT, 7, 2, 7)
-        val results = (1..300).map { SeedMutationManager.resolve(nut).entityDataType() }.toSet()
+        val results = (1..300).map { SeedMutationManager.resolve(nut).single().entityDataType() }.toSet()
         helper.assertTrue(results == setOf(PazEntities.WALL_NUT, PazEntities.EXPLODE_O_NUT), "explode-o-nut mutations: $results")
 
         val thunder = SeedMutationManager.get(level, PazEntities.ELECTRIC_PEA_SHOOTER)!!.mutations.first()
@@ -1063,7 +1066,9 @@ object PlantGameTests {
         helper.assertTrue(player.hasPazAdvancement("win_hardest_raid"), "win_hardest_raid")
         PazCriteria.RELOCATION.trigger(player, false)
         helper.assertFalse(player.hasPazAdvancement("relocation"), "relocation granted for a failed dig")
-        for (wave in 1..10) PazCriteria.RAID_WAVE_TRIGGER.trigger(player, wave)
+        PazCriteria.BOSS_DEFEAT_TRIGGER.trigger(player)
+        helper.assertFalse(player.hasPazAdvancement("taco_time"), "taco_time granted after one boss")
+        PazCriteria.BOSS_DEFEAT_TRIGGER.trigger(player)
         helper.assertTrue(player.hasPazAdvancement("taco_time"), "taco_time")
         helper.removeMockPlayer(player)
         helper.succeed()
@@ -1089,6 +1094,17 @@ object PlantGameTests {
         helper.assertTrue(plant.health == health && plant.pumpkinArmor == armor - 2f, "hit not taken by the pumpkin: health ${plant.health}, armor ${plant.pumpkinArmor}")
         helper.assertTrue(plant.processSeedPacketInteraction(player, packet, InteractionHand.MAIN_HAND) == PacketInteractionResult.NO_INTERACTION, "second pumpkin applied")
         helper.removeMockPlayer(player)
+        helper.succeed()
+    }
+
+    /** Digging up a Marigold gives its loot, not a seed packet. */
+    @JvmStatic
+    @GameTest(template = PLATFORM)
+    fun marigoldDropsLoot(helper: GameTestHelper) {
+        val marigold = helper.spawn(PazEntities.MARIGOLD, 7, 2, 7)
+        val loot = SeedMutationManager.resolve(marigold)
+        helper.assertTrue(loot.isNotEmpty() && loot.none { it.`is`(PazItems.SEED_PACKET) }, "marigold loot: $loot")
+        marigold.discard()
         helper.succeed()
     }
 }

@@ -19,7 +19,6 @@ class HypnoShroom(type: EntityType<out Plant>, level: Level) : Plant(type, level
 
     override fun doPush(entity: Entity) {
         super.doPush(entity)
-        hurtOnCollide(entity)
     }
 
     override fun actuallyHurt(source: DamageSource, damage: Float) {

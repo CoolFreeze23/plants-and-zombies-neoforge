@@ -65,6 +65,6 @@ public class WallNutModel extends PlantModel {
 
 		if (wallNutState.isRolling()) ModelCompatUtils.rotateBy(roll, q);
 
-		body.yRot = wallNutState.yRot * Mth.DEG_TO_RAD;
+		body.yRot += wallNutState.yRot * Mth.DEG_TO_RAD;
 	}
 }
