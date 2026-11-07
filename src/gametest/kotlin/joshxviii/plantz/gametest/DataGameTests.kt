@@ -1,5 +1,6 @@
 package joshxviii.plantz.gametest
 
+import java.nio.file.Files
 import joshxviii.plantz.api.SeedMutationResult
 import joshxviii.plantz.PazCompatSounds
 import joshxviii.plantz.PazEntities
@@ -616,6 +617,29 @@ object DataGameTests {
         need("jukebox_song.plantz.grassy_groove")
         missing.removeAll(UPSTREAM_LANG_GAPS)
         helper.assertTrue(missing.isEmpty(), "missing en_us keys: $missing")
+        helper.succeed()
+    }
+
+    /** pt_br keeps the games' official Brazilian Portuguese names (PvZ wiki language tables); upstream's file has others, so a merge can bring those back. */
+    @JvmStatic
+    @GameTest(template = PLATFORM)
+    fun officialPortugueseNames(helper: GameTestHelper) {
+        val file = ModList.get().getModFileById("plantz").file.findResource("assets", "plantz", "lang", "pt_br.json")
+        val pt = Files.newBufferedReader(file).use { JsonParser.parseReader(it) }.asJsonObject
+        val official = mapOf(
+            "marigold" to "Calêndula", "explode_o_nut" to "Noxplosiva", "fire_peashooter" to "Disparervilha de Fogo",
+            "electric_peashooter" to "Disparervilha Elétrica", "tanglekelp" to "Emaranhalga", "winter_melon" to "Gelancia",
+            "bonkchoy" to "Repolho-boxeador", "lightning_reed" to "Junco-relâmpago", "grave_buster" to "Come-cova",
+            "gargantuar" to "Zumbi Devorador", "gargantuar.variant.giga" to "Zumbi Devorador Gigante", "imp" to "Zumbinho",
+            "imp.variant.yeti" to "Zumbinho Yeti", "browncoat.variant.balloon" to "Zumbi-balão",
+            "browncoat.variant.vampire" to "Zumbi Vampiro", "browncoat.loadout.cone" to "Zumbi Cabeça-de-cone",
+            "browncoat.loadout.bucket" to "Zumbi Cabeça-de-balde", "browncoat.loadout.door" to "Zumbi com Tela",
+            "browncoat.loadout.coffin" to "Zumbi Caixão", "pirate_captain" to "Zumbi Capitão Pirata",
+            "engineer_zombie" to "Engenheiro", "soldier_zombie" to "Soldado", "baron_von_bats" to "Barão Von Morcego",
+            "zombie_yeti" to "Zumbi das Neves", "robo_zombie" to "Zumbi-Robô", "super_brainz" to "Supermioloz",
+        )
+        val wrong = official.filter { (key, name) -> pt.get("entity.plantz.$key")?.asString != name }.map { (key, name) -> "$key: ${pt.get("entity.plantz.$key")} should be $name" }
+        helper.assertTrue(wrong.isEmpty(), "pt_br names: $wrong")
         helper.succeed()
     }
 }

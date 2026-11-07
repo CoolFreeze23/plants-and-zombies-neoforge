@@ -15,7 +15,7 @@ the minimum changes 1.21.1 forces; the newer vanilla APIs upstream relies on are
 | `src/main/kotlin/joshxviii/plantz/integration/**` | Optional Iris, Vanilla Backport, Copper Age Backport and Backported Spears support (registry lookups with 1.21.1 fallbacks, so nothing links against the backports) |
 | `src/main/kotlin/joshxviii/plantz/client/GraveyardAmbience.kt` | The graveyard's 26.1 environment attributes (fog, clouds, sunrise, light) |
 | `src/main/resources/resourcepacks/{vanillabackport,copperagebackport}_compat` | Built-in data packs, each enabled only when its backport is installed (they override different files) |
-| `src/gametest/**` | Dev-only GameTests (not packaged), 148 tests covering plants, zombies, raids, blocks/items, protection and data |
+| `src/gametest/**` | Dev-only GameTests (not packaged), 149 tests covering plants, zombies, raids, blocks/items, protection and data |
 
 ## Entry points
 - `PazMain` (`@Mod`): wires NeoForge events. All `Paz*.initialize()` objects still register eagerly with

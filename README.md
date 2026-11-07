@@ -45,16 +45,20 @@ Optional, detected automatically:
 - Every upstream source and resource file was compared against the port; differences are restored or listed below.
 - Every Plants & Zombies tag expands to the same blocks, items and entities as upstream does against 26.1's vanilla tags
   (1.21.1's `#minecraft:dirt` and carver tags hold different blocks, so the port uses 26.1's contents).
-- **All 148 required GameTests pass** (repeated runs): every plant's behaviour, all special zombies and blueprint machines, ownership, a full zombie
+- **All 149 required GameTests pass** (repeated runs): every plant's behaviour, all special zombies and blueprint machines, ownership, a full zombie
   raid (waves, victory, rewards, boss types), mailboxes (delivery, queue, full/discard), collection box, sun battery, time machine,
   flags, gravestones, garden gnomes, pots, watering can, gardening glove (incl. Lobbing), seed packets and cooldowns, wearables
   (incl. the bucket) and their head protection, the newspaper and door shields, the coffin, letters, pumpkin armor and
   carving loot, the brainz alloy door and trapdoor, zombats, dispensers, blueprints, spawn egg variants and loadouts,
   every upstream recipe, loot tables, advancements, tags, worldgen features, seed mutations and villager trades.
 - Raids saved by older versions (plain wave types, no boss health, no starter) load and save again in the new format.
-- Dedicated server + client over the network: config sync, a zombie raid started with `/pz raid` with its HUD, boss
-  bar, boss chance and wave timer, a saved raid surviving a restart, `/pz options`, the sun HUD, the door shield held and
-  raised, the coffin worn, Baron von Bats, Zombie Goat, Zombat, Marigold, a Lobbing glove throw, the creative tab eggs.
+- Dedicated server + client over the network: config sync, zombie raids started with `/pz raid` and played to their
+  end, with the HUD, boss bar, boss chance and wave timer: a boss wave, the Victory and Defeat titles, the hero reward
+  collected from a mailbox; a saved raid surviving a restart, `/pz options`, the sun HUD, Split Item Tabs, the door
+  shield held and raised, the coffin worn, Baron von Bats, Zombie Goat, Zombat, Marigold, a Lobbing glove throw, the
+  creative tab eggs.
+- Brazilian Portuguese names of mobs and plants that exist in the PvZ games follow the PvZ wiki's official-translation
+  tables (a GameTest guards them, since upstream's own `pt_br` differs in places); mod-only names keep upstream's wording.
 - Dev client: every entity and block entity renderer, item icons, screens (mailbox, collection box, time machine),
   raid overlay, particles, graveyard ambience; with Iris + a shader pack; with Vanilla Backport.
 - GameTests also pass with Backported Spears, Backported Spears + Copper Age Backport, and all three backports
